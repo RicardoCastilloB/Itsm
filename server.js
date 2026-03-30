@@ -13,6 +13,7 @@ const cookieParser   = require('cookie-parser');
 const session        = require('express-session');
 const path           = require('path');
 const methodOverride = require('method-override');
+const { RedisStore } = require('connect-redis');
 require('dotenv').config();
 
 const app  = express();
@@ -37,15 +38,27 @@ app.use((req, res, next) => {
 // ============================================================================
 
 // Cookies y sesión
+// Cookies y sesión
 app.use(cookieParser());
+const { createClient } = require('redis');
+
+const redisClient = createClient({
+    socket: {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: process.env.REDIS_PORT || 6379,
+    }
+});
+redisClient.connect().catch(console.error);
+
 app.use(session({
+    store: new RedisStore({ client: redisClient }),
     secret:            process.env.SESSION_SECRET || 'cambiar_este_secreto',
     resave:            false,
     saveUninitialized: false,
     cookie: {
         secure:   process.env.NODE_ENV === 'production',
         httpOnly: true,
-        maxAge:   8 * 60 * 60 * 1000, // 8 horas
+        maxAge:   8 * 60 * 60 * 1000,
     },
 }));
 
