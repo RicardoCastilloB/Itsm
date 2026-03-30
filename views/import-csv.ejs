@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Importar CSV — Equipment Management</title>
+  <link rel="stylesheet" href="/css/styles.css"> <%/* tu CSS global */%>
+  <style>
+    /* ── Variables ── */
+    :root {
+      --blue:    #0ea5e9;
+      --blue-dk: #0284c7;
+      --green:   #22c55e;
+      --red:     #ef4444;
+      --yellow:  #f59e0b;
+      --gray-50: #f8fafc;
+      --gray-100:#f1f5f9;
+      --gray-200:#e2e8f0;
+      --gray-400:#94a3b8;
+      --gray-600:#475569;
+      --gray-800:#1e293b;
+      --radius:  10px;
+      --shadow:  0 4px 24px rgba(0,0,0,.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--gray-100);
+      color: var(--gray-800);
+      min-height: 100vh;
+    }
+
+    /* ── Layout ── */
+    .page-wrapper {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    /* ── Header ── */
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: 2rem;
+    }
+    .page-header .icon {
+      width: 44px; height: 44px;
+      background: var(--blue);
+      border-radius: var(--radius);
+      display: grid; place-items: center;
+      color: #fff; font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+    .page-header h1 { font-size: 1.5rem; font-weight: 700; }
+    .page-header p  { font-size: .875rem; color: var(--gray-600); margin-top: 2px; }
+
+    /* ── Card ── */
+    .card {
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      color: var(--gray-800);
+    }
+    .card-title span { font-size: 1.1rem; }
+
+    /* ── Drop zone ── */
+    .drop-zone {
+      border: 2.5px dashed var(--gray-200);
+      border-radius: var(--radius);
+      padding: 3rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all .2s;
+      position: relative;
+    }
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+      border-color: var(--blue);
+      background: #f0f9ff;
+    }
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0;
+      opacity: 0; cursor: pointer;
+      width: 100%; height: 100%;
+    }
+    .drop-zone .dz-icon {
+      font-size: 3rem;
+      margin-bottom: .75rem;
+      display: block;
+      transition: transform .2s;
+    }
+    .drop-zone:hover .dz-icon { transform: translateY(-4px); }
+    .drop-zone .dz-label {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--gray-800);
+      margin-bottom: .375rem;
+    }
+    .drop-zone .dz-hint {
+      font-size: .8rem;
+      color: var(--gray-400);
+    }
+
+    /* File selected */
+    .file-preview {
+      display: none;
+      align-items: center;
+      gap: .75rem;
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: .875rem 1.25rem;
+      margin-top: 1rem;
+    }
+    .file-preview.show { display: flex; }
+    .file-preview .fp-icon { font-size: 1.5rem; }
+    .file-preview .fp-name {
+      font-size: .875rem;
+      font-weight: 600;
+      flex: 1;
+    }
+    .file-preview .fp-size {
+      font-size: .8rem;
+      color: var(--gray-400);
+    }
+    .fp-remove {
+      background: none; border: none;
+      color: var(--red); cursor: pointer;
+      font-size: 1.1rem; padding: .25rem;
+      border-radius: 4px;
+      transition: background .15s;
+    }
+    .fp-remove:hover { background: #fee2e2; }
+
+    /* ── Options ── */
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 560px) { .options-grid { grid-template-columns: 1fr; } }
+
+    .field label {
+      display: block;
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--gray-600);
+      margin-bottom: .375rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .field select,
+    .field input {
+      width: 100%;
+      padding: .625rem .875rem;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 8px;
+      font-size: .875rem;
+      color: var(--gray-800);
+      background: #fff;
+      transition: border .2s;
+      appearance: none;
+    }
+    .field select:focus,
+    .field input:focus {
+      outline: none;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px #bae6fd55;
+    }
+
+    /* ── Button ── */
+    .btn-import {
+      width: 100%;
+      padding: .875rem;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+      transition: background .2s, transform .1s;
+      margin-top: 1.5rem;
+    }
+    .btn-import:hover:not(:disabled) { background: var(--blue-dk); }
+    .btn-import:active:not(:disabled) { transform: scale(.98); }
+    .btn-import:disabled {
+      opacity: .5; cursor: not-allowed;
+    }
+
+    /* ── Progress ── */
+    .progress-wrap {
+      display: none;
+      margin-top: 1.5rem;
+    }
+    .progress-wrap.show { display: block; }
+    .progress-bar-bg {
+      height: 8px;
+      background: var(--gray-200);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: .5rem;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--blue);
+      border-radius: 99px;
+      width: 0%;
+      transition: width .4s ease;
+      animation: pulse-bar 1.5s infinite;
+    }
+    @keyframes pulse-bar {
+      0%,100% { opacity: 1; }
+      50%      { opacity: .7; }
+    }
+    .progress-label {
+      font-size: .8rem;
+      color: var(--gray-600);
+      text-align: center;
+    }
+
+    /* ── Results ── */
+    .result-box {
+      display: none;
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    .result-box.show   { display: block; }
+    .result-box.ok     { background: #f0fdf4; border: 1.5px solid #bbf7d0; }
+    .result-box.error  { background: #fef2f2; border: 1.5px solid #fecaca; }
+
+    .result-summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: .75rem;
+      margin-bottom: 1rem;
+    }
+    @media (max-width: 560px) { .result-summary { grid-template-columns: 1fr 1fr; } }
+
+    .stat-pill {
+      text-align: center;
+      padding: .75rem .5rem;
+      border-radius: 8px;
+    }
+    .stat-pill.total   { background: #eff6ff; color: var(--blue-dk); }
+    .stat-pill.ok      { background: #f0fdf4; color: #16a34a; }
+    .stat-pill.skip    { background: #fffbeb; color: #b45309; }
+    .stat-pill.err     { background: #fef2f2; color: #dc2626; }
+    .stat-pill .val    { font-size: 1.75rem; font-weight: 800; display: block; }
+    .stat-pill .lbl    { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+
+    .result-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: .5rem;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
+
+    /* ── Error table ── */
+    .error-table-wrap {
+      margin-top: 1rem;
+      max-height: 280px;
+      overflow-y: auto;
+      border-radius: 8px;
+      border: 1px solid #fecaca;
+    }
+    .error-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .8rem;
+    }
+    .error-table th {
+      background: #fee2e2;
+      padding: .5rem .75rem;
+      text-align: left;
+      font-weight: 700;
+      color: #b91c1c;
+      position: sticky; top: 0;
+    }
+    .error-table td {
+      padding: .5rem .75rem;
+      border-top: 1px solid #fecaca;
+      vertical-align: top;
+    }
+    .error-table tr:hover td { background: #fff5f5; }
+
+    /* ── Info pills ── */
+    .info-row {
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      padding: .3rem .75rem;
+      border-radius: 99px;
+      font-size: .78rem;
+      font-weight: 600;
+    }
+    .badge-blue   { background: #eff6ff; color: var(--blue-dk); }
+    .badge-gray   { background: var(--gray-100); color: var(--gray-600); }
+    .badge-green  { background: #f0fdf4; color: #16a34a; }
+  </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <!-- ── Header ── -->
+  <div class="page-header">
+    <div class="icon">📥</div>
+    <div>
+      <h1>Importar CSV</h1>
+      <p>Carga masiva de empleados, equipos y asignaciones</p>
+    </div>
+  </div>
+
+  <!-- ── Info badges ── -->
+  <div class="info-row">
+    <span class="badge badge-blue">📋 Formato: tabulado (.csv / .tsv / .txt)</span>
+    <span class="badge badge-gray">⚡ Upsert automático</span>
+    <span class="badge badge-green">🔒 Sin duplicados</span>
+    <span class="badge badge-gray">20 MB máx.</span>
+  </div>
+
+  <!-- ── Card: Subir archivo ── -->
+  <div class="card">
+    <div class="card-title"><span>📂</span> Seleccionar archivo</div>
+
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="csvFile" accept=".csv,.tsv,.txt">
+      <span class="dz-icon">🗂️</span>
+      <div class="dz-label">Arrastra tu CSV aquí o haz clic para seleccionar</div>
+      <div class="dz-hint">Archivos .csv · .tsv · .txt — máx. 20 MB</div>
+    </div>
+
+    <div class="file-preview" id="filePreview">
+      <span class="fp-icon">📄</span>
+      <span class="fp-name" id="fpName">—</span>
+      <span class="fp-size" id="fpSize">—</span>
+      <button class="fp-remove" id="fpRemove" title="Quitar archivo">✕</button>
+    </div>
+  </div>
+
+  <!-- ── Card: Opciones ── -->
+  <div class="card">
+    <div class="card-title"><span>⚙️</span> Opciones de importación</div>
+    <div class="options-grid">
+      <div class="field">
+        <label>Separador de columnas</label>
+        <select id="delimSelect">
+          <option value="tab" selected>Tabulador (Excel por defecto)</option>
+          <option value="comma">Coma ( , )</option>
+          <option value="semicolon">Punto y coma ( ; )</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Período (override opcional)</label>
+        <input type="text" id="periodOverride" placeholder="Ej: 202603 (vacío = usar CSV)">
+      </div>
+    </div>
+
+    <button class="btn-import" id="btnImport" disabled>
+      <span id="btnIcon">📤</span>
+      <span id="btnText">Importar CSV</span>
+    </button>
+
+    <!-- Progress -->
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-label" id="progressLabel">Procesando filas...</div>
+    </div>
+  </div>
+
+  <!-- ── Resultados ── -->
+  <div class="result-box" id="resultBox">
+    <div class="result-title" id="resultTitle"></div>
+    <div class="result-summary" id="resultSummary"></div>
+    <div id="errorTableWrap"></div>
+  </div>
+
+</div><!-- /page-wrapper -->
+
+<script>
+(function () {
+  // ── Referencias ──────────────────────────────────────────────────────────
+  const dropZone      = document.getElementById('dropZone');
+  const csvFile       = document.getElementById('csvFile');
+  const filePreview   = document.getElementById('filePreview');
+  const fpName        = document.getElementById('fpName');
+  const fpSize        = document.getElementById('fpSize');
+  const fpRemove      = document.getElementById('fpRemove');
+  const btnImport     = document.getElementById('btnImport');
+  const btnIcon       = document.getElementById('btnIcon');
+  const btnText       = document.getElementById('btnText');
+  const delimSelect   = document.getElementById('delimSelect');
+  const periodOverride= document.getElementById('periodOverride');
+  const progressWrap  = document.getElementById('progressWrap');
+  const progressFill  = document.getElementById('progressFill');
+  const progressLabel = document.getElementById('progressLabel');
+  const resultBox     = document.getElementById('resultBox');
+  const resultTitle   = document.getElementById('resultTitle');
+  const resultSummary = document.getElementById('resultSummary');
+  const errorTableWrap= document.getElementById('errorTableWrap');
+
+  let selectedFile = null;
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  function formatSize(bytes) {
+    if (bytes < 1024)       return bytes + ' B';
+    if (bytes < 1048576)    return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(2) + ' MB';
+  }
+
+  function setFile(file) {
+    if (!file) return;
+    selectedFile    = file;
+    fpName.textContent = file.name;
+    fpSize.textContent = formatSize(file.size);
+    filePreview.classList.add('show');
+    btnImport.disabled = false;
+    hideResult();
+  }
+
+  function clearFile() {
+    selectedFile = null;
+    csvFile.value = '';
+    filePreview.classList.remove('show');
+    btnImport.disabled = true;
+    hideResult();
+  }
+
+  function hideResult() {
+    resultBox.className  = 'result-box';
+    resultTitle.innerHTML  = '';
+    resultSummary.innerHTML= '';
+    errorTableWrap.innerHTML='';
+  }
+
+  function setProgress(pct, label) {
+    progressFill.style.width = pct + '%';
+    progressLabel.textContent = label;
+  }
+
+  // ── Drag & Drop ──────────────────────────────────────────────────────────
+  dropZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropZone.classList.add('drag-over');
+  });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) setFile(file);
+  });
+
+  csvFile.addEventListener('change', () => {
+    if (csvFile.files[0]) setFile(csvFile.files[0]);
+  });
+
+  fpRemove.addEventListener('click', clearFile);
+
+  // ── Importar ─────────────────────────────────────────────────────────────
+  btnImport.addEventListener('click', async () => {
+    if (!selectedFile) return;
+
+    // Preparar UI
+    btnImport.disabled   = true;
+    btnIcon.textContent  = '⏳';
+    btnText.textContent  = 'Importando...';
+    progressWrap.classList.add('show');
+    hideResult();
+    setProgress(15, 'Subiendo archivo...');
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    // Delimitador
+    const delimiter = delimSelect.value;
+
+    // Token JWT desde cookie / localStorage (ajusta según tu auth)
+    const token = localStorage.getItem('token') || getCookie('token') || '';
+
+    try {
+      setProgress(40, 'Procesando filas...');
+
+      const res = await fetch(`/api/import/csv?delimiter=${delimiter}`, {
+        method : 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body   : formData,
+        credentials: 'include'   // envía cookies de sesión también
+      });
+
+      setProgress(85, 'Procesando respuesta...');
+
+      const data = await res.json();
+
+      setProgress(100, 'Completado');
+      setTimeout(() => progressWrap.classList.remove('show'), 800);
+
+      showResult(data, res.ok);
+
+    } catch (err) {
+      setProgress(100, 'Error');
+      setTimeout(() => progressWrap.classList.remove('show'), 800);
+      showResult({ success: false, error: err.message }, false);
+    } finally {
+      btnImport.disabled  = false;
+      btnIcon.textContent = '📤';
+      btnText.textContent = 'Importar CSV';
+    }
+  });
+
+  // ── Mostrar resultados ───────────────────────────────────────────────────
+  function showResult(data, ok) {
+    resultBox.classList.add('show');
+
+    if (!data.success) {
+      resultBox.classList.add('error');
+      resultTitle.innerHTML = `❌ Error: ${escHtml(data.error || 'Error desconocido')}`;
+      return;
+    }
+
+    resultBox.classList.add('ok');
+    resultTitle.innerHTML = '✅ Importación completada correctamente';
+
+    // Stats
+    resultSummary.innerHTML = `
+      <div class="stat-pill total">
+        <span class="val">${data.total    || 0}</span>
+        <span class="lbl">Total filas</span>
+      </div>
+      <div class="stat-pill ok">
+        <span class="val">${data.inserted || 0}</span>
+        <span class="lbl">Insertados</span>
+      </div>
+      <div class="stat-pill skip">
+        <span class="val">${data.skipped  || 0}</span>
+        <span class="lbl">Omitidos</span>
+      </div>
+      <div class="stat-pill err">
+        <span class="val">${data.errors   || 0}</span>
+        <span class="lbl">Errores</span>
+      </div>
+    `;
+
+    // Tabla de errores
+    if (data.errorDetails && data.errorDetails.length) {
+      const rows = data.errorDetails.map(e => `
+        <tr>
+          <td>${e.row}</td>
+          <td><code>${escHtml(e.serie || '—')}</code></td>
+          <td>${escHtml(e.error)}</td>
+        </tr>
+      `).join('');
+
+      errorTableWrap.innerHTML = `
+        <div class="error-table-wrap">
+          <table class="error-table">
+            <thead>
+              <tr><th>Fila</th><th>Serie</th><th>Error</th></tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+  }
+
+  // ── Utils ─────────────────────────────────────────────────────────────────
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function getCookie(name) {
+    const m = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return m ? m[2] : '';
+  }
+
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integratel - Gestión de Activos</title>
+    <!-- Init tema sin flash — ANTES de cualquier CSS -->
+    <script>
+        (function () {
+            const saved = localStorage.getItem('dashboardTheme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+        })();
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        /* ══════════════════════════════════════════════
+           VARIABLES — mismo sistema que el dashboard
+        ══════════════════════════════════════════════ */
+        :root, [data-theme="light"] {
+            --bg-main:        #f5f7fa;
+            --bg-card:        #ffffff;
+            --border-soft:    #e2e8f0;
+            --text-main:      #1e293b;
+            --text-muted:     #64748b;
+            --primary:        #3b82f6;
+            --success:        #10b981;
+            --danger:         #ef4444;
+            --info:           #06b6d4;
+            --scrollbar-thumb:#cbd5e1;
+            --scrollbar-track:#f1f5f9;
+            /* login-specific */
+            --login-bg:       #ffffff;
+            --login-shadow:   rgba(0,0,0,.10);
+            --overlay-start:  rgba(30,91,168,.30);
+            --overlay-end:    rgba(59,130,246,.18);
+            --input-bg:       #f8fafc;
+            --input-bg-focus: #ffffff;
+            --label-color:    #475569;
+        }
+        [data-theme="dark"] {
+            --bg-main:        #0f172a;
+            --bg-card:        #1e293b;
+            --border-soft:    #2d3f55;
+            --text-main:      #e2e8f0;
+            --text-muted:     #94a3b8;
+            --primary:        #60a5fa;
+            --success:        #34d399;
+            --danger:         #f87171;
+            --info:           #22d3ee;
+            --scrollbar-thumb:#334155;
+            --scrollbar-track:#1e293b;
+            /* login-specific */
+            --login-bg:       #1e293b;
+            --login-shadow:   rgba(0,0,0,.40);
+            --overlay-start:  rgba(15,23,42,.60);
+            --overlay-end:    rgba(30,41,59,.50);
+            --input-bg:       #0f172a;
+            --input-bg-focus: #162032;
+            --label-color:    #94a3b8;
+        }
+
+        /* ══════════════════════════════════════════════
+           BASE
+        ══════════════════════════════════════════════ */
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background .3s, color .3s;
+        }
+
+        /* ══════════════════════════════════════════════
+           FONDO FOTOGRAFICO — izquierdo 60%
+        ══════════════════════════════════════════════ */
+        .telefonica-background {
+            position: fixed; top:0; left:0;
+            width: 60%; height: 100%;
+            background-image: url("https://telefonica.com.pe/wp-content/uploads/sites/5/2025/08/Integratel-Peru-continua-avanzando-en-la-transformacion-Foto-MOVISTAR.jpg?resize=1224,673");
+            background-size: cover;
+            background-position: center;
+            z-index: 1;
+        }
+        .telefonica-overlay {
+            position: fixed; top:0; left:0;
+            width: 60%; height: 100%;
+            background: linear-gradient(135deg, var(--overlay-start), var(--overlay-end));
+            z-index: 2;
+            transition: background .3s;
+        }
+
+        /* ══════════════════════════════════════════════
+           INFO SECTION — sobre la foto
+        ══════════════════════════════════════════════ */
+        .info-section {
+            position: fixed; left:0; top:0;
+            width: 60%; height: 100%;
+            z-index: 4;
+            display: flex; flex-direction: column;
+            justify-content: space-between;
+            padding: 60px;
+            color: white;
+        }
+        .telefonica-logo {
+            font-size: 2.2rem; font-weight: 700;
+            display: flex; align-items: center; gap: 14px;
+        }
+        .company-tagline {
+            font-size: 1rem; opacity: .85;
+            margin-top: 8px; font-weight: 300;
+        }
+        .team-info {
+            display: grid; grid-template-columns: repeat(3,1fr); gap: 28px;
+        }
+        .team-member h6 { font-weight:600; margin-bottom:4px; font-size:.95rem; }
+        .team-member p  { font-size:.82rem; opacity:.85; margin-bottom:2px; }
+        .team-member a  { color:white; text-decoration:none; font-size:.82rem; opacity:.85; transition:opacity .2s; }
+        .team-member a:hover { opacity:1; text-decoration:underline; }
+
+        /* ══════════════════════════════════════════════
+           THEME TOGGLE — identico al navbar del dashboard
+        ══════════════════════════════════════════════ */
+        .theme-toggle-wrap {
+            position: fixed; top: 14px; right: calc(40% + 14px);
+            display: flex; align-items: center; gap: 7px;
+            cursor: pointer; user-select: none;
+            padding: 4px 10px 4px 8px; border-radius: 20px;
+            transition: background .2s;
+            z-index: 1000;
+            backdrop-filter: blur(8px);
+            background: rgba(255,255,255,.18);
+        }
+        .theme-toggle-wrap:hover { background: rgba(255,255,255,.30); }
+
+        .theme-toggle-icon {
+            font-size: 14px; line-height: 1;
+            transition: transform .4s cubic-bezier(.4,0,.2,1);
+            display: flex; align-items: center;
+        }
+        .theme-toggle-wrap:hover .theme-toggle-icon { transform: rotate(20deg); }
+
+        .theme-switch {
+            width: 34px; height: 18px;
+            background: #cbd5e1; border-radius: 9px;
+            position: relative; transition: background .3s; flex-shrink: 0;
+        }
+        [data-theme="dark"] .theme-switch { background: #3b82f6; }
+
+        .theme-switch-knob {
+            width: 13px; height: 13px; background: #fff; border-radius: 50%;
+            position: absolute; top: 2.5px; left: 3px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.25);
+            transition: transform .3s cubic-bezier(.4,0,.2,1);
+        }
+        [data-theme="dark"] .theme-switch-knob { transform: translateX(16px); }
+
+        .theme-toggle-label {
+            font-size: 12px; font-weight: 600;
+            color: rgba(255,255,255,.9); letter-spacing: .2px;
+            white-space: nowrap;
+        }
+
+        /* ══════════════════════════════════════════════
+           LOGIN PANEL — derecho 40%
+        ══════════════════════════════════════════════ */
+        .login-section {
+            position: fixed; right:0; top:0;
+            width: 40%; height: 100%;
+            background: var(--login-bg);
+            z-index: 3;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: -5px 0 30px var(--login-shadow);
+            transition: background .3s, box-shadow .3s;
+        }
+        .login-container { width:100%; max-width:420px; padding:44px 40px; }
+        .login-header    { text-align:center; margin-bottom:36px; }
+
+        .user-avatar {
+            width:76px; height:76px; border-radius:50%;
+            background: linear-gradient(135deg, var(--primary), var(--info));
+            margin: 0 auto 18px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.9rem;
+            box-shadow: 0 4px 16px rgba(59,130,246,.30);
+        }
+        .login-title {
+            font-size: 1.75rem; font-weight: 700;
+            color: var(--primary); margin-bottom: 4px;
+            transition: color .3s;
+        }
+        .login-subtitle { font-size:.85rem; color:var(--text-muted); }
+
+        .form-label {
+            font-weight: 600; font-size: 13px;
+            color: var(--label-color); margin-bottom: 8px;
+            transition: color .3s;
+        }
+        .form-control {
+            border: 1px solid var(--border-soft); border-radius: 8px;
+            padding: 11px 14px; font-size: .9rem;
+            background: var(--input-bg); color: var(--text-main);
+            transition: border-color .2s, background .3s, color .3s, box-shadow .2s;
+        }
+        .form-control::placeholder { color: var(--text-muted); }
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+            background: var(--input-bg-focus);
+            color: var(--text-main); outline: none;
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, var(--primary), var(--info));
+            border: none; border-radius: 25px;
+            padding: 13px; font-weight: 700;
+            font-size: .95rem; width: 100%; color: white;
+            transition: all .25s; margin-top: 20px; letter-spacing: .3px;
+        }
+        .btn-login:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(59,130,246,.35);
+            color: white;
+        }
+        .btn-login:disabled { opacity:.75; cursor:not-allowed; }
+
+        .password-wrapper { position: relative; }
+        .password-toggle  {
+            cursor: pointer; position: absolute;
+            right: 14px; top: 50%; transform: translateY(-50%);
+            color: var(--text-muted); z-index: 10; transition: color .2s;
+        }
+        .password-toggle:hover { color: var(--primary); }
+
+        /* Alerts — mismo estilo que toasts del dashboard */
+        .alert {
+            border-radius: 8px; border: none;
+            padding: 11px 14px; margin-bottom: 18px;
+            font-size: .875rem; display: flex; align-items: center; gap: 8px;
+        }
+        .alert-danger  { background:#fef2f2; border-left:4px solid var(--danger);  color:#991b1b; }
+        .alert-success { background:#ecfdf5; border-left:4px solid var(--success); color:#065f46; }
+        [data-theme="dark"] .alert-danger  { background:#2a0f0f; color:#fca5a5; }
+        [data-theme="dark"] .alert-success { background:#062918; color:#6ee7b7; }
+
+        *::-webkit-scrollbar       { width:6px; height:6px; }
+        *::-webkit-scrollbar-thumb { background:var(--scrollbar-thumb); border-radius:3px; }
+        *::-webkit-scrollbar-track { background:var(--scrollbar-track); }
+
+        /* ══════════════════════════════════════════════
+           RESPONSIVE
+        ══════════════════════════════════════════════ */
+        @media (max-width:1024px) {
+            .telefonica-background,
+            .telefonica-overlay,
+            .info-section  { width:50%; }
+            .login-section { width:50%; }
+            .theme-toggle-wrap { right:calc(50% + 14px); }
+            .info-section  { padding:40px; }
+            .team-info     { grid-template-columns:1fr; gap:18px; }
+        }
+        @media (max-width:768px) {
+            .telefonica-background,
+            .telefonica-overlay,
+            .info-section { display:none; }
+            .login-section { width:100%; position:relative; }
+            .theme-toggle-wrap {
+                right:16px;
+                background: rgba(59,130,246,.10);
+            }
+            .theme-toggle-wrap:hover { background:rgba(59,130,246,.18); }
+            .theme-toggle-label { color:var(--text-muted); }
+            .login-container { padding:36px 24px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="telefonica-background"></div>
+    <div class="telefonica-overlay"></div>
+
+    <!-- Info izquierda -->
+    <div class="info-section">
+        <div>
+            <div class="telefonica-logo">
+                <i class="bi bi-cpu"></i> Integratel
+            </div>
+            <p class="company-tagline">Sistema de Gestion de Activos</p>
+        </div>
+        <div>
+            <div class="team-info">
+                <div class="team-member">
+                    <h6>Soporte TI</h6>
+                    <p>Mesa de ayuda 24/7</p>
+                    <a href="#">soporte@integratel.pe</a>
+                </div>
+                <div class="team-member">
+                    <h6>Version</h6>
+                    <p>v2.4.1 — 2025</p>
+                    <a href="#">Ver novedades</a>
+                </div>
+                <div class="team-member">
+                    <h6>Integratel Peru</h6>
+                    <p>Movistar Empresas</p>
+                    <a href="#">integratel.pe</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toggle de tema — identico al navbar del dashboard -->
+    <div class="theme-toggle-wrap" id="themeToggle"
+         onclick="toggleTheme()" title="Cambiar tema"
+         role="button" aria-label="Cambiar modo claro/oscuro">
+        <i class="theme-toggle-icon" id="toggleIcon">🌙</i>
+        <div class="theme-switch">
+            <div class="theme-switch-knob" id="switchKnob"></div>
+        </div>
+        <span class="theme-toggle-label" id="toggleLabel">Oscuro</span>
+    </div>
+
+    <!-- Panel de login -->
+    <div class="login-section">
+        <div class="login-container">
+            <div class="login-header">
+                <div class="user-avatar">
+                    <i class="bi bi-person"></i>
+                </div>
+                <h2 class="login-title">Iniciar sesion</h2>
+                <p class="login-subtitle">Gestion de Activos · Integratel</p>
+            </div>
+
+            <div id="alertContainer"></div>
+
+            <form id="loginForm" action="/api/auth/login" method="POST" novalidate>
+                <div class="mb-3">
+                    <label for="username" class="form-label">Usuario</label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="username"
+                        name="username"
+                        placeholder="Ingresa tu usuario"
+                        required
+                        autocomplete="username"
+                    >
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Contrasena</label>
+                    <div class="password-wrapper">
+                        <input
+                            type="password"
+                            class="form-control"
+                            id="password"
+                            name="password"
+                            placeholder="Ingresa tu contrasena"
+                            required
+                            autocomplete="current-password"
+                        >
+                        <i class="bi bi-eye password-toggle" id="togglePassword"></i>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-login" id="loginBtn">
+                    <span id="loginBtnText">Ingresar</span>
+                    <span id="loginBtnSpinner" class="d-none">
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        Iniciando sesion...
+                    </span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        /* ══════════════════════════════════════════════
+           TEMA — identico al navbar del dashboard
+        ══════════════════════════════════════════════ */
+        function toggleTheme() {
+            const html    = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next    = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('dashboardTheme', next);
+            _syncToggleUI(next);
+        }
+
+        function _syncToggleUI(theme) {
+            const icon  = document.getElementById('toggleIcon');
+            const label = document.getElementById('toggleLabel');
+            if (!icon || !label) return;
+            if (theme === 'dark') {
+                icon.textContent  = '☀️';
+                label.textContent = 'Claro';
+            } else {
+                icon.textContent  = '🌙';
+                label.textContent = 'Oscuro';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const saved = localStorage.getItem('dashboardTheme') || 'light';
+            _syncToggleUI(saved);
+        });
+
+        /* ══════════════════════════════════════════════
+           SHOW / HIDE PASSWORD
+        ══════════════════════════════════════════════ */
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            const input  = document.getElementById('password');
+            const isPass = input.type === 'password';
+            input.type   = isPass ? 'text' : 'password';
+            this.classList.toggle('bi-eye',      !isPass);
+            this.classList.toggle('bi-eye-slash', isPass);
+        });
+
+        /* ══════════════════════════════════════════════
+           ALERT
+        ══════════════════════════════════════════════ */
+        function showAlert(message, type) {
+            type = type || 'danger';
+            var icon = type === 'danger' ? 'exclamation-circle' : 'check-circle';
+            document.getElementById('alertContainer').innerHTML =
+                '<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
+                '<i class="bi bi-' + icon + '"></i> ' + message +
+                '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                '</div>';
+            setTimeout(function () {
+                var el = document.querySelector('#alertContainer .alert');
+                if (el) bootstrap.Alert.getOrCreateInstance(el).close();
+            }, 5000);
+        }
+
+        /* ══════════════════════════════════════════════
+           SUBMIT LOGIN
+        ══════════════════════════════════════════════ */
+        document.getElementById('loginForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            var btn  = document.getElementById('loginBtn');
+            var text = document.getElementById('loginBtnText');
+            var spin = document.getElementById('loginBtnSpinner');
+
+            btn.disabled = true;
+            text.classList.add('d-none');
+            spin.classList.remove('d-none');
+
+            var body = {
+                username: document.getElementById('username').value.trim(),
+                password: document.getElementById('password').value
+            };
+
+            try {
+                var res  = await fetch('/api/auth/login', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify(body)
+                });
+                var data = await res.json();
+
+                if (res.ok && data.success) {
+                    localStorage.setItem('accessToken',  data.accessToken);
+                    localStorage.setItem('refreshToken', data.refreshToken);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    showAlert('Bienvenido, ' + data.user.username + '!', 'success');
+                    setTimeout(function () { window.location.href = '/home'; }, 1000);
+                } else {
+                    showAlert(data.error || 'Credenciales incorrectas. Intentalo de nuevo.', 'danger');
+                    btn.disabled = false;
+                    text.classList.remove('d-none');
+                    spin.classList.add('d-none');
+                }
+            } catch (err) {
+                console.error(err);
+                showAlert('Error de conexion. Por favor, intentalo de nuevo.', 'danger');
+                btn.disabled = false;
+                text.classList.remove('d-none');
+                spin.classList.add('d-none');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <button class="close-sidebar" id="closeSidebar">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    
+    <div class="menu-item">
+        <a href="<%= APP_URL %>/dashboard" class="menu-header">
+            <div class="menu-title">
+               <i class="fas fa-home"></i>
+                <span>Indicadores</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item">
+        <div class="menu-header" onclick="toggleSubmenu(this)">
+            <div class="menu-title">
+                <i class="fas fa-desktop"></i>
+                <span>Equipos</span>
+            </div>
+            <i class="fas fa-chevron-down collapse-indicator"></i>
+        </div>
+        <div class="submenu">
+            <a href="<%= APP_URL %>/equipment" class="submenu-item">
+                <i class="fa-solid fa-database"></i> CMDB
+            </a>
+            <a href="#" class="submenu-item">
+                <i class="fa-solid fa-server"></i> SCCM
+            </a>
+        </div>
+    </div>
+
+    <div class="menu-item">
+        <div class="menu-header" onclick="toggleSubmenu(this)">
+            <div class="menu-title">
+                <i class="fas fa-users"></i>
+                <span>Usuarios</span>
+            </div>
+            <i class="fas fa-chevron-down collapse-indicator"></i>
+        </div>
+        <div class="submenu">
+            <a href="<%= APP_URL %>/employees" class="submenu-item">
+                <i class="fa-solid fa-user-tie"></i> Planilla
+            </a>
+        </div>
+    </div>
+    
+    <div class="menu-item">
+        <a href="<%= APP_URL %>/index" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-laptop-code"></i>
+                <span>Asignaciones</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item">
+        <a href="<%= APP_URL %>/warranty" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-shield-alt"></i>
+                <span>Garantías</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item">
+        <a href="<%= APP_URL %>/tickets" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-ticket-alt"></i>
+                <span>Tickets</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item">
+        <a href="<%= APP_URL %>/recoveries" class="menu-header">
+            <div class="menu-title">
+               <i class="fa-solid fa-truck"></i>
+                <span>Almacen</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item">
+        <a href="<%= APP_URL %>/ad" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-headset"></i>
+                <span>Reporte AD</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item">
+        <a href="<%= APP_URL %>/sccm" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-shield-alt"></i>
+                <span>Panda</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item">
+        <a href="#" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-cog"></i>
+                <span>Administración</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item"> 
+        <a href="<%= APP_URL %>/logout" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Navbar Principal -->
+<nav class="navbar navbar-expand-lg fixed-top" id="navbar">
+    <div class="container-fluid">
+        <button class="toggler-btn" id="mainToggleSidebar">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="theme-toggle-wrap ms-auto" id="themeToggle" onclick="toggleTheme()" title="Cambiar tema" role="button" aria-label="Cambiar modo claro/oscuro">
+            <i class="theme-toggle-icon" id="toggleIcon">🌙</i>
+            <div class="theme-switch">
+                <div class="theme-switch-knob" id="switchKnob"></div>
+            </div>
+            <span class="theme-toggle-label" id="toggleLabel">Oscuro</span>
+        </div>
+    </div>
+</nav>
+
+<!-- el resto del <style> y <script> queda igual... -->

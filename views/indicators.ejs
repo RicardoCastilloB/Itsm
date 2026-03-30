@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indicadores y Reportes - Equipment Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.30.0/index.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .main-container {
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .page-header h1 {
+            color: #1f2937;
+            font-weight: 700;
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        .page-header p {
+            color: #6b7280;
+            margin: 0.5rem 0 0 0;
+        }
+
+        /* Panel de filtros */
+        .filters-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .filters-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .filters-header h3 {
+            color: #1f2937;
+            font-weight: 600;
+            margin: 0;
+            font-size: 1.25rem;
+        }
+
+        .filter-group {
+            margin-bottom: 1rem;
+        }
+
+        .filter-group label {
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 0.75rem;
+            transition: all 0.3s;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            outline: none;
+        }
+
+        /* Cards de métricas */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            opacity: 0.1;
+            transform: translate(30%, -30%);
+        }
+
+        .metric-card.pink::before { background: #ec4899; }
+        .metric-card.cyan::before { background: #06b6d4; }
+        .metric-card.yellow::before { background: #f59e0b; }
+        .metric-card.purple::before { background: #8b5cf6; }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .metric-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .metric-card.pink .metric-icon { background: #fce7f3; color: #ec4899; }
+        .metric-card.cyan .metric-icon { background: #cffafe; color: #06b6d4; }
+        .metric-card.yellow .metric-icon { background: #fef3c7; color: #f59e0b; }
+        .metric-card.purple .metric-icon { background: #ede9fe; color: #8b5cf6; }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-subtitle {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        /* Chart containers */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .chart-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .chart-subtitle {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Botones de acción */
+        .btn-filter {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-filter:hover {
+            background: #4338ca;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-reset {
+            background: #f3f4f6;
+            color: #374151;
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-reset:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-export {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-export:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Loading state */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-spinner {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            border-width: 0.3rem;
+        }
+
+        /* Tabla de detalles */
+        .details-table {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 2rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .table {
+            margin: 0;
+        }
+
+        .table thead th {
+            border-bottom: 2px solid #e5e7eb;
+            color: #374151;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            padding: 1rem;
+        }
+
+        .table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .badge {
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <div class="page-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1><i class="bi bi-graph-up"></i> Indicadores y Reportes</h1>
+                    <p>Análisis detallado de equipos, asignaciones y tendencias</p>
+                </div>
+                <div>
+                    <button class="btn btn-export" onclick="exportReport()">
+                        <i class="bi bi-download"></i> Exportar Excel
+                    </button>
+                    <button class="btn btn-export ms-2" onclick="exportPDFWithCharts()">
+                        <i class="bi bi-file-pdf"></i> Exportar PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de Filtros -->
+        <div class="filters-panel">
+            <div class="filters-header">
+                <h3><i class="bi bi-funnel"></i> Filtros de Búsqueda</h3>
+                <div>
+                    <button class="btn btn-secondary me-2" onclick="toggleComparison()">
+                        <i class="bi bi-graph-up-arrow"></i> Comparar Períodos
+                    </button>
+                    <button class="btn btn-reset" onclick="resetFilters()">
+                        <i class="bi bi-arrow-clockwise"></i> Limpiar Filtros
+                    </button>
+                </div>
+            </div>
+
+            <form id="filtersForm">
+                <div class="row">
+                    <div class="col-md-3 filter-group">
+                        <label for="startDate">Fecha Inicio</label>
+                        <input type="date" class="form-control" id="startDate" name="startDate">
+                    </div>
+                    
+                    <div class="col-md-3 filter-group">
+                        <label for="endDate">Fecha Fin</label>
+                        <input type="date" class="form-control" id="endDate" name="endDate">
+                    </div>
+
+                    <div class="col-md-3 filter-group">
+                        <label for="equipmentType">Tipo de Equipo</label>
+                        <select class="form-select" id="equipmentType" name="equipmentType">
+                            <option value="">Todos</option>
+                            <option value="Desktop">Desktop</option>
+                            <option value="Laptop">Laptop</option>
+                            <option value="Tablet">Tablet</option>
+                            <option value="Smartphone">Smartphone</option>
+                            <option value="Monitor">Monitor</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3 filter-group">
+                        <label for="status">Estado</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="">Todos</option>
+                            <option value="Asignado">Asignado</option>
+                            <option value="Disponible">Disponible</option>
+                            <option value="Mantenimiento">Mantenimiento</option>
+                            <option value="Obsoleto">Obsoleto</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3 filter-group">
+                        <label for="department">Departamento</label>
+                        <select class="form-select" id="department" name="department">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3 filter-group">
+                        <label for="location">Ubicación</label>
+                        <select class="form-select" id="location" name="location">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3 filter-group">
+                        <label for="brand">Marca</label>
+                        <select class="form-select" id="brand" name="brand">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3 filter-group d-flex align-items-end">
+                        <button type="submit" class="btn btn-filter w-100">
+                            <i class="bi bi-search"></i> Aplicar Filtros
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Panel de Comparación (oculto inicialmente) -->
+                <div id="comparisonPanel" class="mt-3" style="display: none;">
+                    <div class="alert alert-info">
+                        <strong><i class="bi bi-info-circle"></i> Modo Comparación:</strong> 
+                        Selecciona un segundo período para comparar con el actual
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 filter-group">
+                            <label for="compareStartDate">Fecha Inicio (Comparación)</label>
+                            <input type="date" class="form-control" id="compareStartDate" name="compareStartDate">
+                        </div>
+                        
+                        <div class="col-md-4 filter-group">
+                            <label for="compareEndDate">Fecha Fin (Comparación)</label>
+                            <input type="date" class="form-control" id="compareEndDate" name="compareEndDate">
+                        </div>
+
+                        <div class="col-md-4 filter-group d-flex align-items-end">
+                            <button type="button" class="btn btn-info w-100" onclick="comparePeríods()">
+                                <i class="bi bi-bar-chart-line"></i> Comparar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+
+
+        <!-- Gráficos -->
+        <div class="charts-grid">
+            <!-- Gráfico de Aplicados con Predicción -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">
+                        <i class="bi bi-bar-chart-line"></i> Análisis y Tendencias
+                    </h3>
+                    <p class="chart-subtitle">Distribución de asignaciones con predicción de tendencia</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="applicadosChart"></canvas>
+                </div>
+                <div class="mt-3" id="trendInfo" style="display: none;">
+                    <div class="alert alert-success">
+                        <strong><i class="bi bi-graph-up"></i> Tendencia:</strong>
+                        <span id="trendText"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico de Estado Actual con Comparación -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">
+                        <i class="bi bi-graph-up"></i> Estado Actual
+                    </h3>
+                    <p class="chart-subtitle">Distribución de equipos por estado</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="estadoChart"></canvas>
+                </div>
+                <div class="mt-3" id="comparisonInfo" style="display: none;">
+                    <div class="alert alert-info">
+                        <strong><i class="bi bi-arrow-left-right"></i> Comparación:</strong>
+                        <span id="comparisonText"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico de Distribución General -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">
+                        <i class="bi bi-pie-chart"></i> Distribución General
+                    </h3>
+                    <p class="chart-subtitle">Equipos por tipo y categoría</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="equiposChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Gauge de Aplicados -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">
+                        <i class="bi bi-speedometer2"></i> Índice de Asignación
+                    </h3>
+                    <p class="chart-subtitle">Porcentaje de equipos asignados</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="gaugeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nuevas Secciones de Análisis Avanzado -->
+        
+        <!-- Comparación de Períodos -->
+        <div id="comparisonSection" style="display: none;">
+            <div class="chart-card mb-4">
+                <div class="chart-header">
+                    <h3 class="chart-title">
+                        <i class="bi bi-arrow-left-right"></i> Comparación de Períodos
+                    </h3>
+                    <p class="chart-subtitle">Análisis comparativo entre dos períodos seleccionados</p>
+                </div>
+                <div class="chart-container" style="height: 400px;">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="alert alert-primary">
+                            <h5>Período Principal</h5>
+                            <div id="period1Summary"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-secondary">
+                            <h5>Período de Comparación</h5>
+                            <div id="period2Summary"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Detalles -->
+
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">A
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-3 mb-0">Procesando datos...</p>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+// ============================================================================
+// INDICADORES.HTML - JAVASCRIPT CORREGIDO CON FILTROS FUNCIONALES
+// ============================================================================
+// INSTRUCCIONES: Reemplazar el <script> del archivo indicadores.html
+// con este código (desde línea ~500 hasta el final)
+// ============================================================================
+
+// ============================================================================
+// CONFIGURACIÓN GENERAL Y VARIABLES GLOBALES
+// ============================================================================
+
+const API_BASE = 'http://localhost:3000/api/indicators';
+
+let charts = {};
+let currentFilters = {};
+let comparisonMode = false;
+let trendData = null;
+
+// ============================================================================
+// INICIALIZACIÓN
+// ============================================================================
+
+$(document).ready(function() {
+    initializeDateFilters();
+    loadInitialData();
+    loadFilterOptions();
+    setupEventListeners();
+});
+
+function initializeDateFilters() {
+    const today = new Date();
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+    
+    $('#startDate').val(formatDate(firstDayOfMonth));
+    $('#endDate').val(formatDate(today));
+    $('#compareStartDate').val(formatDate(lastMonth));
+    $('#compareEndDate').val(formatDate(lastMonthEnd));
+}
+
+function setupEventListeners() {
+    $('#filtersForm').on('submit', function(e) {
+        e.preventDefault();
+        applyFilters();
+    });
+}
+
+// ============================================================================
+// FUNCIONES DE CARGA DE DATOS
+// ============================================================================
+
+async function loadInitialData() {
+    showLoading();
+    try {
+        await Promise.all([
+            loadMetrics(),
+            loadChartData(),
+            loadAssignmentsTable()
+        ]);
+    } catch (error) {
+        console.error('Error loading data:', error);
+        alert('Error al cargar los datos');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function loadMetrics() {
+    try {
+        const filters = getFilters();
+        const params = new URLSearchParams(filters);
+        
+        // ⭐ CAMBIO: Usar el endpoint correcto
+        const response = await fetch(`${API_BASE}/metrics?${params}`);
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            // Actualizar las métricas en el HTML
+            $('#totalEmployees').text(result.data.totalEmployees.toLocaleString());
+            $('#totalEquipment').text(result.data.totalEquipment.toLocaleString());
+            $('#activeAssignments').text(result.data.activeAssignments.toLocaleString());
+            
+            console.log('✅ Métricas cargadas:', result.data);
+        }
+    } catch (error) {
+        console.error('Error loading metrics:', error);
+    }
+}
+
+async function loadFilterOptions() {
+    try {
+        // Cargar departamentos
+        const deptResponse = await fetch('http://localhost:3000/api/departments');
+        const deptResult = await deptResponse.json();
+        if (deptResult.success) {
+            deptResult.data.forEach(dept => {
+                $('#department').append(`<option value="${dept.id}">${dept.department_name}</option>`);
+            });
+        }
+
+        // Cargar ubicaciones
+        const locResponse = await fetch('http://localhost:3000/api/locations');
+        const locResult = await locResponse.json();
+        if (locResult.success) {
+            locResult.data.forEach(loc => {
+                $('#location').append(`<option value="${loc.id}">${loc.location_name}</option>`);
+            });
+        }
+
+        // Cargar marcas únicas
+        const equipResponse = await fetch('http://localhost:3000/api/equipment');
+        const equipResult = await equipResponse.json();
+        if (equipResult.success) {
+            const uniqueBrands = [...new Set(equipResult.data.map(eq => eq.brand).filter(Boolean))];
+            uniqueBrands.sort().forEach(brand => {
+                $('#brand').append(`<option value="${brand}">${brand}</option>`);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading filter options:', error);
+    }
+}
+
+async function loadChartData() {
+    const filters = getFilters();
+    const params = new URLSearchParams(filters);
+    
+    try {
+        // ⭐ CAMBIO: Usar los endpoints correctos
+        const [timelineData, statusData, distributionData, rateData] = await Promise.all([
+            fetch(`${API_BASE}/assignments-timeline?${params}`).then(r => r.json()),
+            fetch(`${API_BASE}/equipment-by-status?${params}`).then(r => r.json()),
+            fetch(`${API_BASE}/equipment-distribution?${params}`).then(r => r.json()),
+            fetch(`${API_BASE}/assignment-rate?${params}`).then(r => r.json())
+        ]);
+        
+        if (timelineData.success) {
+            createApplicadosChart(timelineData.data);
+        }
+        
+        if (statusData.success) {
+            createEstadoChart(statusData.data);
+        }
+        
+        if (distributionData.success) {
+            createEquiposChart(distributionData.data);
+        }
+        
+        if (rateData.success) {
+            createGaugeChart(rateData.data.rate);
+        }
+        
+        console.log('✅ Gráficos actualizados con filtros');
+        
+    } catch (error) {
+        console.error('Error loading chart data:', error);
+    }
+}
+
+async function loadAssignmentsTable() {
+    try {
+        const filters = getFilters();
+        const params = new URLSearchParams({ ...filters, limit: 50 });
+        
+        // ⭐ CAMBIO: Usar el endpoint correcto
+        const response = await fetch(`${API_BASE}/assignments-detailed?${params}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            renderAssignmentsTable(result.data);
+            console.log(`✅ Tabla cargada: ${result.data.length} asignaciones`);
+        }
+    } catch (error) {
+        console.error('Error loading assignments:', error);
+    }
+}
+
+function renderAssignmentsTable(assignments) {
+    const tbody = $('#assignmentsTableBody');
+    tbody.empty();
+    
+    if (!assignments || assignments.length === 0) {
+        tbody.append('<tr><td colspan="8" class="text-center">No se encontraron asignaciones</td></tr>');
+        return;
+    }
+    
+    assignments.forEach(assignment => {
+        const statusColor = {
+            'Asignado': 'success',
+            'Disponible': 'info',
+            'Mantenimiento': 'warning',
+            'Obsoleto': 'danger'
+        }[assignment.equipment_status] || 'secondary';
+        
+        const row = `
+            <tr>
+                <td><strong>${assignment.assignment_id}</strong></td>
+                <td>
+                    <div>${assignment.employee_name}</div>
+                    <small class="text-muted">${assignment.employee_cip}</small>
+                </td>
+                <td>
+                    <div>${assignment.equipment_code}</div>
+                    <small class="text-muted">${assignment.brand || ''} ${assignment.model || ''}</small>
+                </td>
+                <td><span class="badge bg-info">${assignment.equipment_type || 'N/A'}</span></td>
+                <td>${assignment.department_name || 'N/A'}</td>
+                <td>
+                    <div>${assignment.location_name || 'N/A'}</div>
+                    <small class="text-muted">${assignment.city || ''}</small>
+                </td>
+                <td>
+                    <div>${formatDate(assignment.assignment_date)}</div>
+                    <small class="text-muted">${assignment.days_assigned} días</small>
+                </td>
+                <td><span class="badge bg-${statusColor}">${assignment.equipment_status}</span></td>
+            </tr>
+        `;
+        tbody.append(row);
+    });
+}
+
+// ============================================================================
+// FUNCIONES DE FILTROS
+// ============================================================================
+
+function getFilters() {
+    return {
+        startDate: $('#startDate').val(),
+        endDate: $('#endDate').val(),
+        equipmentType: $('#equipmentType').val(),
+        status: $('#status').val(),
+        department: $('#department').val(),
+        location: $('#location').val(),
+        brand: $('#brand').val()
+    };
+}
+
+async function applyFilters() {
+    showLoading();
+    try {
+        console.log('🔍 Aplicando filtros:', getFilters());
+        
+        // Recargar todos los datos con filtros
+        await Promise.all([
+            loadMetrics(),
+            loadChartData(),
+            loadAssignmentsTable()
+        ]);
+        
+        console.log('✅ Filtros aplicados correctamente');
+        
+    } catch (error) {
+        console.error('Error applying filters:', error);
+        alert('Error al aplicar filtros');
+    } finally {
+        hideLoading();
+    }
+}
+
+function resetFilters() {
+    $('#filtersForm')[0].reset();
+    initializeDateFilters();
+    applyFilters();
+}
+
+// ============================================================================
+// MODO COMPARACIÓN
+// ============================================================================
+
+function toggleComparison() {
+    comparisonMode = !comparisonMode;
+    $('#comparisonPanel').slideToggle();
+    
+    if (!comparisonMode) {
+        $('#comparisonSection').hide();
+    }
+}
+
+async function comparePeríods() {
+    showLoading();
+    try {
+        const filters1 = {
+            startDate: $('#startDate').val(),
+            endDate: $('#endDate').val(),
+            ...getFilters()
+        };
+        
+        const filters2 = {
+            startDate: $('#compareStartDate').val(),
+            endDate: $('#compareEndDate').val(),
+            ...getFilters()
+        };
+        
+        const [data1, data2] = await Promise.all([
+            fetch(`${API_BASE}/comparison-data?${new URLSearchParams(filters1)}`).then(r => r.json()),
+            fetch(`${API_BASE}/comparison-data?${new URLSearchParams(filters2)}`).then(r => r.json())
+        ]);
+        
+        if (data1.success && data2.success) {
+            createComparisonChart(data1.data, data2.data, filters1, filters2);
+            $('#comparisonSection').show();
+            displayComparisonSummary(data1.data, data2.data);
+        }
+    } catch (error) {
+        console.error('Error comparing periods:', error);
+        alert('Error al comparar períodos');
+    } finally {
+        hideLoading();
+    }
+}
+
+function createComparisonChart(data1, data2, filters1, filters2) {
+    const ctx = document.getElementById('comparisonChart');
+    if (charts.comparison) charts.comparison.destroy();
+    
+    const period1Label = `${filters1.startDate} a ${filters1.endDate}`;
+    const period2Label = `${filters2.startDate} a ${filters2.endDate}`;
+    
+    charts.comparison = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Asignaciones', 'Equipos Nuevos', 'Devoluciones', 'Mantenimientos'],
+            datasets: [
+                {
+                    label: period1Label,
+                    data: [
+                        data1.total_assignments || 0,
+                        data1.new_equipment || 0,
+                        data1.returns || 0,
+                        data1.maintenance || 0
+                    ],
+                    backgroundColor: '#3b82f6',
+                },
+                {
+                    label: period2Label,
+                    data: [
+                        data2.total_assignments || 0,
+                        data2.new_equipment || 0,
+                        data2.returns || 0,
+                        data2.maintenance || 0
+                    ],
+                    backgroundColor: '#10b981',
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.parsed.y}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 }
+                }
+            }
+        }
+    });
+}
+
+function displayComparisonSummary(data1, data2) {
+    const calc = (val1, val2) => {
+        const diff = val1 - val2;
+        const pct = val2 !== 0 ? ((diff / val2) * 100).toFixed(1) : 0;
+        const icon = diff > 0 ? '▲' : diff < 0 ? '▼' : '━';
+        const color = diff > 0 ? 'success' : diff < 0 ? 'danger' : 'secondary';
+        return { diff, pct, icon, color };
+    };
+    
+    const assignmentsCmp = calc(data1.total_assignments, data2.total_assignments);
+    const equipmentCmp = calc(data1.new_equipment, data2.new_equipment);
+    
+    $('#period1Summary').html(`
+        <p><strong>Asignaciones:</strong> ${data1.total_assignments || 0}</p>
+        <p><strong>Equipos Nuevos:</strong> ${data1.new_equipment || 0}</p>
+        <p><strong>Devoluciones:</strong> ${data1.returns || 0}</p>
+    `);
+    
+    $('#period2Summary').html(`
+        <p><strong>Asignaciones:</strong> ${data2.total_assignments || 0} 
+           <span class="badge bg-${assignmentsCmp.color}">${assignmentsCmp.icon} ${assignmentsCmp.pct}%</span>
+        </p>
+        <p><strong>Equipos Nuevos:</strong> ${data2.new_equipment || 0}
+           <span class="badge bg-${equipmentCmp.color}">${equipmentCmp.icon} ${equipmentCmp.pct}%</span>
+        </p>
+        <p><strong>Devoluciones:</strong> ${data2.returns || 0}</p>
+    `);
+}
+
+// ============================================================================
+// CREACIÓN DE GRÁFICOS
+// ============================================================================
+
+function createApplicadosChart(chartData) {
+    const ctx = document.getElementById('applicadosChart');
+    if (!ctx) return;
+    if (charts.applicados) charts.applicados.destroy();
+    
+    charts.applicados = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: 'Asignaciones',
+                data: chartData.datasets[0].data,
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointRadius: 5,
+                pointBackgroundColor: '#3b82f6'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: true, position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Asignaciones: ${context.parsed.y}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 }
+                }
+            }
+        }
+    });
+}
+
+function createEstadoChart(chartData) {
+    const ctx = document.getElementById('estadoChart');
+    if (!ctx) return;
+    if (charts.estado) charts.estado.destroy();
+    
+    const statusData = chartData.summary || [];
+    const labels = statusData.map(s => s.status);
+    const data = statusData.map(s => s.total);
+    
+    charts.estado = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Equipos',
+                data,
+                backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((context.parsed.y / total) * 100).toFixed(1);
+                            return `${context.parsed.y} equipos (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 }
+                }
+            }
+        }
+    });
+}
+
+function createEquiposChart(chartData) {
+    const ctx = document.getElementById('equiposChart');
+    if (!ctx) return;
+    if (charts.equipos) charts.equipos.destroy();
+    
+    charts.equipos = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                data: chartData.datasets[0].data,
+                backgroundColor: ['#ec4899', '#3b82f6', '#f59e0b', '#06b6d4', '#8b5cf6']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { padding: 15, font: { size: 12 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const percentage = chartData.datasets[0].percentages[context.dataIndex];
+                            return `${context.label}: ${context.parsed} (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function createGaugeChart(value) {
+    const ctx = document.getElementById('gaugeChart');
+    if (!ctx) return;
+    if (charts.gauge) charts.gauge.destroy();
+    
+    charts.gauge = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [value, 100 - value],
+                backgroundColor: ['#10b981', '#f3f4f6'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            rotation: -90,
+            circumference: 180,
+            cutout: '75%',
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false }
+            }
+        },
+        plugins: [{
+            id: 'gaugeText',
+            afterDatasetsDraw(chart) {
+                const { ctx, chartArea: { width, height } } = chart;
+                ctx.save();
+                
+                const centerX = width / 2;
+                const centerY = height;
+                
+                ctx.font = 'bold 48px Inter';
+                ctx.fillStyle = '#1f2937';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(`${value}%`, centerX, centerY - 20);
+                
+                ctx.font = '14px Inter';
+                ctx.fillStyle = '#6b7280';
+                ctx.fillText('Tasa de Asignación', centerX, centerY + 20);
+                
+                ctx.restore();
+            }
+        }]
+    });
+}
+
+// ============================================================================
+// EXPORTACIÓN
+// ============================================================================
+
+async function exportReport() {
+    showLoading();
+    try {
+        const filters = getFilters();
+        
+        const response = await fetch(`${API_BASE}/export-data?${new URLSearchParams(filters)}`);
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.message || 'Error al obtener datos');
+        }
+        
+        const wb = XLSX.utils.book_new();
+        
+        // Hoja 1: Métricas
+        const metricsData = [
+            ['Métrica', 'Valor'],
+            ['Total Empleados', $('#totalEmployees').text()],
+            ['Total Equipos', $('#totalEquipment').text()],
+            ['Asignaciones Activas', $('#activeAssignments').text()],
+            ['Fecha Generación', new Date().toLocaleString('es-PE')]
+        ];
+        const wsMetrics = XLSX.utils.aoa_to_sheet(metricsData);
+        XLSX.utils.book_append_sheet(wb, wsMetrics, 'Métricas');
+        
+        // Hoja 2: Asignaciones
+        if (result.data && result.data.assignments) {
+            const wsAssignments = XLSX.utils.json_to_sheet(result.data.assignments);
+            XLSX.utils.book_append_sheet(wb, wsAssignments, 'Asignaciones');
+        }
+        
+        // Hoja 3: Equipos por Estado
+        if (result.data && result.data.equipmentByStatus) {
+            const wsStatus = XLSX.utils.json_to_sheet(result.data.equipmentByStatus);
+            XLSX.utils.book_append_sheet(wb, wsStatus, 'Equipos por Estado');
+        }
+        
+        XLSX.writeFile(wb, `reporte_indicadores_${formatDate(new Date())}.xlsx`);
+        
+    } catch (error) {
+        console.error('Error exporting Excel:', error);
+        alert('Error al exportar: ' + error.message);
+    } finally {
+        hideLoading();
+    }
+}
+
+async function exportPDFWithCharts() {
+    alert('⚠️ Función de exportación PDF en desarrollo.\nPor ahora, usa la exportación a Excel.');
+}
+
+// ============================================================================
+// UTILIDADES
+// ============================================================================
+
+function showLoading() {
+    $('#loadingOverlay').addClass('active');
+}
+
+function hideLoading() {
+    $('#loadingOverlay').removeClass('active');
+}
+
+function formatDate(date) {
+    if (!date) return '';
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+console.log('✅ Indicadores.js cargado - Versión con filtros funcionales');
+    </script>
+</body>
+</html>

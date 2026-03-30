@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garantías y Mantenimientos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+/* ── Design System — Light & Dark ── */
+:root, [data-theme="light"] {
+    --bg-main:    #f5f7fa;
+    --bg-card:    #ffffff;
+    --bg-header:  #fafbfc;
+    --border-soft:#e2e8f0;
+    --border-row: #f1f5f9;
+    --text-main:  #1e293b;
+    --text-muted: #64748b;
+    --primary:    #3b82f6;
+    --success:    #10b981;
+    --warning:    #f59e0b;
+    --info:       #06b6d4;
+    --danger:     #ef4444;
+    --purple:     #8b5cf6;
+    --hover-row:  #f8fafc;
+    --scrollbar-thumb: #cbd5e1;
+    --scrollbar-track: #f1f5f9;
+    --vencer-bg:       #fafbfc;
+    --vencer-hover:    #f1f5f9;
+    --maint-bg:        #f8fafc;
+    --maint-hover:     #f1f5f9;
+    --modal-footer-bg: #fafbfc;
+    --tmpl-btn-bg:     #ffffff;
+    --tmpl-btn-hover:  #eff6ff;
+    --st-btn-bg:       #ffffff;
+    --wpi-bg:          #ffffff;
+    --ac-bg:           #ffffff;
+    --ac-hover:        #f0f7ff;
+    --ac-border:       #f1f5f9;
+    --badge-light-bg:  #f1f5f9;
+    --medal-other-bg:  #e2e8f0;
+}
+[data-theme="dark"] {
+    --bg-main:    #0f172a;
+    --bg-card:    #1e293b;
+    --bg-header:  #162032;
+    --border-soft:#2d3f55;
+    --border-row: #2d3f55;
+    --text-main:  #e2e8f0;
+    --text-muted: #94a3b8;
+    --primary:    #60a5fa;
+    --success:    #34d399;
+    --warning:    #fbbf24;
+    --info:       #22d3ee;
+    --danger:     #f87171;
+    --purple:     #a78bfa;
+    --hover-row:  #243348;
+    --scrollbar-thumb: #334155;
+    --scrollbar-track: #1e293b;
+    --vencer-bg:       #1e293b;
+    --vencer-hover:    #243348;
+    --maint-bg:        #162032;
+    --maint-hover:     #243348;
+    --modal-footer-bg: #162032;
+    --tmpl-btn-bg:     #1e293b;
+    --tmpl-btn-hover:  #1e3a5f;
+    --st-btn-bg:       #1e293b;
+    --wpi-bg:          #1e293b;
+    --ac-bg:           #1e293b;
+    --ac-hover:        #243348;
+    --ac-border:       #2d3f55;
+    --badge-light-bg:  #2d3f55;
+    --medal-other-bg:  #2d3f55;
+}
+
+body { margin:0; background:var(--bg-main); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; color:var(--text-main); transition:background 0.3s,color 0.3s; }
+.dashboard-wrapper { width:100%; padding:12px; margin-top:60px; }
+.dashboard-content { width:100%; max-width:1680px; margin:0 auto; }
+
+.cards-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px; }
+@media(max-width:992px){.cards-4{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:576px){.cards-4{grid-template-columns:1fr;}}
+
+.kpi-card {
+    background:var(--bg-card); border-radius:12px; height:80px;
+    padding:0 16px; display:flex; justify-content:space-between; align-items:center;
+    border:1px solid var(--border-soft); box-shadow:0 1px 3px rgba(0,0,0,.05);
+    transition:all .2s; cursor:default;
+}
+.kpi-card:hover { transform:translateY(-2px); box-shadow:0 4px 14px rgba(0,0,0,.09); }
+.kpi-title { font-size:9px; letter-spacing:.6px; text-transform:uppercase; color:var(--text-muted); font-weight:700; margin-bottom:5px; }
+.kpi-value { font-size:26px; font-weight:800; line-height:1; }
+.kpi-icon  { font-size:30px; opacity:.18; }
+.c-primary{color:var(--primary)!important;} .c-success{color:var(--success)!important;}
+.c-warning{color:var(--warning)!important;} .c-danger{color:var(--danger)!important;}
+.c-info{color:var(--info)!important;} .c-purple{color:var(--purple)!important;}
+
+.row-bi { display:grid; grid-template-columns:1.6fr 1fr; gap:14px; margin-bottom:14px; }
+@media(max-width:1200px){.row-bi{grid-template-columns:1fr;}}
+
+.card-bi {
+    background:var(--bg-card); border-radius:12px; border:1px solid var(--border-soft);
+    box-shadow:0 1px 3px rgba(0,0,0,.05); display:flex; flex-direction:column;
+    overflow:hidden; margin-bottom:14px; transition:background 0.3s,border-color 0.3s;
+}
+.card-bi-header {
+    padding:13px 18px; border-bottom:1px solid var(--border-soft); font-weight:700; font-size:13px;
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--bg-header); flex-shrink:0; gap:8px; color:var(--text-main);
+    transition:background 0.3s,border-color 0.3s,color 0.3s;
+}
+.card-bi-header .hdr-left { display:flex; align-items:center; gap:7px; }
+.card-bi-body { padding:18px; flex:1; }
+
+.table { width:100%; margin-bottom:0; font-size:13px; border-collapse:collapse; color:var(--text-main); }
+.table thead th {
+    font-size:9px; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted);
+    background:var(--bg-header); border-bottom:2px solid var(--border-soft);
+    padding:11px 14px; font-weight:700; text-align:center; position:sticky; top:0; z-index:2;
+    transition:background 0.3s,color 0.3s,border-color 0.3s;
+}
+.table tbody td {
+    padding:11px 14px; vertical-align:middle; text-align:center;
+    border-bottom:1px solid var(--border-row); color:var(--text-main);
+    transition:background 0.15s,border-color 0.3s,color 0.3s;
+}
+.table tbody td:first-child,.table tbody td:nth-child(2) { text-align:left; }
+.table tbody tr:hover { background:var(--hover-row); }
+[data-theme="dark"] .table { --bs-table-bg:transparent; }
+[data-theme="dark"] .table-hover>tbody>tr:hover>* { --bs-table-accent-bg:var(--hover-row); background-color:var(--hover-row)!important; }
+
+.badge { font-size:11px; padding:4px 9px; border-radius:6px; font-weight:600; }
+.badge.bg-success  { background:#10b981!important; }
+.badge.bg-primary  { background:#3b82f6!important; }
+.badge.bg-warning  { background:#f59e0b!important; color:#000!important; }
+.badge.bg-danger   { background:#ef4444!important; }
+.badge.bg-info     { background:#06b6d4!important; }
+.badge.bg-secondary{ background:#64748b!important; }
+.badge.bg-light    { background:var(--badge-light-bg)!important; color:var(--text-main)!important; }
+.badge.bg-purple   { background:#8b5cf6!important; }
+
+.progress { height:5px; border-radius:4px; background:var(--border-soft); overflow:hidden; transition:background 0.3s; }
+.progress-bar { border-radius:4px; transition:width .7s ease; }
+
+.medal { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; flex-shrink:0; }
+.medal.gold   { background:linear-gradient(135deg,#fbbf24,#d97706); color:#fff; }
+.medal.silver { background:linear-gradient(135deg,#94a3b8,#64748b); color:#fff; }
+.medal.bronze { background:linear-gradient(135deg,#cd7c3a,#a05a2c); color:#fff; }
+.medal.other  { background:var(--medal-other-bg); color:var(--text-muted); }
+
+.vencer-item {
+    display:flex; align-items:center; gap:10px; padding:9px 11px;
+    border-radius:8px; margin-bottom:6px; border:1px solid var(--border-soft);
+    background:var(--vencer-bg); transition:background .15s,border-color 0.3s;
+}
+.vencer-item:hover { background:var(--vencer-hover); }
+.vencer-item:last-child { margin-bottom:0; }
+.vencer-days {
+    min-width:44px; height:44px; border-radius:9px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-weight:800; flex-shrink:0; line-height:1.1;
+}
+.vencer-days span.d-num { font-size:15px; }
+.vencer-days span.d-lbl { font-size:8px; text-transform:uppercase; letter-spacing:.4px; }
+.vencer-days.ok     { background:#d1fae5; color:#065f46; }
+.vencer-days.warn   { background:#fed7aa; color:#92400e; }
+.vencer-days.urgent { background:#fecaca; color:#991b1b; }
+
+.mes-row { display:grid; grid-template-columns:80px 1fr 100px; gap:7px 12px; align-items:center; }
+.mes-label { font-size:11px; color:var(--text-muted); font-weight:600; text-align:right; }
+.mes-val   { font-size:12px; font-weight:700; color:var(--text-main); }
+.mes-count { font-size:10px; color:var(--text-muted); }
+
+.mini-spin { display:inline-block; width:14px; height:14px; border:2px solid var(--border-soft); border-top-color:var(--primary); border-radius:50%; animation:spin .65s linear infinite; }
+@keyframes spin{to{transform:rotate(360deg);}}
+*::-webkit-scrollbar{width:5px;height:5px;}
+*::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb);border-radius:3px;}
+*::-webkit-scrollbar-track{background:var(--scrollbar-track);}
+
+.equip-card {
+    background:var(--bg-card); border-radius:12px; border:1px solid var(--border-soft);
+    box-shadow:0 1px 3px rgba(0,0,0,.05); margin-bottom:14px; overflow:hidden;
+    transition:box-shadow .2s,background 0.3s,border-color 0.3s;
+}
+.equip-card:hover { box-shadow:0 4px 12px rgba(0,0,0,.08); }
+.equip-card-header {
+    padding:13px 18px; border-bottom:1px solid var(--border-soft); background:var(--bg-header);
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;
+    transition:background 0.3s,border-color 0.3s;
+}
+.equip-card-title { font-weight:700; font-size:14px; display:flex; align-items:center; gap:8px; color:var(--text-main); }
+.equip-card-meta  { font-size:11px; color:var(--text-muted); margin-top:2px; }
+.equip-card-body  { padding:14px 18px; background:var(--bg-card); }
+
+.info-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; margin-bottom:14px; }
+.info-item { display:flex; flex-direction:column; gap:2px; }
+.info-label { font-size:9px; text-transform:uppercase; color:var(--text-muted); font-weight:700; letter-spacing:.5px; }
+.info-value { font-size:13px; font-weight:600; color:var(--text-main); }
+
+.warranty-status { padding:4px 11px; border-radius:20px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; gap:5px; }
+.warranty-active  { background:#d1fae5; color:#065f46; }
+.warranty-warning { background:#fed7aa; color:#92400e; }
+.warranty-expired { background:#fecaca; color:#991b1b; }
+
+.maint-item {
+    background:var(--maint-bg); border-left:4px solid var(--primary);
+    padding:10px 13px; margin-bottom:7px; border-radius:0 8px 8px 0; transition:background .15s;
+}
+.maint-item:hover { background:var(--maint-hover); }
+.maint-item:last-child { margin-bottom:0; }
+.maint-item.t-cargador  { border-left-color:#f59e0b; }
+.maint-item.t-bateria   { border-left-color:#ef4444; }
+.maint-item.t-ram       { border-left-color:#8b5cf6; }
+.maint-item.t-teclado   { border-left-color:#06b6d4; }
+.maint-item.t-pantalla  { border-left-color:#ec4899; }
+.maint-item.t-disco     { border-left-color:#10b981; }
+.maint-item.t-limpieza  { border-left-color:#64748b; }
+.maint-item.t-bios      { border-left-color:#3b82f6; }
+.maint-item strong { color:var(--text-main); }
+
+.btn-maint {
+    background:var(--primary); border:none; color:#fff; padding:7px 16px;
+    border-radius:8px; font-weight:600; font-size:12px; cursor:pointer;
+    display:inline-flex; align-items:center; gap:5px; transition:all .2s;
+}
+.btn-maint:hover { background:#2563eb; transform:translateY(-1px); box-shadow:0 4px 12px rgba(59,130,246,.35); }
+
+.no-results { text-align:center; padding:50px 20px; color:var(--text-muted); }
+.loading-spinner { display:none; justify-content:center; align-items:center; padding:36px; }
+.loading-spinner.active { display:flex; }
+
+.autocomplete-container { position:relative; }
+.autocomplete-results {
+    position:absolute; top:calc(100% + 4px); left:0; right:0;
+    background:var(--ac-bg); border:1px solid var(--border-soft); border-radius:10px;
+    box-shadow:0 10px 36px rgba(0,0,0,.12); max-height:280px; overflow-y:auto; z-index:1060; display:none;
+}
+.autocomplete-results.show { display:block; animation:dropIn .15s ease; }
+@keyframes dropIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.ac-item { padding:10px 15px; cursor:pointer; border-bottom:1px solid var(--ac-border); transition:background .12s; }
+.ac-item:last-child { border-bottom:none; }
+.ac-item:hover,.ac-item.active-ac { background:var(--ac-hover); }
+.ac-email   { font-weight:600; font-size:13px; color:var(--text-main); display:block; margin-bottom:1px; }
+.ac-details { font-size:11px; color:var(--text-muted); }
+.ac-empty   { padding:14px; text-align:center; color:var(--text-muted); font-size:13px; }
+#searchEmail { background:var(--bg-card); color:var(--text-main); border-color:var(--border-soft); }
+
+/* Modal dark */
+[data-theme="dark"] .modal-content { background:var(--bg-card)!important; color:var(--text-main)!important; border-color:var(--border-soft)!important; }
+[data-theme="dark"] .modal-body    { background:var(--bg-card)!important; }
+[data-theme="dark"] .modal-footer  { background:var(--modal-footer-bg)!important; border-color:var(--border-soft)!important; }
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select   { background:var(--bg-card)!important; color:var(--text-main)!important; border-color:var(--border-soft)!important; }
+[data-theme="dark"] .form-control::placeholder { color:var(--text-muted); }
+[data-theme="dark"] label { color:var(--text-muted)!important; }
+
+.tmpl-btn {
+    border:2px solid var(--border-soft); border-radius:10px; padding:11px 6px;
+    cursor:pointer; text-align:center; transition:all .2s;
+    background:var(--tmpl-btn-bg); width:100%; color:var(--text-main);
+}
+.tmpl-btn:hover { border-color:var(--primary); background:var(--tmpl-btn-hover); transform:translateY(-2px); }
+.tmpl-btn.active { border-color:var(--primary); background:var(--tmpl-btn-hover); box-shadow:0 0 0 3px rgba(59,130,246,.15); }
+.tmpl-btn .t-ico { font-size:24px; display:block; margin-bottom:3px; }
+.tmpl-btn .t-lbl { font-size:10px; font-weight:700; color:var(--text-muted); }
+
+.sec-div { display:flex; align-items:center; gap:9px; color:var(--text-muted); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; margin:14px 0 9px; }
+.sec-div::before,.sec-div::after { content:''; flex:1; height:1px; background:var(--border-soft); }
+
+.st-btn { border:2px solid var(--border-soft); border-radius:7px; padding:6px 10px; cursor:pointer; background:var(--st-btn-bg); color:var(--text-muted); font-size:11px; font-weight:700; transition:all .2s; width:100%; }
+.st-btn.ok  { border-color:#10b981; background:#ecfdf5; color:#059669; }
+.st-btn.wip { border-color:var(--primary); background:#eff6ff; color:#2563eb; }
+.st-btn.pend{ border-color:var(--warning); background:#fffbeb; color:#d97706; }
+
+.wpi { border:2px solid var(--border-soft); border-radius:20px; padding:4px 11px; cursor:pointer; background:var(--wpi-bg); color:var(--text-muted); font-size:11px; font-weight:600; transition:all .2s; }
+.wpi.sel { border-color:#6366f1; background:#eef2ff; color:#4f46e5; }
+
+@keyframes toastIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
+    </style>
+</head>
+<body>
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <button class="close-sidebar" id="closeSidebar">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    
+    <div class="menu-item">
+        <a href="<%= APP_URL %>/home" class="menu-header">
+            <div class="menu-title">
+               <i class="fas fa-home"></i>
+                <span>Home</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item">
+        <a href="<%= APP_URL %>/warranty" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-shield-alt"></i>
+                <span>Garantías</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item">
+        <a href="<%= APP_URL %>/tickets" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-ticket-alt"></i>
+                <span>Tickets</span>
+            </div>
+        </a>
+    </div>
+
+
+
+
+
+    <div class="menu-item">
+        <a href="<%= APP_URL %>/sccm" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-shield-alt"></i>
+                <span>Panda</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item">
+        <a href="#" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-cog"></i>
+                <span>Administración</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item"> 
+        <a href="<%= APP_URL %>/logout" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Navbar Principal -->
+<nav class="navbar navbar-expand-lg fixed-top" id="navbar">
+    <div class="container-fluid">
+        <button class="toggler-btn" id="mainToggleSidebar">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Dark mode toggle — compacto, alineado a la derecha del navbar -->
+        <div class="theme-toggle-wrap ms-auto" id="themeToggle" onclick="toggleTheme()" title="Cambiar tema" role="button" aria-label="Cambiar modo claro/oscuro">
+            <!-- Ícono -->
+            <i class="theme-toggle-icon" id="toggleIcon">🌙</i>
+            <!-- Switch track -->
+            <div class="theme-switch">
+                <div class="theme-switch-knob" id="switchKnob"></div>
+            </div>
+            <!-- Label -->
+            <span class="theme-toggle-label" id="toggleLabel">Oscuro</span>
+        </div>
+    </div>
+</nav>
+
+<style>
+/* ─── Dark Mode Toggle — Navbar ─────────────────────── */
+.theme-toggle-wrap {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    user-select: none;
+    padding: 4px 10px 4px 8px;
+    border-radius: 20px;
+    transition: background 0.2s;
+}
+.theme-toggle-wrap:hover {
+    background: rgba(0,0,0,0.06);
+}
+[data-theme="dark"] .theme-toggle-wrap:hover {
+    background: rgba(255,255,255,0.08);
+}
+
+/* Ícono emoji pequeño */
+.theme-toggle-icon {
+    font-size: 14px;
+    line-height: 1;
+    transition: transform 0.4s cubic-bezier(.4,0,.2,1);
+    display: flex;
+    align-items: center;
+}
+.theme-toggle-wrap:hover .theme-toggle-icon {
+    transform: rotate(20deg);
+}
+
+/* Switch track */
+.theme-switch {
+    width: 34px;
+    height: 18px;
+    background: #cbd5e1;
+    border-radius: 9px;
+    position: relative;
+    transition: background 0.3s ease;
+    flex-shrink: 0;
+}
+[data-theme="dark"] .theme-switch {
+    background: #3b82f6;
+}
+
+/* Knob */
+.theme-switch-knob {
+    width: 13px;
+    height: 13px;
+    background: #ffffff;
+    border-radius: 50%;
+    position: absolute;
+    top: 2.5px;
+    left: 3px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+}
+[data-theme="dark"] .theme-switch-knob {
+    transform: translateX(16px);
+}
+
+/* Label */
+.theme-toggle-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    letter-spacing: 0.2px;
+    transition: color 0.3s;
+    white-space: nowrap;
+}
+[data-theme="dark"] .theme-toggle-label {
+    color: #94a3b8;
+}
+</style>
+
+<script>
+/* ─── Dark Mode — init inmediato (sin flash) ────────── */
+(function () {
+    const saved = localStorage.getItem('dashboardTheme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+})();
+
+function toggleTheme() {
+    const html    = document.documentElement;
+    const current = html.getAttribute('data-theme');
+    const next    = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('dashboardTheme', next);
+    _syncToggleUI(next);
+    if (typeof updateChartsTheme === 'function') updateChartsTheme(next);
+}
+
+function _syncToggleUI(theme) { 
+    const icon  = document.getElementById('toggleIcon');
+    const label = document.getElementById('toggleLabel');
+    if (!icon || !label) return;
+    if (theme === 'dark') {
+        icon.textContent  = '☀️';
+        label.textContent = 'Claro';
+    } else {
+        icon.textContent  = '🌙';
+        label.textContent = 'Oscuro';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const saved = localStorage.getItem('dashboardTheme') || 'light';
+    _syncToggleUI(saved);
+});
+</script>
+
+<div class="dashboard-wrapper">
+<div class="dashboard-content">
+
+<div class="cards-4">
+    <div class="kpi-card"><div><div class="kpi-title">Mantenimientos (año)</div><div class="kpi-value c-primary" id="kpiTotal"><span class="mini-spin"></span></div></div><i class="bi bi-tools kpi-icon c-primary"></i></div>
+    <div class="kpi-card"><div><div class="kpi-title">Costo Total (año)</div><div class="kpi-value c-success" id="kpiCosto"><span class="mini-spin"></span></div></div><i class="bi bi-cash-stack kpi-icon c-success"></i></div>
+    <div class="kpi-card"><div><div class="kpi-title">Garantías por Vencer</div><div class="kpi-value c-warning" id="kpiVencer"><span class="mini-spin"></span></div></div><i class="bi bi-shield-exclamation kpi-icon c-warning"></i></div>
+    <div class="kpi-card"><div><div class="kpi-title">Tipos de Cambio</div><div class="kpi-value c-purple" id="kpiTipos"><span class="mini-spin"></span></div></div><i class="bi bi-bar-chart-fill kpi-icon c-purple"></i></div>
+</div>
+
+<div class="row-bi">
+    <div class="card-bi" style="margin-bottom:0;max-height:390px;">
+        <div class="card-bi-header">
+            <div class="hdr-left"><i class="bi bi-trophy-fill" style="color:#f59e0b;"></i> Componentes con Más Cambios — últimos 12 meses</div>
+            <span id="topUpdatedAt" style="font-size:10px;color:var(--text-muted);font-weight:400;"></span>
+        </div>
+        <div style="overflow-y:auto;flex:1;">
+            <table class="table">
+                <thead><tr>
+                    <th style="width:36px;text-align:center;">#</th>
+                    <th style="text-align:left;">Componente</th>
+                    <th>Cambios</th><th>Equipos</th><th>Costo Prom.</th><th>Total</th>
+                </tr></thead>
+                <tbody id="topBody">
+                    <tr><td colspan="6" class="text-center py-4"><span class="mini-spin"></span><span style="color:var(--text-muted);font-size:12px;margin-left:8px;">Cargando…</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-bi" style="margin-bottom:0;max-height:390px;">
+        <div class="card-bi-header">
+            <div class="hdr-left"><i class="bi bi-shield-exclamation c-warning"></i> Por Vencer (90 días)</div>
+            <span class="badge bg-warning" id="vencerBadge" style="font-size:10px;">…</span>
+        </div>
+        <div id="vencerList" style="overflow-y:auto;flex:1;padding:10px 12px;">
+            <div class="text-center py-4"><span class="mini-spin"></span></div>
+        </div>
+    </div>
+</div>
+
+<div class="card-bi">
+    <div class="card-bi-header"><div class="hdr-left"><i class="bi bi-graph-up-arrow c-success"></i> Costo de Mantenimientos por Mes — últimos 12 meses</div></div>
+    <div class="card-bi-body" id="costoBody"><div class="text-center py-3"><span class="mini-spin"></span></div></div>
+</div>
+
+<div class="card-bi">
+    <div class="card-bi-header"><div class="hdr-left"><i class="bi bi-search c-primary"></i> Buscar Equipos por Usuario</div></div>
+    <div class="card-bi-body">
+        <div class="row align-items-end g-3">
+            <div class="col-md-8">
+                <label style="font-size:9px;text-transform:uppercase;font-weight:700;color:var(--text-muted);letter-spacing:.5px;display:block;margin-bottom:6px;">Email Corporativo</label>
+                <div class="autocomplete-container">
+                    <input type="email" id="searchEmail" class="form-control"
+                           style="padding:11px 16px;border:2px solid var(--border-soft);border-radius:12px;font-size:14px;transition:all .2s;outline:none;"
+                           placeholder="Escribe para buscar por email corporativo…" autocomplete="off"
+                           onfocus="this.style.borderColor='var(--primary)';this.style.boxShadow='0 0 0 3px rgba(59,130,246,.1)'"
+                           onblur="this.style.borderColor='var(--border-soft)';this.style.boxShadow='none'">
+                    <div id="acResults" class="autocomplete-results"></div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-primary w-100" style="padding:11px 0;font-weight:700;font-size:14px;border-radius:10px;" onclick="buscarEquipos()">
+                    <i class="bi bi-search me-1"></i> Buscar Equipos
+                </button>
+            </div>
+        </div>
+        <div class="mt-2"><small style="color:var(--text-muted);font-size:11px;"><i class="bi bi-info-circle me-1"></i>Ingresa el email corporativo para ver todos sus equipos asignados con historial de mantenimientos</small></div>
+    </div>
+</div>
+
+<div id="loadingSearch" class="loading-spinner">
+    <div class="d-flex align-items-center gap-3" style="color:var(--text-muted);">
+        <span class="mini-spin" style="width:22px;height:22px;border-width:3px;"></span>
+        <span style="font-size:14px;font-weight:500;">Buscando equipos…</span>
+    </div>
+</div>
+<div id="searchResults"></div>
+
+</div></div>
+
+<!-- MODAL -->
+<div class="modal fade" id="modalMaint" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="border-radius:12px;overflow:hidden;border:none;box-shadow:0 20px 60px rgba(0,0,0,.15);">
+            <div class="modal-header" style="background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;padding:16px 20px;">
+                <div>
+                    <h5 class="modal-title mb-0" style="font-weight:700;"><i class="bi bi-tools me-2"></i>Registrar Mantenimiento</h5>
+                    <small id="modalInfo" class="opacity-75" style="font-size:12px;"></small>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formMaint">
+                <div class="modal-body" style="padding:20px;">
+                    <div class="sec-div">Paso 1 — ¿Qué se realizó?</div>
+                    <div class="row g-2 mb-1">
+                        <div class="col-3"><div class="tmpl-btn" onclick="pickTemplate('cargador',this)"><span class="t-ico">🔌</span><span class="t-lbl">Cambio Cargador</span></div></div>
+                        <div class="col-3"><div class="tmpl-btn" onclick="pickTemplate('bateria',this)"><span class="t-ico">🔋</span><span class="t-lbl">Cambio Batería</span></div></div>
+                        <div class="col-3"><div class="tmpl-btn" onclick="pickTemplate('ram',this)"><span class="t-ico">💾</span><span class="t-lbl">Cambio RAM</span></div></div>
+                        <div class="col-3"><div class="tmpl-btn" onclick="pickTemplate('teclado',this)"><span class="t-ico">⌨️</span><span class="t-lbl">Cambio Teclado</span></div></div>
+                        <div class="col-3"><div class="tmpl-btn" onclick="pickTemplate('pantalla',this)"><span class="t-ico">🖥️</span><span class="t-lbl">Cambio Pantalla</span></div></div>
+                        <div class="col-3"><div class="tmpl-btn" onclick="pickTemplate('disco',this)"><span class="t-ico">💿</span><span class="t-lbl">Cambio Disco</span></div></div>
+                        <div class="col-3"><div class="tmpl-btn" onclick="pickTemplate('limpieza',this)"><span class="t-ico">🧹</span><span class="t-lbl">Limpieza Interna</span></div></div>
+                        <div class="col-3"><div class="tmpl-btn" onclick="pickTemplate('otro',this)"><span class="t-ico">🔧</span><span class="t-lbl">Otro</span></div></div>
+                    </div>
+                    <div id="formExtra" style="display:none;">
+                        <div class="sec-div">Paso 2 — Fecha y estado</div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-5">
+                                <label style="font-size:11px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:4px;">Fecha</label>
+                                <input type="date" class="form-control form-control-sm" id="fDate" required style="border:2px solid var(--border-soft);border-radius:8px;">
+                            </div>
+                            <div class="col-md-7">
+                                <label style="font-size:11px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:4px;">Estado</label>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="st-btn ok" id="sb-comp" onclick="pickStatus('Completado')">✅ Completado</button>
+                                    <button type="button" class="st-btn"    id="sb-wip"  onclick="pickStatus('En Proceso')">🔄 En Proceso</button>
+                                    <button type="button" class="st-btn"    id="sb-pend" onclick="pickStatus('Pendiente')">⏳ Pendiente</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="sec-div">Paso 3 — Detalles</div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-5"><label style="font-size:10px;color:var(--text-muted);display:block;margin-bottom:3px;">Componente</label><input type="text" class="form-control form-control-sm" id="fCompName" placeholder="Nombre del componente"></div>
+                            <div class="col-md-3"><label style="font-size:10px;color:var(--text-muted);display:block;margin-bottom:3px;">Marca</label><input type="text" class="form-control form-control-sm" id="fBrand" placeholder="Marca"></div>
+                            <div class="col-md-4"><label style="font-size:10px;color:var(--text-muted);display:block;margin-bottom:3px;">Modelo</label><input type="text" class="form-control form-control-sm" id="fModel" placeholder="Modelo"></div>
+                            <div class="col-md-4"><label style="font-size:10px;color:var(--text-muted);display:block;margin-bottom:3px;">N° Serie</label><input type="text" class="form-control form-control-sm" id="fSerial" placeholder="Serie (opcional)"></div>
+                            <div class="col-md-4"><label style="font-size:10px;color:var(--text-muted);display:block;margin-bottom:3px;">Técnico</label><input type="text" class="form-control form-control-sm" id="fTech" placeholder="Nombre técnico"></div>
+                            <div class="col-md-4"><label style="font-size:10px;color:var(--text-muted);display:block;margin-bottom:3px;">Costo (S/)</label><input type="number" class="form-control form-control-sm" id="fCost" step="0.01" min="0" placeholder="0.00"></div>
+                        </div>
+                        <div class="sec-div">Paso 4 — Garantía del componente</div>
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <button type="button" class="wpi" onclick="pickWarranty(0)">Sin garantía</button>
+                            <button type="button" class="wpi" onclick="pickWarranty(3)">3 meses</button>
+                            <button type="button" class="wpi" onclick="pickWarranty(6)">6 meses</button>
+                            <button type="button" class="wpi" onclick="pickWarranty(12)">12 meses</button>
+                            <button type="button" class="wpi" onclick="pickWarranty(24)">24 meses</button>
+                            <button type="button" class="wpi" onclick="pickWarranty(36)">36 meses</button>
+                            <button type="button" class="wpi" onclick="pickWarranty(60)">60 meses</button>
+                        </div>
+                        <input type="hidden" id="fWarranty" value="0">
+                        <div class="sec-div">Paso 5 — Observaciones (opcional)</div>
+                        <textarea class="form-control form-control-sm" id="fNotes" rows="2" placeholder="Notas adicionales…"></textarea>
+                    </div>
+                    <input type="hidden" id="fType">
+                    <input type="hidden" id="fStatus" value="Completado">
+                    <input type="hidden" id="fEqId">
+                    <input type="hidden" id="fEmpId">
+                </div>
+                <div class="modal-footer" style="background:var(--modal-footer-bg);border-top:1px solid var(--border-soft);padding:12px 20px;">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4" id="btnSave" disabled>
+                        <i class="bi bi-check-circle me-1"></i> Guardar Mantenimiento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/sidebar.js"></script>
+<script>
+const WA='/api/warranty', EA='/api/employees';
+const TYPE_META={'Cambio Cargador':{icon:'🔌',color:'#f59e0b',cls:'t-cargador'},'Cambio Batería':{icon:'🔋',color:'#ef4444',cls:'t-bateria'},'Cambio RAM':{icon:'💾',color:'#8b5cf6',cls:'t-ram'},'Cambio Teclado':{icon:'⌨️',color:'#06b6d4',cls:'t-teclado'},'Cambio Pantalla':{icon:'🖥️',color:'#ec4899',cls:'t-pantalla'},'Cambio Disco Duro':{icon:'💿',color:'#10b981',cls:'t-disco'},'Limpieza Interna':{icon:'🧹',color:'#64748b',cls:'t-limpieza'},'Actualización BIOS':{icon:'⚙️',color:'#3b82f6',cls:'t-bios'},'Otro':{icon:'🔧',color:'#94a3b8',cls:''}};
+
+async function loadStats(){try{const[rs,rt]=await Promise.all([fetch(`${WA}/stats`,{credentials:'include'}).then(r=>r.json()),fetch(`${WA}/top-components`,{credentials:'include'}).then(r=>r.json())]);if(rs.success)renderKPIs(rs.data);if(rt.success)renderTop(rt.data);}catch(e){console.error('Stats error:',e);['kpiTotal','kpiCosto','kpiVencer','kpiTipos'].forEach(id=>{document.getElementById(id).innerHTML=`<span style="font-size:12px;color:var(--danger);">Error</span>`;});document.getElementById('topBody').innerHTML=`<tr><td colspan="6" class="text-center py-4" style="color:var(--danger);font-size:12px;"><i class="bi bi-exclamation-triangle me-1"></i>No se pudo conectar a <code>/api/warranty</code></td></tr>`;}}
+
+function renderKPIs(d){document.getElementById('kpiTotal').textContent=d.total_mantenimientos_año??0;document.getElementById('kpiCosto').textContent=d.total_costo_año?'S/ '+Number(d.total_costo_año).toLocaleString('es-PE',{minimumFractionDigits:0}):'S/ 0';const vn=d.proximos_vencer?.length??0;document.getElementById('kpiVencer').textContent=vn;document.getElementById('kpiTipos').textContent=d.por_tipo?.length??0;document.getElementById('vencerBadge').textContent=vn+' equipos';document.getElementById('vencerBadge').className=`badge ${vn>5?'bg-danger':vn>0?'bg-warning':'bg-success'}`;document.getElementById('topUpdatedAt').textContent='Actualizado '+new Date().toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'});renderVencer(d.proximos_vencer||[]);renderCosto(d.costo_mensual||[]);}
+
+function renderTop(data){const tb=document.getElementById('topBody');if(!data.length){tb.innerHTML=`<tr><td colspan="6" class="text-center py-5" style="color:var(--text-muted);"><i class="bi bi-inbox" style="font-size:30px;opacity:.25;display:block;margin-bottom:8px;"></i>Sin registros de mantenimiento</td></tr>`;return;}const max=data[0].total_cambios||1;const mdls=['gold','silver','bronze'];tb.innerHTML=data.map((r,i)=>{const m=TYPE_META[r.maintenance_type]||{icon:'🔧',color:'#94a3b8'};const pct=Math.round((r.total_cambios/max)*100);return`<tr><td style="text-align:center;"><div class="medal ${mdls[i]||'other'}">${i+1}</div></td><td><div style="font-weight:700;font-size:13px;color:var(--text-main);">${m.icon} ${r.maintenance_type}</div><div class="progress mt-1" style="width:130px;"><div class="progress-bar" style="width:${pct}%;background:${m.color};"></div></div>${r.marcas_usadas?`<div style="font-size:10px;color:var(--text-muted);margin-top:1px;">${r.marcas_usadas}</div>`:''}</td><td><strong style="font-size:16px;color:var(--primary);">${r.total_cambios}</strong></td><td><span class="badge bg-secondary">${r.equipos_afectados}</span></td><td style="color:var(--text-muted);font-size:12px;">${r.costo_promedio?'S/ '+Number(r.costo_promedio).toFixed(2):'—'}</td><td>${r.costo_total?`<span class="badge bg-success">S/ ${Number(r.costo_total).toLocaleString('es-PE',{minimumFractionDigits:2})}</span>`:'<span style="color:var(--text-muted);">—</span>'}</td></tr>`;}).join('');}
+
+function renderVencer(data){const el=document.getElementById('vencerList');if(!data.length){el.innerHTML=`<div style="text-align:center;padding:28px;color:var(--text-muted);"><i class="bi bi-shield-check" style="font-size:34px;opacity:.2;display:block;margin-bottom:7px;"></i><span style="font-size:13px;">Sin garantías próximas a vencer</span></div>`;return;}el.innerHTML=data.map(v=>{const d=v.dias_restantes;const cls=d<=14?'urgent':d<=30?'warn':'ok';const m=TYPE_META[v.maintenance_type]||{icon:'🔧'};return`<div class="vencer-item"><div class="vencer-days ${cls}"><span class="d-num">${d}</span><span class="d-lbl">días</span></div><div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:12px;color:var(--text-main);">${m.icon} ${v.maintenance_type}</div><div style="font-size:11px;color:var(--text-muted);"><span style="font-family:monospace;">${v.device_code}</span> · ${v.brand} ${v.model}</div>${v.employee_name?`<div style="font-size:10px;color:var(--text-muted);"><i class="bi bi-person"></i> ${v.employee_name}</div>`:''}</div><div style="text-align:right;flex-shrink:0;"><div style="font-size:9px;color:var(--text-muted);">Vence</div><div style="font-size:11px;font-weight:700;color:var(--text-main);">${new Date(v.warranty_end_date).toLocaleDateString('es-PE')}</div></div></div>`;}).join('');}
+
+function renderCosto(data){const el=document.getElementById('costoBody');if(!data.length){el.innerHTML=`<p style="text-align:center;color:var(--text-muted);font-size:13px;padding:16px 0;">Sin datos de costo mensual</p>`;return;}const max=Math.max(...data.map(d=>parseFloat(d.costo_total)||0))||1;el.innerHTML=`<div class="mes-row" style="gap:7px 14px;">${data.map(d=>{const v=parseFloat(d.costo_total)||0;const pct=Math.round((v/max)*100);return`<div class="mes-label">${d.mes_nombre}</div><div class="progress" style="height:8px;"><div class="progress-bar" style="width:${pct}%;background:var(--primary);"></div></div><div class="mes-val">S/ ${v.toLocaleString('es-PE',{minimumFractionDigits:0})} <span class="mes-count">(${d.cantidad})</span></div>`;}).join('')}</div>`;}
+
+async function buscarEquipos(){const email=document.getElementById('searchEmail').value.trim();if(!email){alert('⚠️ Ingresa un email');return;}if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){alert('⚠️ Email inválido');return;}document.getElementById('loadingSearch').classList.add('active');document.getElementById('searchResults').innerHTML='';try{const r=await fetch(`${WA}/search-by-email?email=${encodeURIComponent(email)}`,{credentials:'include'}).then(x=>x.json());r.success&&r.data.length?renderResults(r.data):renderNoResults(email);}catch(e){alert('Error: '+e.message);}finally{document.getElementById('loadingSearch').classList.remove('active');}}
+
+function renderResults(data){const con=document.getElementById('searchResults');const total=data.reduce((s,e)=>s+e.total_maintenances,0);con.innerHTML=`<div class="cards-4" style="margin-top:4px;"><div class="kpi-card"><div><div class="kpi-title">Equipos</div><div class="kpi-value c-primary">${data.length}</div></div><i class="bi bi-hdd-stack kpi-icon c-primary"></i></div><div class="kpi-card"><div><div class="kpi-title">Mantenimientos</div><div class="kpi-value c-success">${total}</div></div><i class="bi bi-tools kpi-icon c-success"></i></div><div class="kpi-card" style="grid-column:span 2;"><div><div class="kpi-title">Usuario</div><div class="kpi-value" style="font-size:18px;color:var(--text-main);">${data[0].employee_name}</div></div><i class="bi bi-person-circle kpi-icon c-warning"></i></div></div>`;data.forEach(eq=>{con.innerHTML+=buildEquipCard(eq);});}
+
+function buildEquipCard(eq){let wCls='warranty-expired',wIco='dash-circle',wTxt='Sin garantía';const last=(eq.maintenance_history||[]).filter(m=>m.warranty_end_date).sort((a,b)=>new Date(b.warranty_end_date)-new Date(a.warranty_end_date))[0];if(last){const d=Math.floor((new Date(last.warranty_end_date)-new Date())/86400000);if(d<0){wCls='warranty-expired';wIco='x-circle-fill';wTxt='Garantía vencida';}else if(d<=90){wCls='warranty-warning';wIco='exclamation-triangle-fill';wTxt=`⚠️ ${d} días restantes`;}else{wCls='warranty-active';wIco='check-circle-fill';wTxt=`${d} días restantes`;}}const isLaptop=eq.equipment_type==='Laptop';return`<div class="equip-card"><div class="equip-card-header"><div><div class="equip-card-title"><i class="bi bi-${isLaptop?'laptop':'pc-display'}" style="color:var(--primary);"></i>${eq.brand} ${eq.model}</div><div class="equip-card-meta"><strong>Código:</strong> <span style="font-family:monospace;">${eq.device_code}</span> &nbsp;·&nbsp; <strong>Serie:</strong> <span style="font-family:monospace;">${eq.serial_number}</span></div></div><span class="warranty-status ${wCls}"><i class="bi bi-${wIco}"></i> ${wTxt}</span></div><div class="equip-card-body"><div class="info-grid"><div class="info-item"><span class="info-label">Procesador</span><span class="info-value" style="font-size:12px;">${eq.processor||'N/A'}</span></div><div class="info-item"><span class="info-label">RAM</span><span class="info-value"><span class="badge bg-secondary">${eq.ram_memory||'N/A'}</span></span></div><div class="info-item"><span class="info-label">Disco</span><span class="info-value"><span class="badge bg-secondary">${eq.disk_capacity||'N/A'}</span></span></div><div class="info-item"><span class="info-label">SO</span><span class="info-value" style="font-size:12px;">${eq.operating_system||'N/A'}</span></div><div class="info-item"><span class="info-label">Ubicación</span><span class="info-value" style="font-size:12px;">${eq.location_name||'N/A'}${eq.city?' — '+eq.city:''}</span></div><div class="info-item"><span class="info-label">Asignado</span><span class="info-value" style="font-size:12px;">${new Date(eq.assignment_date).toLocaleDateString('es-PE')}</span></div></div>${isLaptop?`<div class="mb-3"><button class="btn-maint" data-eq-id="${eq.equipment_id}" data-code="${eq.device_code}" data-name="${eq.brand} ${eq.model}" data-emp="${eq.employee_id||''}" onclick="openModal(this)"><i class="bi bi-tools"></i> Registrar Mantenimiento</button></div>`:''}${eq.maintenance_history.length>0?`<div style="border-top:1px solid var(--border-soft);padding-top:13px;margin-top:2px;"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:9px;"><i class="bi bi-clock-history me-1"></i>Historial <span class="badge bg-primary ms-1" style="font-size:9px;">${eq.maintenance_history.length}</span></div>${eq.maintenance_history.map(m=>{const mt=TYPE_META[m.maintenance_type]||{icon:'🔧',cls:''};return`<div class="maint-item ${mt.cls}"><div class="d-flex justify-content-between align-items-start mb-1"><div><strong style="font-size:13px;">${mt.icon} ${m.maintenance_type}</strong>${m.component_name?`<div style="font-size:11px;color:var(--text-muted);">${m.component_name}</div>`:''}</div><div class="text-end"><span style="font-size:11px;color:var(--text-muted);"><i class="bi bi-calendar3"></i> ${new Date(m.maintenance_date).toLocaleDateString('es-PE')}</span>${m.cost?`<div><span class="badge bg-success" style="font-size:10px;">S/ ${parseFloat(m.cost).toFixed(2)}</span></div>`:''}</div></div>${m.component_brand||m.component_model?`<div class="mb-1">${m.component_brand?`<span class="badge bg-light" style="font-size:10px;">${m.component_brand}</span>`:''}${m.component_model?`<span class="badge bg-light ms-1" style="font-size:10px;">${m.component_model}</span>`:''}</div>`:''}${m.notes?`<p style="font-size:12px;color:var(--text-muted);margin-bottom:5px;"><i class="bi bi-chat-left-text me-1"></i>${m.notes}</p>`:''}<div class="d-flex justify-content-between" style="font-size:11px;">${m.technician_name?`<span style="color:var(--text-muted);"><i class="bi bi-person-badge me-1"></i>${m.technician_name}</span>`:'<span></span>'}${m.warranty_months>0?`<span class="badge bg-info"><i class="bi bi-shield-check me-1"></i>${m.warranty_months} meses</span>`:''}</div></div>`;}).join('')}</div>`:`<div style="text-align:center;padding:18px;color:var(--text-muted);border-top:1px solid var(--border-soft);margin-top:2px;"><i class="bi bi-inbox" style="font-size:24px;opacity:.25;display:block;margin-bottom:5px;"></i><span style="font-size:13px;">Sin mantenimientos registrados</span></div>`}</div></div>`;}
+
+function renderNoResults(email){document.getElementById('searchResults').innerHTML=`<div class="card-bi"><div class="card-bi-body"><div class="no-results"><i class="bi bi-inbox" style="font-size:48px;opacity:.2;display:block;margin-bottom:10px;"></i><h5 style="font-weight:700;">Sin resultados</h5><p style="color:var(--text-muted);font-size:13px;margin:0;">No hay equipos asignados a <strong>${email}</strong></p></div></div></div>`;}
+
+const TMPLS={cargador:{type:'Cambio Cargador',name:'Cargador USB-C 65W',brand:'',model:'',warranty:12,notes:'Reemplazo de cargador.'},bateria:{type:'Cambio Batería',name:'Batería Li-ion',brand:'',model:'',warranty:12,notes:'Reemplazo de batería por degradación.'},ram:{type:'Cambio RAM',name:'Módulo RAM DDR4',brand:'',model:'',warranty:24,notes:'Ampliación / reemplazo de RAM.'},teclado:{type:'Cambio Teclado',name:'Teclado retroiluminado',brand:'',model:'',warranty:6,notes:'Reemplazo de teclado.'},pantalla:{type:'Cambio Pantalla',name:'Pantalla LCD/LED',brand:'',model:'',warranty:12,notes:'Reemplazo de pantalla.'},disco:{type:'Cambio Disco Duro',name:'SSD NVMe M.2',brand:'',model:'',warranty:60,notes:'Reemplazo / ampliación de almacenamiento.'},limpieza:{type:'Limpieza Interna',name:'Servicio de limpieza',brand:'N/A',model:'',warranty:0,notes:'Limpieza de ventiladores y pasta térmica.'},otro:{type:'Otro',name:'',brand:'',model:'',warranty:0,notes:''}};
+
+function pickTemplate(k,el){const t=TMPLS[k];if(!t)return;document.querySelectorAll('.tmpl-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');document.getElementById('fType').value=t.type;document.getElementById('fCompName').value=t.name;document.getElementById('fBrand').value=t.brand;document.getElementById('fModel').value=t.model;document.getElementById('fNotes').value=t.notes;pickWarranty(t.warranty);document.getElementById('formExtra').style.display='block';document.getElementById('btnSave').disabled=false;setTimeout(()=>document.getElementById('formExtra').scrollIntoView({behavior:'smooth',block:'nearest'}),80);}
+function pickWarranty(m){document.getElementById('fWarranty').value=m;document.querySelectorAll('.wpi').forEach(p=>{p.classList.remove('sel');if(p.textContent.trim()===(m===0?'Sin garantía':m+' meses'))p.classList.add('sel');});}
+function pickStatus(s){document.getElementById('fStatus').value=s;['sb-comp','sb-wip','sb-pend'].forEach(id=>document.getElementById(id).className='st-btn');if(s==='Completado')document.getElementById('sb-comp').className='st-btn ok';if(s==='En Proceso')document.getElementById('sb-wip').className='st-btn wip';if(s==='Pendiente')document.getElementById('sb-pend').className='st-btn pend';}
+function openModal(btn){document.getElementById('formMaint').reset();document.querySelectorAll('.tmpl-btn').forEach(b=>b.classList.remove('active'));document.getElementById('formExtra').style.display='none';document.getElementById('btnSave').disabled=true;document.getElementById('fEqId').value=btn.dataset.eqId;document.getElementById('fEmpId').value=btn.dataset.emp||'';document.getElementById('modalInfo').textContent=` ${btn.dataset.code} — ${btn.dataset.name}`;document.getElementById('fDate').value=new Date().toISOString().split('T')[0];document.getElementById('fStatus').value='Completado';document.getElementById('fWarranty').value='0';pickStatus('Completado');pickWarranty(0);new bootstrap.Modal(document.getElementById('modalMaint')).show();}
+
+document.getElementById('formMaint').addEventListener('submit',async function(e){e.preventDefault();const btn=document.getElementById('btnSave'),orig=btn.innerHTML;btn.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span>Guardando…';btn.disabled=true;const eqId=parseInt(document.getElementById('fEqId').value);const mType=document.getElementById('fType').value;if(!eqId||!mType){toast('error','❌ Datos incompletos');btn.innerHTML=orig;btn.disabled=false;return;}const fd={equipment_id:eqId,employee_id:document.getElementById('fEmpId').value?parseInt(document.getElementById('fEmpId').value):null,maintenance_date:document.getElementById('fDate').value,maintenance_type:mType,component_name:document.getElementById('fCompName').value||null,component_brand:document.getElementById('fBrand').value||null,component_model:document.getElementById('fModel').value||null,serial_number:document.getElementById('fSerial').value||null,technician_name:document.getElementById('fTech').value||null,cost:parseFloat(document.getElementById('fCost').value)||null,warranty_months:parseInt(document.getElementById('fWarranty').value)||0,status:document.getElementById('fStatus').value||'Completado',notes:document.getElementById('fNotes').value||null};try{const r=await fetch(`${WA}/maintenance`,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(fd)}).then(x=>x.json());if(r.success){bootstrap.Modal.getInstance(document.getElementById('modalMaint')).hide();const em=document.getElementById('searchEmail').value;if(em)buscarEquipos();loadStats();toast('success','✅ Mantenimiento registrado exitosamente');}else{throw new Error(r.errors?.map(x=>x.msg).join(', ')||r.message||'Error');}}catch(err){toast('error','❌ '+err.message);btn.innerHTML=orig;btn.disabled=false;}});
+
+let acTimer=null,acIdx=-1;
+const emailEl=document.getElementById('searchEmail'),acDrop=document.getElementById('acResults');
+emailEl.addEventListener('input',function(){clearTimeout(acTimer);const q=this.value.trim();if(q.length<2){hideAc();return;}emailEl.classList.add('loading');acTimer=setTimeout(async()=>{try{const r=await fetch(`${EA}/search-emails?q=${encodeURIComponent(q)}`,{credentials:'include'}).then(x=>x.json());emailEl.classList.remove('loading');if(r.success&&r.data.length){acDrop.innerHTML=r.data.map(e=>`<div class="ac-item" onclick="pickEmail('${e.email}')"><span class="ac-email">${e.email}</span><div class="ac-details"><i class="bi bi-person me-1"></i>${e.full_name}${e.position_name?' | '+e.position_name:''}${e.cip?' | CIP: '+e.cip:''}</div></div>`).join('');}else{acDrop.innerHTML=`<div class="ac-empty"><i class="bi bi-inbox me-1"></i>Sin resultados</div>`;}acDrop.classList.add('show');}catch{emailEl.classList.remove('loading');hideAc();}},280);});
+function pickEmail(e){emailEl.value=e;hideAc();setTimeout(buscarEquipos,80);}
+function hideAc(){acDrop.classList.remove('show');acDrop.innerHTML='';acIdx=-1;}
+document.addEventListener('click',e=>{if(!e.target.closest('.autocomplete-container'))hideAc();});
+emailEl.addEventListener('keydown',function(e){const items=acDrop.querySelectorAll('.ac-item');if(!items.length)return;if(e.key==='ArrowDown'){e.preventDefault();acIdx=Math.min(acIdx+1,items.length-1);items.forEach((it,i)=>it.classList.toggle('active-ac',i===acIdx));items[acIdx]?.scrollIntoView({block:'nearest'});}else if(e.key==='ArrowUp'){e.preventDefault();acIdx=Math.max(acIdx-1,0);items.forEach((it,i)=>it.classList.toggle('active-ac',i===acIdx));items[acIdx]?.scrollIntoView({block:'nearest'});}else if(e.key==='Enter'){e.preventDefault();acIdx>=0&&items[acIdx]?items[acIdx].click():buscarEquipos();}else if(e.key==='Escape'){hideAc();}});
+emailEl.addEventListener('keypress',e=>{if(e.key==='Enter')buscarEquipos();});
+
+function toast(type,msg){const el=document.createElement('div');el.style.cssText=`position:fixed;top:20px;right:20px;z-index:9999;background:${type==='success'?'#10b981':'#ef4444'};color:#fff;padding:12px 18px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.15);display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;animation:toastIn .2s ease;`;el.innerHTML=`<i class="bi bi-${type==='success'?'check-circle-fill':'exclamation-circle-fill'}"></i> ${msg}`;document.body.appendChild(el);setTimeout(()=>el.remove(),4000);}
+
+document.addEventListener('DOMContentLoaded',loadStats);
+</script>
+
+</body>
+</html>

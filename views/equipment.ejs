@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Equipos - Equipment Management</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+:root,
+[data-theme="light"] {
+    --bg-main: #f5f7fa;
+    --bg-card: #ffffff;
+    --bg-header: #fafbfc;
+    --border-soft: #e2e8f0;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --primary: #3b82f6;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --info: #06b6d4;
+    --danger: #ef4444;
+    --hover-row: #f8fafc;
+    --input-bg: #ffffff;
+    --shadow-card: 0 1px 3px rgba(0,0,0,.05);
+    --shadow-hover: 0 4px 12px rgba(0,0,0,.08);
+    --scrollbar-thumb: #cbd5e1;
+    --scrollbar-thumb-hover: #94a3b8;
+    --scrollbar-track: #f1f5f9;
+    --modal-bg: #ffffff;
+    --modal-border: #e2e8f0;
+    --input-readonly-bg: #f8fafc;
+}
+[data-theme="dark"] {
+    --bg-main: #0f172a;
+    --bg-card: #1e293b;
+    --bg-header: #162032;
+    --border-soft: #2d3f55;
+    --text-main: #e2e8f0;
+    --text-muted: #94a3b8;
+    --primary: #60a5fa;
+    --success: #34d399;
+    --warning: #fbbf24;
+    --info: #22d3ee;
+    --danger: #f87171;
+    --hover-row: #243348;
+    --input-bg: #1e293b;
+    --shadow-card: 0 1px 3px rgba(0,0,0,.3);
+    --shadow-hover: 0 4px 12px rgba(0,0,0,.4);
+    --scrollbar-thumb: #334155;
+    --scrollbar-thumb-hover: #475569;
+    --scrollbar-track: #1e293b;
+    --modal-bg: #1e293b;
+    --modal-border: #2d3f55;
+    --input-readonly-bg: #162032;
+}
+*{ box-sizing: border-box; }
+body {
+    margin: 0;
+    background: var(--bg-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--text-main);
+    overflow-x: hidden;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+.dashboard-wrapper { width: 100%; padding: 12px; margin-top: 60px; }
+.dashboard-content { width: 100%; max-width: 1680px; margin: 0 auto; }
+
+/* ── KPI CARDS — solo 4 que pediste ── */
+.cards-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+}
+@media (max-width: 992px) { .cards-4 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 576px) { .cards-4 { grid-template-columns: 1fr; } }
+
+.kpi-card {
+    background: var(--bg-card);
+    border-radius: 12px;
+    height: 80px;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid var(--border-soft);
+    box-shadow: var(--shadow-card);
+    transition: all 0.2s, background 0.3s, border-color 0.3s;
+}
+.kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+.kpi-title { font-size: 9px; letter-spacing:.5px; text-transform:uppercase; color:var(--text-muted); font-weight:600; margin-bottom:5px; }
+.kpi-value { font-size: 24px; font-weight: 700; line-height: 1; }
+.kpi-icon  { font-size: 28px; opacity: .25; }
+.primary { color: var(--primary); }
+.success { color: var(--success); }
+.warning { color: var(--warning); }
+.info    { color: var(--info); }
+.danger  { color: var(--danger); }
+
+/* ── CHARTS ROW ── */
+.row-dashboard {
+    display: grid;
+    grid-template-columns: 1.8fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+@media (max-width: 1200px) { .row-dashboard { grid-template-columns: 1fr; } }
+
+/* ── CARD BI ── */
+.card-bi {
+    background: var(--bg-card);
+    border-radius: 12px;
+    border: 1px solid var(--border-soft);
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: background 0.3s, border-color 0.3s;
+}
+.card-bi-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-soft);
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-header);
+    flex-shrink: 0;
+    color: var(--text-main);
+    transition: background 0.3s, border-color 0.3s, color 0.3s;
+}
+.card-bi-body { padding: 0; flex: 1; overflow: auto; min-height: 0; }
+.card-distribucion { height: 360px; }
+.card-top-modelos  { height: 360px; }
+
+/* ── TABLE ── */
+.table { width: 100%; margin-bottom: 0; font-size: 13px; color: var(--text-main); }
+.table thead th {
+    font-size: 10px; text-transform: uppercase; color: var(--text-muted);
+    background: var(--bg-header); border-bottom: 1px solid var(--border-soft);
+    padding: 12px 16px; font-weight: 600; text-align: center;
+    position: sticky; top: 0; z-index: 10;
+    transition: background 0.3s, color 0.3s, border-color 0.3s;
+}
+.table tbody td {
+    padding: 14px 16px; font-size: 13px; vertical-align: middle;
+    text-align: center; border-bottom: 1px solid var(--border-soft);
+    color: var(--text-main); background: transparent;
+    transition: background 0.15s, border-color 0.3s, color 0.3s;
+}
+.table tbody td:first-child { text-align: left; font-weight: 600; }
+.table-hover tbody tr:hover td { background-color: var(--hover-row) !important; }
+[data-theme="dark"] .table { --bs-table-bg: transparent; --bs-table-border-color: var(--border-soft); }
+[data-theme="dark"] .table-hover > tbody > tr:hover > * { --bs-table-accent-bg: var(--hover-row); }
+
+.badge { font-size: 11px; padding: 5px 10px; border-radius: 6px; font-weight: 600; }
+
+/* ── SEARCH BOX ── */
+.search-box { position: relative; margin-bottom: 12px; }
+.search-box input {
+    width: 100%; padding: 11px 16px;
+    border: 2px solid var(--border-soft); border-radius: 12px;
+    font-size: 14px; background: var(--bg-card); color: var(--text-main);
+    transition: all 0.2s, background 0.3s, color 0.3s, border-color 0.3s;
+}
+.search-box input::placeholder { color: var(--text-muted); }
+.search-box input:focus {
+    outline: none; border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59,130,246,.1);
+    background: var(--bg-card); color: var(--text-main);
+}
+
+.card-equipos .card-bi-body { max-height: 600px; }
+.table-equipos thead th { background: var(--bg-header); position: sticky; top: 0; z-index: 10; }
+
+.mini-spin {
+    display:inline-block; width:14px; height:14px;
+    border:2px solid var(--border-soft); border-top-color:var(--primary);
+    border-radius:50%; animation:spin .65s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+
+.form-control, .form-select {
+    background-color: var(--input-bg); color: var(--text-main);
+    border-color: var(--border-soft);
+    transition: background 0.3s, border-color 0.3s, color 0.3s;
+}
+.form-control:focus, .form-select:focus {
+    background-color: var(--input-bg); color: var(--text-main);
+    border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+}
+.form-control::placeholder { color: var(--text-muted); }
+.form-control.bg-light, .form-control[readonly] {
+    background-color: var(--input-readonly-bg) !important; color: var(--text-muted);
+}
+.form-label { color: var(--text-main); transition: color 0.3s; }
+[data-theme="dark"] .modal-content { background-color: var(--modal-bg); border-color: var(--modal-border); color: var(--text-main); }
+[data-theme="dark"] .modal-body, [data-theme="dark"] .modal-footer { background-color: var(--modal-bg); border-color: var(--modal-border); }
+[data-theme="dark"] .btn-secondary { background-color: #334155; border-color: #475569; color: #e2e8f0; }
+[data-theme="dark"] .btn-secondary:hover { background-color: #475569; }
+.btn-sm { padding: 6px 14px; font-size: 12px; font-weight: 600; }
+.btn-outline-secondary { border-color: var(--border-soft); color: var(--text-muted); background: transparent; }
+.btn-outline-secondary:hover { background-color: var(--border-soft); color: var(--text-main); }
+.btn-outline-primary { border-color: var(--primary); color: var(--primary); background: transparent; }
+.btn-outline-primary:hover { background-color: var(--primary); border-color: var(--primary); color: white; }
+.text-muted { color: var(--text-muted) !important; transition: color 0.3s; }
+.border-top { border-color: var(--border-soft) !important; }
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+*::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+*::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+    </style>
+
+    <script>
+    (function () {
+        const saved = localStorage.getItem('dashboardTheme') || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+    })();
+    </script>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <button class="close-sidebar" id="closeSidebar">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    
+    <div class="menu-item">
+        <a href="<%= APP_URL %>/home" class="menu-header">
+            <div class="menu-title">
+               <i class="fas fa-home"></i>
+                <span>Home</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item">
+        <div class="menu-header" onclick="toggleSubmenu(this)">
+            <div class="menu-title">
+                <i class="fas fa-desktop"></i>
+                <span>Equipos</span>
+            </div>
+            <i class="fas fa-chevron-down collapse-indicator"></i>
+        </div>
+        <div class="submenu">
+            <a href="<%= APP_URL %>/equipment" class="submenu-item">
+                <i class="fa-solid fa-database"></i> CMDB
+            </a>
+            <a href="#" class="submenu-item">
+                <i class="fa-solid fa-server"></i> SCCM
+            </a>
+        </div>
+    </div>
+
+   
+    <div class="menu-item">
+        <a href="#" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-cog"></i>
+                <span>Administración</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item"> 
+        <a href="logout" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Navbar Principal -->
+<nav class="navbar navbar-expand-lg fixed-top" id="navbar">
+    <div class="container-fluid">
+        <button class="toggler-btn" id="mainToggleSidebar">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Dark mode toggle — compacto, alineado a la derecha del navbar -->
+        <div class="theme-toggle-wrap ms-auto" id="themeToggle" onclick="toggleTheme()" title="Cambiar tema" role="button" aria-label="Cambiar modo claro/oscuro">
+            <!-- Ícono -->
+            <i class="theme-toggle-icon" id="toggleIcon">🌙</i>
+            <!-- Switch track -->
+            <div class="theme-switch">
+                <div class="theme-switch-knob" id="switchKnob"></div>
+            </div>
+            <!-- Label -->
+            <span class="theme-toggle-label" id="toggleLabel">Oscuro</span>
+        </div>
+    </div>
+</nav>
+
+<style>
+/* ─── Dark Mode Toggle — Navbar ─────────────────────── */
+.theme-toggle-wrap {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    user-select: none;
+    padding: 4px 10px 4px 8px;
+    border-radius: 20px;
+    transition: background 0.2s;
+}
+.theme-toggle-wrap:hover {
+    background: rgba(0,0,0,0.06);
+}
+[data-theme="dark"] .theme-toggle-wrap:hover {
+    background: rgba(255,255,255,0.08);
+}
+
+/* Ícono emoji pequeño */
+.theme-toggle-icon {
+    font-size: 14px;
+    line-height: 1;
+    transition: transform 0.4s cubic-bezier(.4,0,.2,1);
+    display: flex;
+    align-items: center;
+}
+.theme-toggle-wrap:hover .theme-toggle-icon {
+    transform: rotate(20deg);
+}
+
+/* Switch track */
+.theme-switch {
+    width: 34px;
+    height: 18px;
+    background: #cbd5e1;
+    border-radius: 9px;
+    position: relative;
+    transition: background 0.3s ease;
+    flex-shrink: 0;
+}
+[data-theme="dark"] .theme-switch {
+    background: #3b82f6;
+}
+
+/* Knob */
+.theme-switch-knob {
+    width: 13px;
+    height: 13px;
+    background: #ffffff;
+    border-radius: 50%;
+    position: absolute;
+    top: 2.5px;
+    left: 3px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+}
+[data-theme="dark"] .theme-switch-knob {
+    transform: translateX(16px);
+}
+
+/* Label */
+.theme-toggle-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    letter-spacing: 0.2px;
+    transition: color 0.3s;
+    white-space: nowrap;
+}
+[data-theme="dark"] .theme-toggle-label {
+    color: #94a3b8;
+}
+</style>
+
+<script>
+/* ─── Dark Mode — init inmediato (sin flash) ────────── */
+(function () {
+    const saved = localStorage.getItem('dashboardTheme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+})();
+
+function toggleTheme() {
+    const html    = document.documentElement;
+    const current = html.getAttribute('data-theme');
+    const next    = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('dashboardTheme', next);
+    _syncToggleUI(next);
+    if (typeof updateChartsTheme === 'function') updateChartsTheme(next);
+}
+
+function _syncToggleUI(theme) {
+    const icon  = document.getElementById('toggleIcon');
+    const label = document.getElementById('toggleLabel');
+    if (!icon || !label) return;
+    if (theme === 'dark') {
+        icon.textContent  = '☀️';
+        label.textContent = 'Claro';
+    } else {
+        icon.textContent  = '🌙';
+        label.textContent = 'Oscuro';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const saved = localStorage.getItem('dashboardTheme') || 'light';
+    _syncToggleUI(saved);
+});
+</script>
+
+<div class="dashboard-wrapper">
+<div class="dashboard-content">
+
+<!-- KPI CARDS — Total, Laptops, Desktop, En Garantía -->
+<div class="cards-4">
+    <div class="kpi-card">
+        <div><div class="kpi-title">Total Equipos</div><div class="kpi-value primary" id="kpiTotalEquipos">-</div></div>
+        <i class="bi bi-hdd-stack kpi-icon primary"></i>
+    </div>
+    <div class="kpi-card">
+        <div><div class="kpi-title">Laptops</div><div class="kpi-value info" id="equipos_laptop">-</div></div>
+        <i class="bi bi-laptop kpi-icon info"></i>
+    </div>
+    <div class="kpi-card">
+        <div><div class="kpi-title">Desktop</div><div class="kpi-value success" id="equipos_desktop">-</div></div>
+        <i class="bi bi-pc-display kpi-icon success"></i>
+    </div>
+    <div class="kpi-card">
+        <div><div class="kpi-title">En Garantía</div><div class="kpi-value warning" id="equiposGarantia">-</div></div>
+        <i class="bi bi-shield-check kpi-icon warning"></i>
+    </div>
+</div>
+
+<!-- GRÁFICOS -->
+<div class="row-dashboard">
+    <div class="card-bi card-distribucion">
+        <div class="card-bi-header">
+            <span style="display:flex;align-items:center;gap:8px;">
+                <i class="bi bi-bar-chart-fill"></i> Top 10 Marcas Más Usadas
+            </span>
+            <button class="btn btn-sm btn-outline-secondary" onclick="limpiarFiltroTabla()">
+                <i class="bi bi-x-circle"></i> Limpiar filtro
+            </button>
+        </div>
+        <div class="card-bi-body" style="padding:20px;">
+            <canvas id="chartTopMarcas" style="max-height:240px;"></canvas>
+            <div class="text-center text-muted small mt-3">
+                👆 Haz clic en una barra para ver equipos de esa marca
+            </div>
+        </div>
+    </div>
+    <div class="card-bi card-top-modelos">
+        <div class="card-bi-header">
+            <i class="bi bi-pie-chart-fill"></i> Distribución por Sistema Operativo
+        </div>
+        <div class="card-bi-body" style="padding:20px;">
+            <canvas id="chartTopSO" style="max-height:220px;"></canvas>
+            <div class="text-center text-muted small mt-3">
+                👆 Haz clic en un segmento para filtrar por sistema operativo
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BUSCADOR -->
+<div class="search-box">
+    <input type="text" id="globalSearch"
+           placeholder="🔍 Buscar por código, serie, marca o modelo...">
+</div>
+
+<!-- TABLA DE EQUIPOS — sin botón Nuevo Equipo -->
+<div class="card-bi card-equipos" style="margin-bottom:12px;">
+    <div class="card-bi-header">
+        <div style="display:flex;align-items:center;gap:8px;">
+            <i class="bi bi-laptop-fill"></i> Lista de Equipos
+            <span class="badge bg-primary" id="totalEquiposTabla">0</span>
+        </div>
+        <button class="btn btn-sm btn-outline-primary" onclick="location.reload()">
+            <i class="bi bi-arrow-clockwise"></i> Actualizar
+        </button>
+    </div>
+    <div class="card-bi-body">
+        <table class="table table-hover table-equipos mb-0" id="equiposTable">
+            <thead>
+                <tr>
+                    <th style="text-align:left;">CÓDIGO</th>
+                    <th>SERIE</th>
+                    <th>TIPO</th>
+                    <th>MARCA</th>
+                    <th>MODELO</th>
+                    <th>SISTEMA OP.</th>
+                    <th>RAM</th>
+                    <th>DISCO</th>
+                    <th>ESTADO</th>
+                    <th>ACCIONES</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="10" class="text-center py-5">
+                    <span class="mini-spin"></span>
+                    <p class="text-muted mt-2 mb-0" style="font-size:12px;">Cargando equipos...</p>
+                </td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</div><!-- /.dashboard-content -->
+</div><!-- /.dashboard-wrapper -->
+
+<!-- MODAL: EDITAR EQUIPO (se mantiene para las acciones de la tabla) -->
+<div class="modal fade" id="editEquipmentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Editar Equipo</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editEquipmentForm">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Código</label>
+                            <input type="text" class="form-control" id="editDeviceCode" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Serie</label>
+                            <input type="text" class="form-control" id="editSerialNumber">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Tipo</label>
+                            <input type="text" class="form-control" id="editEquipmentType">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Marca</label>
+                            <input type="text" class="form-control" id="editBrand">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Modelo</label>
+                            <input type="text" class="form-control" id="editModel">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">RAM</label>
+                            <input type="text" class="form-control" id="editRam">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Disco</label>
+                            <input type="text" class="form-control" id="editDisk">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="saveEquipmentChanges">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="/js/sidebar.js"></script>
+<script src="/js/equipment-dashboard.js"></script>
+
+<script>
+function toggleTheme() {
+    const html    = document.documentElement;
+    const current = html.getAttribute('data-theme');
+    const next    = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('dashboardTheme', next);
+    if (typeof updateChartsTheme === 'function') updateChartsTheme(next);
+}
+document.addEventListener('DOMContentLoaded', function () {
+    const saved = localStorage.getItem('dashboardTheme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+});
+</script>
+</body>
+</html>

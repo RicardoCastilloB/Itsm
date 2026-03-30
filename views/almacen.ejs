@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light"> 
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Almacén Workplace</title>
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+/* ════════════════════════════════════════════════════
+   VARIABLES
+════════════════════════════════════════════════════ */
+:root,[data-theme="light"]{
+    --bg:#f0f4f8;--card:#ffffff;--hdr:#f8fafc;--border:#e2e8f0;
+    --text:#1e293b;--muted:#64748b;--primary:#3b82f6;--success:#10b981;
+    --warning:#f59e0b;--info:#06b6d4;--danger:#ef4444;--purple:#8b5cf6;
+    --hover:#f1f5f9;--input-bg:#ffffff;
+    --sh-sm:0 1px 3px rgba(0,0,0,.06);--sh-md:0 4px 12px rgba(0,0,0,.08);--sh-lg:0 8px 24px rgba(0,0,0,.10);
+    --mono:'JetBrains Mono',monospace;
+}
+[data-theme="dark"]{
+    --bg:#0f172a;--card:#1e293b;--hdr:#162032;--border:#2d3f55;
+    --text:#e2e8f0;--muted:#94a3b8;--primary:#60a5fa;--success:#34d399;
+    --warning:#fbbf24;--info:#22d3ee;--danger:#f87171;--purple:#a78bfa;
+    --hover:#243348;--input-bg:#1e293b;
+    --sh-sm:0 1px 3px rgba(0,0,0,.3);--sh-md:0 4px 12px rgba(0,0,0,.4);--sh-lg:0 8px 24px rgba(0,0,0,.5);
+}
+
+/* ════════════════════════════════════════════════════
+   BASE
+════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'DM Sans',-apple-system,sans-serif;transition:background .3s,color .3s;overflow-x:hidden;}
+.pg{max-width:1700px;margin:0 auto;padding:24px 20px;margin-top:64px;}
+
+/* ════════════════════════════════════════════════════
+   PAGE HEADER
+════════════════════════════════════════════════════ */
+.page-hdr{display:flex;align-items:center;gap:16px;margin-bottom:28px;}
+.page-hdr-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;box-shadow:var(--sh-md);}
+.page-hdr h1{font-size:22px;font-weight:800;margin:0;color:var(--text);}
+.page-hdr p{margin:3px 0 0;font-size:13px;color:var(--muted);}
+
+/* ════════════════════════════════════════════════════
+   SECTION TITLE
+════════════════════════════════════════════════════ */
+.sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:0 0 14px;display:flex;align-items:center;gap:8px;}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ════════════════════════════════════════════════════
+   KPI GRID — dos grupos
+════════════════════════════════════════════════════ */
+.kpi-grid-almacen{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:8px;}
+.kpi-grid-recoveries{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px;}
+@media(max-width:1100px){.kpi-grid-almacen{grid-template-columns:repeat(2,1fr);}.kpi-grid-recoveries{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:600px){.kpi-grid-almacen,.kpi-grid-recoveries{grid-template-columns:repeat(2,1fr);}}
+
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:all .2s;box-shadow:var(--sh-sm);position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;inset:0;background:var(--kc);opacity:0;transition:opacity .2s;}
+.kpi:hover::before,.kpi.active::before{opacity:.06;}
+.kpi.active{border-color:var(--kc)!important;box-shadow:0 0 0 2px var(--kc)!important;}
+.kpi.no-click{cursor:default;}
+.kpi-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:5px;}
+.kpi-val{font-size:28px;font-weight:800;line-height:1;color:var(--kc);}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+.kpi-icon{font-size:32px;opacity:.18;color:var(--kc);}
+.kpi-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;}
+
+/* ════════════════════════════════════════════════════
+   CHARTS ROW
+════════════════════════════════════════════════════ */
+.charts-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px;}
+@media(max-width:1100px){.charts-row{grid-template-columns:1fr 1fr;}}
+@media(max-width:680px){.charts-row{grid-template-columns:1fr;}}
+
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--sh-sm);}
+.chart-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+.chart-canvas-wrap{position:relative;height:160px;}
+
+/* ════════════════════════════════════════════════════
+   MAIN TABS
+════════════════════════════════════════════════════ */
+.main-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;}
+.main-tab-btn{padding:12px 22px;font-size:13px;font-weight:700;color:var(--muted);background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;transition:all .15s;margin-bottom:-2px;display:flex;align-items:center;gap:7px;}
+.main-tab-btn:hover{color:var(--text);}
+.main-tab-btn.active{color:var(--primary);border-bottom-color:var(--primary);}
+.main-tab-btn .tab-count{background:var(--border);color:var(--muted);padding:1px 7px;border-radius:10px;font-size:11px;font-weight:700;}
+.main-tab-btn.active .tab-count{background:rgba(59,130,246,.15);color:var(--primary);}
+
+.main-tab-pane{display:none;}
+.main-tab-pane.active{display:block;}
+
+/* ════════════════════════════════════════════════════
+   SUB-TABS (almacén)
+════════════════════════════════════════════════════ */
+.tabs{display:flex;gap:4px;border-bottom:2px solid var(--border);margin-bottom:16px;}
+.tab-btn{padding:9px 16px;font-size:13px;font-weight:600;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .15s;margin-bottom:-2px;}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{color:var(--primary);border-bottom-color:var(--primary);}
+.tab-pane{display:none;}
+.tab-pane.active{display:block;}
+
+/* ════════════════════════════════════════════════════
+   CARD BASE
+════════════════════════════════════════════════════ */
+.card-ui{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh-sm);overflow:hidden;margin-bottom:20px;}
+.card-head{padding:13px 18px;background:var(--hdr);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.card-head .title{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
+
+/* ════════════════════════════════════════════════════
+   TABLE
+════════════════════════════════════════════════════ */
+.tbl-wrap{overflow:auto;max-height:480px;}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl thead th{background:var(--hdr);color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:11px 14px;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:5;}
+.tbl tbody td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text);}
+.tbl tbody tr:last-child td{border-bottom:none;}
+.tbl tbody tr{transition:background .12s;cursor:pointer;}
+.tbl tbody tr:hover td{background:var(--hover);}
+.mono{font-family:var(--mono);font-size:12px;}
+.link-cell{color:var(--primary);cursor:pointer;font-weight:600;}
+
+/* ════════════════════════════════════════════════════
+   DATATABLES — recoveries (dark compat)
+════════════════════════════════════════════════════ */
+#recoveriesTable thead th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);background:var(--hdr);border-bottom:1px solid var(--border);padding:11px 14px;}
+#recoveriesTable tbody td{padding:11px 14px;vertical-align:middle;font-size:13px;color:var(--text);background:var(--card);}
+#recoveriesTable tbody tr:hover td{background:var(--hover)!important;}
+.dataTables_wrapper{padding:12px 16px 16px;color:var(--text);}
+.dataTables_wrapper .dataTables_length select,
+.dataTables_wrapper .dataTables_filter input{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:4px 8px;}
+.dataTables_wrapper .dataTables_info,.dataTables_wrapper .dataTables_paginate{color:var(--muted);}
+.dataTables_paginate .paginate_button.current{background:var(--primary)!important;color:#fff!important;border-color:var(--primary)!important;border-radius:6px;}
+.dataTables_paginate .paginate_button:hover{background:var(--hover)!important;color:var(--text)!important;}
+
+/* ════════════════════════════════════════════════════
+   BADGES
+════════════════════════════════════════════════════ */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:700;border:1px solid transparent;}
+.bg-success{background:rgba(16,185,129,.12);color:#059669;border-color:rgba(16,185,129,.25);}
+.bg-info{background:rgba(6,182,212,.12);color:#0891b2;border-color:rgba(6,182,212,.25);}
+.bg-warning{background:rgba(245,158,11,.12);color:#d97706;border-color:rgba(245,158,11,.25);}
+.bg-danger{background:rgba(239,68,68,.12);color:#dc2626;border-color:rgba(239,68,68,.25);}
+.bg-secondary{background:rgba(100,116,139,.1);color:var(--muted);border-color:rgba(100,116,139,.2);}
+.bg-purple{background:rgba(139,92,246,.12);color:#7c3aed;border-color:rgba(139,92,246,.25);}
+.bg-primary-soft{background:rgba(59,130,246,.12);color:#2563eb;border-color:rgba(59,130,246,.25);}
+
+/* ── Recoveries status badges ── */
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
+.status-por_recuperar   {background:rgba(239,68,68,.12); color:#dc2626;}
+.status-en_gestion      {background:rgba(245,158,11,.12);color:#d97706;}
+.status-recogido_tecnico{background:rgba(99,102,241,.12);color:#6366f1;}
+.status-traido_oficina  {background:rgba(99,102,241,.12);color:#6366f1;}
+.status-en_revision     {background:rgba(139,92,246,.12);color:#7c3aed;}
+.status-listo_para_asignar{background:rgba(16,185,129,.12);color:#059669;}
+.status-envio_provincia {background:rgba(59,130,246,.12);color:#2563eb;}
+.status-recuperado      {background:rgba(100,116,139,.12);color:#475569;}
+.method-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:var(--hdr);color:var(--muted);border:1px solid var(--border);}
+
+/* ════════════════════════════════════════════════════
+   BUTTONS
+════════════════════════════════════════════════════ */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:600;border:1px solid transparent;cursor:pointer;transition:all .15s;text-decoration:none;}
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:8px;}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary);}
+.btn-primary:hover{filter:brightness(1.1);}
+.btn-success{background:var(--success);color:#fff;border-color:var(--success);}
+.btn-warning{background:var(--warning);color:#fff;border-color:var(--warning);}
+.btn-danger{background:var(--danger);color:#fff;border-color:var(--danger);}
+.btn-outline{background:none;border:1px solid var(--border);color:var(--muted);}
+.btn-outline:hover{border-color:var(--primary);color:var(--primary);}
+.btn-action{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--muted);display:inline-flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;transition:all .2s;}
+.btn-action:hover{border-color:var(--primary);color:var(--primary);background:rgba(59,130,246,.08);}
+.btn-action.btn-advance:hover{border-color:var(--success);color:var(--success);background:rgba(16,185,129,.08);}
+.btn-action.btn-delete:hover{border-color:var(--danger);color:var(--danger);background:rgba(239,68,68,.08);}
+
+/* ════════════════════════════════════════════════════
+   FORM CONTROLS
+════════════════════════════════════════════════════ */
+.form-control,.form-select{width:100%;padding:9px 13px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;background:var(--input-bg);color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s;}
+.form-control:focus,.form-select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(59,130,246,.12);}
+.form-control::placeholder{color:var(--muted);}
+.form-label{font-size:12px;font-weight:600;color:var(--text);margin-bottom:5px;display:block;}
+.form-label .req{color:var(--danger);}
+
+/* ════════════════════════════════════════════════════
+   SEARCH BAR
+════════════════════════════════════════════════════ */
+.search-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.search-wrap{position:relative;flex:1;min-width:200px;}
+.search-wrap .ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none;}
+.search-inp{width:100%;padding:8px 12px 8px 36px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;background:var(--input-bg);color:var(--text);outline:none;transition:border-color .2s;}
+.search-inp:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(59,130,246,.1);}
+
+/* ════════════════════════════════════════════════════
+   FILTERS BAR (recoveries)
+════════════════════════════════════════════════════ */
+.filters-bar{background:var(--card);border-radius:12px;padding:13px 16px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;box-shadow:var(--sh-sm);border:1px solid var(--border);}
+.filter-pill{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .2s;}
+.filter-pill:hover,.filter-pill.active{border-color:var(--primary);color:var(--primary);background:rgba(59,130,246,.08);}
+.filter-pill.f-amber.active{border-color:var(--warning);color:var(--warning);background:rgba(245,158,11,.08);}
+.filter-pill.f-blue.active{border-color:#6366f1;color:#6366f1;background:rgba(99,102,241,.08);}
+.filter-pill.f-purple.active{border-color:var(--purple);color:var(--purple);background:rgba(139,92,246,.08);}
+.filter-pill.f-green.active{border-color:var(--success);color:var(--success);background:rgba(16,185,129,.08);}
+.filter-pill.f-red.active{border-color:var(--danger);color:var(--danger);background:rgba(239,68,68,.08);}
+
+/* ════════════════════════════════════════════════════
+   PAGINATION
+════════════════════════════════════════════════════ */
+.pag{display:flex;align-items:center;gap:6px;padding:12px 16px;border-top:1px solid var(--border);}
+.pag-info{font-size:12px;color:var(--muted);flex:1;}
+.pag-btn{padding:5px 11px;border:1px solid var(--border);border-radius:7px;background:none;color:var(--text);font-size:12px;cursor:pointer;transition:all .15s;}
+.pag-btn:hover:not(:disabled){border-color:var(--primary);color:var(--primary);}
+.pag-btn:disabled{opacity:.4;cursor:not-allowed;}
+.pag-btn.active{background:var(--primary);border-color:var(--primary);color:#fff;}
+
+/* ════════════════════════════════════════════════════
+   TRANSFER FORM
+════════════════════════════════════════════════════ */
+.transfer-form{background:var(--hdr);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:20px;}
+.transfer-arrow{display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--primary);}
+
+/* ════════════════════════════════════════════════════
+   FLOW STEPPER (recoveries)
+════════════════════════════════════════════════════ */
+.flow-stepper{display:flex;align-items:center;overflow-x:auto;padding:8px 0 12px;scrollbar-width:thin;}
+.flow-step{display:flex;flex-direction:column;align-items:center;min-width:90px;position:relative;}
+.flow-step::after{content:'';position:absolute;top:14px;left:calc(50% + 14px);width:calc(100% - 28px);height:2px;background:var(--border);}
+.flow-step:last-child::after{display:none;}
+.flow-step-dot{width:28px;height:28px;border-radius:50%;background:var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;z-index:1;border:2px solid var(--border);transition:all .3s;}
+.flow-step.completed .flow-step-dot{background:var(--success);border-color:var(--success);color:#fff;}
+.flow-step.active .flow-step-dot{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:0 0 0 4px rgba(59,130,246,.2);}
+.flow-step.completed::after{background:var(--success);}
+.flow-step-label{font-size:9px;font-weight:600;text-align:center;margin-top:4px;color:var(--muted);max-width:80px;line-height:1.2;}
+.flow-step.completed .flow-step-label,.flow-step.active .flow-step-label{color:var(--text);}
+
+/* ════════════════════════════════════════════════════
+   SEARCH AUTOCOMPLETE (recoveries modals)
+════════════════════════════════════════════════════ */
+.search-results-dropdown{position:absolute;z-index:1050;width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:var(--sh-md);max-height:220px;overflow-y:auto;display:none;}
+.search-result-item{padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);transition:background .15s;}
+.search-result-item:last-child{border-bottom:none;}
+.search-result-item:hover{background:var(--hover);}
+.search-result-item strong{display:block;font-weight:600;color:var(--text);}
+.search-result-item small{color:var(--muted);}
+
+/* ════════════════════════════════════════════════════
+   LOG TIMELINE
+════════════════════════════════════════════════════ */
+.log-timeline{padding:8px 0;}
+.log-entry{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);}
+.log-entry:last-child{border-bottom:none;}
+.log-dot{width:10px;height:10px;border-radius:50%;background:var(--primary);flex-shrink:0;margin-top:4px;}
+.log-text{font-size:12px;color:var(--text);}
+.log-meta{font-size:11px;color:var(--muted);}
+
+/* ════════════════════════════════════════════════════
+   MODAL (almacén — custom)
+════════════════════════════════════════════════════ */
+.modal-backdrop-custom{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1040;display:none;align-items:center;justify-content:center;}
+.modal-backdrop-custom.open{display:flex;}
+.modal-box{background:var(--card);border:1px solid var(--border);border-radius:18px;width:100%;margin:20px;box-shadow:var(--sh-lg);overflow:hidden;max-height:90vh;display:flex;flex-direction:column;}
+.modal-box.sm{max-width:480px;}
+.modal-box.md{max-width:640px;}
+.modal-box.lg{max-width:900px;}
+.modal-hdr{padding:16px 22px;border-bottom:1px solid var(--border);background:var(--hdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.modal-hdr-left{display:flex;align-items:center;gap:10px;}
+.modal-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.modal-title-txt{font-size:14px;font-weight:700;color:var(--text);}
+.modal-sub-txt{font-size:11px;color:var(--muted);}
+.modal-close-btn{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;padding:2px 6px;border-radius:6px;transition:background .15s;}
+.modal-close-btn:hover{background:var(--hover);}
+.modal-body-custom{padding:22px;overflow-y:auto;flex:1;}
+.modal-ftr{padding:14px 22px;border-top:1px solid var(--border);background:var(--hdr);display:flex;gap:10px;justify-content:flex-end;flex-shrink:0;}
+
+/* ════════════════════════════════════════════════════
+   DETAIL GRID
+════════════════════════════════════════════════════ */
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.detail-cell{background:var(--hdr);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+.detail-cell.span2{grid-column:1/-1;}
+.detail-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:4px;}
+.detail-val{font-size:13px;color:var(--text);font-weight:600;}
+
+/* ════════════════════════════════════════════════════
+   EMPTY / LOADING / TOAST
+════════════════════════════════════════════════════ */
+.empty-row td{text-align:center;padding:32px;color:var(--muted);font-size:13px;}
+.spinner-sm{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .65s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+#toastZone{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast-item{padding:12px 18px;border-radius:12px;color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;box-shadow:var(--sh-md);animation:toastIn .25s ease;max-width:360px;}
+@keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.toast-ok{background:#10b981;}.toast-err{background:#ef4444;}.toast-inf{background:#3b82f6;}.toast-warn{background:#f59e0b;}
+
+/* toast-container-custom para recoveries */
+.toast-container-custom{position:fixed;top:72px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+
+*::-webkit-scrollbar{width:5px;height:5px;}
+*::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+
+<script>(function(){const t=localStorage.getItem('dashboardTheme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <button class="close-sidebar" id="closeSidebar">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    
+    <div class="menu-item">
+        <a href="<%= APP_URL %>/home" class="menu-header">
+            <div class="menu-title">
+               <i class="fas fa-home"></i>
+                <span>Home</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item">
+        <div class="menu-header" onclick="toggleSubmenu(this)">
+            <div class="menu-title">
+                <i class="fas fa-desktop"></i>
+                <span>Almacen</span>
+            </div>
+            <i class="fas fa-chevron-down collapse-indicator"></i>
+        </div>
+        <div class="submenu">
+            <a href="<%= APP_URL %>/equipment" class="submenu-item">
+                <i class="fa-solid fa-database"></i> Jira
+            </a>
+            <a href="#" class="submenu-item">
+                <i class="fa-solid fa-server"></i> Tareas
+            </a>
+        </div>
+    </div>
+
+   
+    <div class="menu-item">
+        <a href="#" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-cog"></i>
+                <span>Administración</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item"> 
+        <a href="logout" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Navbar Principal -->
+<nav class="navbar navbar-expand-lg fixed-top" id="navbar">
+    <div class="container-fluid">
+        <button class="toggler-btn" id="mainToggleSidebar">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Dark mode toggle — compacto, alineado a la derecha del navbar -->
+        <div class="theme-toggle-wrap ms-auto" id="themeToggle" onclick="toggleTheme()" title="Cambiar tema" role="button" aria-label="Cambiar modo claro/oscuro">
+            <!-- Ícono -->
+            <i class="theme-toggle-icon" id="toggleIcon">🌙</i>
+            <!-- Switch track -->
+            <div class="theme-switch">
+                <div class="theme-switch-knob" id="switchKnob"></div>
+            </div>
+            <!-- Label -->
+            <span class="theme-toggle-label" id="toggleLabel">Oscuro</span>
+        </div>
+    </div>
+</nav>
+
+<style>
+/* ─── Dark Mode Toggle — Navbar ─────────────────────── */
+.theme-toggle-wrap {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    user-select: none;
+    padding: 4px 10px 4px 8px;
+    border-radius: 20px;
+    transition: background 0.2s;
+}
+.theme-toggle-wrap:hover {
+    background: rgba(0,0,0,0.06);
+}
+[data-theme="dark"] .theme-toggle-wrap:hover {
+    background: rgba(255,255,255,0.08);
+}
+
+/* Ícono emoji pequeño */
+.theme-toggle-icon {
+    font-size: 14px;
+    line-height: 1;
+    transition: transform 0.4s cubic-bezier(.4,0,.2,1);
+    display: flex;
+    align-items: center;
+}
+.theme-toggle-wrap:hover .theme-toggle-icon {
+    transform: rotate(20deg);
+}
+
+/* Switch track */
+.theme-switch {
+    width: 34px;
+    height: 18px;
+    background: #cbd5e1;
+    border-radius: 9px;
+    position: relative;
+    transition: background 0.3s ease;
+    flex-shrink: 0;
+}
+[data-theme="dark"] .theme-switch {
+    background: #3b82f6;
+}
+
+/* Knob */
+.theme-switch-knob {
+    width: 13px;
+    height: 13px;
+    background: #ffffff;
+    border-radius: 50%;
+    position: absolute;
+    top: 2.5px;
+    left: 3px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+}
+[data-theme="dark"] .theme-switch-knob {
+    transform: translateX(16px);
+}
+
+/* Label */
+.theme-toggle-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    letter-spacing: 0.2px;
+    transition: color 0.3s;
+    white-space: nowrap;
+}
+[data-theme="dark"] .theme-toggle-label {
+    color: #94a3b8;
+}
+</style>
+
+<script>
+/* ─── Dark Mode — init inmediato (sin flash) ────────── */
+(function () {
+    const saved = localStorage.getItem('dashboardTheme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+})();
+
+function toggleTheme() {
+    const html    = document.documentElement;
+    const current = html.getAttribute('data-theme');
+    const next    = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('dashboardTheme', next);
+    _syncToggleUI(next);
+    if (typeof updateChartsTheme === 'function') updateChartsTheme(next);
+}
+
+function _syncToggleUI(theme) {
+    const icon  = document.getElementById('toggleIcon');
+    const label = document.getElementById('toggleLabel');
+    if (!icon || !label) return;
+    if (theme === 'dark') {
+        icon.textContent  = '☀️';
+        label.textContent = 'Claro';
+    } else {
+        icon.textContent  = '🌙';
+        label.textContent = 'Oscuro';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const saved = localStorage.getItem('dashboardTheme') || 'light';
+    _syncToggleUI(saved);
+});
+</script>
+
+<div class="pg">
+
+<!-- ══════════════════════════════════════════════════
+     PAGE HEADER
+══════════════════════════════════════════════════ -->
+<div class="page-hdr">
+    <div class="page-hdr-icon" style="background:linear-gradient(135deg,#3b82f6,#8b5cf6);">
+        <i class="bi bi-boxes" style="color:#fff;"></i>
+    </div>
+    <div>
+        <h1>Almacén Workplace</h1>
+        <p>Gestión de equipos disponibles, fallas técnicas, traslados y recupero de equipos</p>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     KPI SECTION — ALMACÉN
+══════════════════════════════════════════════════ -->
+<p class="sec-title"><i class="bi bi-boxes"></i> Stock en almacén</p>
+<div class="kpi-grid-almacen">
+    <div class="kpi" style="--kc:var(--info)" data-tipo="Laptop" onclick="filtrarPorTipo('Laptop')">
+        <div class="kpi-left">
+            <div class="kpi-label">Laptops</div>
+            <div class="kpi-val" id="kpi-laptop">—</div>
+            <div class="kpi-sub">disponibles</div>
+        </div>
+        <i class="bi bi-laptop kpi-icon"></i>
+    </div>
+    <div class="kpi" style="--kc:var(--success)" data-tipo="Desktop" onclick="filtrarPorTipo('Desktop')">
+        <div class="kpi-left">
+            <div class="kpi-label">Desktops</div>
+            <div class="kpi-val" id="kpi-desktop">—</div>
+            <div class="kpi-sub">disponibles</div>
+        </div>
+        <i class="bi bi-pc-display kpi-icon"></i>
+    </div>
+    <div class="kpi" style="--kc:var(--warning)" data-tipo="Monitor" onclick="filtrarPorTipo('Monitor')">
+        <div class="kpi-left">
+            <div class="kpi-label">Monitores</div>
+            <div class="kpi-val" id="kpi-monitor">—</div>
+            <div class="kpi-sub">disponibles</div>
+        </div>
+        <i class="bi bi-display kpi-icon"></i>
+    </div>
+    <div class="kpi" style="--kc:var(--primary)" data-tipo="" onclick="filtrarPorTipo('')">
+        <div class="kpi-left">
+            <div class="kpi-label">Total almacén</div>
+            <div class="kpi-val" id="kpi-total">—</div>
+            <div class="kpi-sub" id="kpi-fallas-sub">— con falla</div>
+        </div>
+        <i class="bi bi-boxes kpi-icon"></i>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     KPI SECTION — RECUPEROS
+══════════════════════════════════════════════════ -->
+<p class="sec-title" style="margin-top:8px;"><i class="bi bi-arrow-return-left"></i> Recupero de equipos</p>
+<div class="kpi-grid-recoveries">
+    <div class="kpi no-click" style="--kc:var(--danger)">
+        <div class="kpi-left">
+            <div class="kpi-label"><span class="kpi-dot" style="background:var(--danger)"></span>Por recuperar</div>
+            <div class="kpi-val" id="kpiPorRecuperar">—</div>
+            <div class="kpi-sub">Sin gestión iniciada</div>
+        </div>
+        <i class="bi bi-exclamation-circle kpi-icon"></i>
+    </div>
+    <div class="kpi no-click" style="--kc:var(--warning)">
+        <div class="kpi-left">
+            <div class="kpi-label"><span class="kpi-dot" style="background:var(--warning)"></span>En proceso</div>
+            <div class="kpi-val" id="kpiEnProceso">—</div>
+            <div class="kpi-sub">Gestión + recogidos</div>
+        </div>
+        <i class="bi bi-hourglass-split kpi-icon"></i>
+    </div>
+    <div class="kpi no-click" style="--kc:var(--purple)">
+        <div class="kpi-left">
+            <div class="kpi-label"><span class="kpi-dot" style="background:var(--purple)"></span>En revisión</div>
+            <div class="kpi-val" id="kpiEnRevision">—</div>
+            <div class="kpi-sub">Revisión técnica</div>
+        </div>
+        <i class="bi bi-tools kpi-icon"></i>
+    </div>
+    <div class="kpi no-click" style="--kc:var(--success)">
+        <div class="kpi-left">
+            <div class="kpi-label"><span class="kpi-dot" style="background:var(--success)"></span>Listos</div>
+            <div class="kpi-val" id="kpiListos">—</div>
+            <div class="kpi-sub">Para reasignar</div>
+        </div>
+        <i class="bi bi-check-circle kpi-icon"></i>
+    </div>
+    <div class="kpi no-click" style="--kc:var(--muted)">
+        <div class="kpi-left">
+            <div class="kpi-label"><span class="kpi-dot" style="background:var(--muted)"></span>Recuperados (mes)</div>
+            <div class="kpi-val" id="kpiRecuperadosMes">—</div>
+            <div class="kpi-sub">Este mes</div>
+        </div>
+        <i class="bi bi-calendar-check kpi-icon"></i>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     CHARTS ROW
+══════════════════════════════════════════════════ -->
+<div class="charts-row">
+    <div class="chart-card">
+        <div class="chart-title"><i class="bi bi-pie-chart-fill" style="color:var(--info)"></i> Stock por tipo</div>
+        <div class="chart-canvas-wrap"><canvas id="chartStockTipo"></canvas></div>
+    </div>
+    <div class="chart-card">
+        <div class="chart-title"><i class="bi bi-bar-chart-fill" style="color:var(--warning)"></i> Fallas por componente</div>
+        <div class="chart-canvas-wrap"><canvas id="chartFallasComp"></canvas></div>
+    </div>
+    <div class="chart-card">
+        <div class="chart-title"><i class="bi bi-graph-up" style="color:var(--success)"></i> Recuperos por estado</div>
+        <div class="chart-canvas-wrap"><canvas id="chartRecuperosEstado"></canvas></div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     MAIN TABS
+══════════════════════════════════════════════════ -->
+<div class="main-tabs">
+    <button class="main-tab-btn active" onclick="switchMainTab('almacen', this)">
+        <i class="bi bi-boxes"></i> Almacén
+        <span class="tab-count" id="mtc-almacen">0</span>
+    </button>
+    <button class="main-tab-btn" onclick="switchMainTab('recuperos', this)">
+        <i class="bi bi-arrow-return-left"></i> Recuperos
+        <span class="tab-count" id="mtc-recuperos">0</span>
+    </button>
+</div>
+
+<!-- ══════════════════════════════════════
+     MAIN TAB: ALMACÉN
+══════════════════════════════════════ -->
+<div id="maintab-almacen" class="main-tab-pane active">
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('disponibles', this)">
+            <i class="bi bi-box-seam"></i> Disponibles
+        </button>
+        <button class="tab-btn" onclick="switchTab('fallas', this)">
+            <i class="bi bi-exclamation-triangle"></i> Fallas técnicas
+            <span id="badge-fallas" class="badge bg-danger ms-1" style="display:none;">0</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('traslados', this)">
+            <i class="bi bi-arrows-move"></i> Traslados
+        </button>
+    </div>
+
+    <!-- TAB: DISPONIBLES -->
+    <div id="tab-disponibles" class="tab-pane active">
+        <div class="card-ui">
+            <div class="card-head">
+                <span class="title"><i class="bi bi-laptop-fill"></i> Equipos disponibles <span class="badge bg-primary-soft" id="cnt-disponibles">0</span></span>
+                <div class="search-bar">
+                    <div class="search-wrap">
+                        <i class="bi bi-search ico"></i>
+                        <input type="text" class="search-inp" id="searchDisp" placeholder="Buscar código, marca, modelo..." oninput="onSearchDisp()">
+                    </div>
+                    <select class="form-select" style="width:140px;" id="filterTipoDisp" onchange="onSearchDisp()">
+                        <option value="">Todos los tipos</option>
+                        <option value="Laptop">Laptop</option>
+                        <option value="Desktop">Desktop</option>
+                        <option value="Monitor">Monitor</option>
+                        <option value="Tablet">Tablet</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                    <button class="btn btn-success btn-sm" onclick="openModalNuevo()"><i class="bi bi-plus-circle"></i> Nuevo equipo</button>
+                    <button class="btn btn-outline btn-sm" onclick="cargarDisponibles()" title="Actualizar"><i class="bi bi-arrow-clockwise"></i></button>
+                </div>
+            </div>
+            <div class="tbl-wrap">
+                <table class="tbl">
+                    <thead><tr><th>Código</th><th>Tipo</th><th>Marca</th><th>Modelo</th><th>SO</th><th>RAM</th><th>Disco</th><th>Dominio</th><th>Garantía</th></tr></thead>
+                    <tbody id="tbl-disp"><tr class="empty-row"><td colspan="9"><span class="spinner-sm"></span> Cargando...</td></tr></tbody>
+                </table>
+            </div>
+            <div class="pag" id="pag-disp"></div>
+        </div>
+    </div>
+
+    <!-- TAB: FALLAS -->
+    <div id="tab-fallas" class="tab-pane">
+        <div class="card-ui">
+            <div class="card-head">
+                <span class="title"><i class="bi bi-tools" style="color:var(--warning)"></i> Equipos con falla técnica <span class="badge bg-warning" id="cnt-fallas">0</span></span>
+                <div class="search-bar">
+                    <div class="search-wrap">
+                        <i class="bi bi-search ico"></i>
+                        <input type="text" class="search-inp" id="searchFallas" placeholder="Buscar equipo o falla..." oninput="onSearchFallas()">
+                    </div>
+                    <select class="form-select" style="width:180px;" id="filterStatusFalla" onchange="onSearchFallas()">
+                        <option value="">Todos los estados</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="En proceso">En proceso</option>
+                        <option value="Esperando repuesto">Esperando repuesto</option>
+                        <option value="Resuelto">Resuelto</option>
+                        <option value="Dado de baja">Dado de baja</option>
+                    </select>
+                    <button class="btn btn-warning btn-sm" onclick="openModalFalla()"><i class="bi bi-plus-circle"></i> Registrar falla</button>
+                    <button class="btn btn-outline btn-sm" onclick="cargarFallas()" title="Actualizar"><i class="bi bi-arrow-clockwise"></i></button>
+                </div>
+            </div>
+            <div class="tbl-wrap">
+                <table class="tbl">
+                    <thead><tr><th>Equipo</th><th>Componente</th><th>Descripción</th><th>Proveedor</th><th>Costo Est.</th><th>Estado</th><th>Registrado</th><th>Acciones</th></tr></thead>
+                    <tbody id="tbl-fallas"><tr class="empty-row"><td colspan="8"><span class="spinner-sm"></span> Cargando...</td></tr></tbody>
+                </table>
+            </div>
+            <div class="pag" id="pag-fallas"></div>
+        </div>
+    </div>
+
+    <!-- TAB: TRASLADOS -->
+    <div id="tab-traslados" class="tab-pane">
+        <div class="transfer-form">
+            <p class="sec-title" style="margin-bottom:16px;"><i class="bi bi-arrows-move"></i> Registrar traslado</p>
+            <div style="display:grid;grid-template-columns:1fr 60px 1fr 1fr;gap:12px;align-items:end;">
+                <div>
+                    <label class="form-label">Equipo <span class="req">*</span></label>
+                    <div style="position:relative;">
+                        <input type="text" class="form-control" id="trEquipoQ" placeholder="Buscar código..." autocomplete="off" oninput="buscarEquipoTraslado(this.value)">
+                        <div id="trEquipoDrop" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:9px;z-index:50;max-height:200px;overflow:auto;box-shadow:var(--sh-md);"></div>
+                    </div>
+                    <input type="hidden" id="trEquipoId">
+                    <div id="trEquipoInfo" style="margin-top:6px;font-size:11px;color:var(--muted);"></div>
+                </div>
+                <div class="transfer-arrow"><i class="bi bi-arrow-right-circle-fill"></i></div>
+                <div>
+                    <label class="form-label">Destino <span class="req">*</span></label>
+                    <select class="form-select" id="trDestino"><option value="">Seleccionar ubicación...</option></select>
+                </div>
+                <div>
+                    <label class="form-label">Fecha <span class="req">*</span></label>
+                    <input type="date" class="form-control" id="trFecha">
+                </div>
+            </div>
+            <div style="margin-top:12px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;">
+                <div>
+                    <label class="form-label">Notas (opcional)</label>
+                    <input type="text" class="form-control" id="trNotas" placeholder="Observaciones del traslado...">
+                </div>
+                <button class="btn btn-primary" onclick="registrarTraslado()"><i class="bi bi-send-fill"></i> Registrar traslado</button>
+            </div>
+        </div>
+        <div class="card-ui">
+            <div class="card-head">
+                <span class="title"><i class="bi bi-clock-history"></i> Historial de traslados <span class="badge bg-primary-soft" id="cnt-traslados">0</span></span>
+                <div class="search-bar">
+                    <div class="search-wrap">
+                        <i class="bi bi-search ico"></i>
+                        <input type="text" class="search-inp" id="searchTr" placeholder="Buscar equipo o ubicación..." oninput="onSearchTr()">
+                    </div>
+                    <button class="btn btn-outline btn-sm" onclick="cargarTraslados()" title="Actualizar"><i class="bi bi-arrow-clockwise"></i></button>
+                </div>
+            </div>
+            <div class="tbl-wrap">
+                <table class="tbl">
+                    <thead><tr><th>Fecha</th><th>Equipo</th><th>Tipo</th><th>Origen</th><th>Destino</th><th>Notas</th></tr></thead>
+                    <tbody id="tbl-tr"><tr class="empty-row"><td colspan="6"><span class="spinner-sm"></span> Cargando...</td></tr></tbody>
+                </table>
+            </div>
+            <div class="pag" id="pag-tr"></div>
+        </div>
+    </div>
+
+</div><!-- /maintab-almacen -->
+
+
+<!-- ══════════════════════════════════════
+     MAIN TAB: RECUPEROS
+══════════════════════════════════════ -->
+<div id="maintab-recuperos" class="main-tab-pane">
+
+    <!-- Filtros de estado -->
+    <div class="filters-bar">
+        <span style="font-size:12px;font-weight:600;color:var(--muted);margin-right:4px;">Estado:</span>
+        <button class="filter-pill active"    data-status="todos"               onclick="rec_aplicarFiltro(this,'todos')">Todos</button>
+        <button class="filter-pill f-red"     data-status="por_recuperar"       onclick="rec_aplicarFiltro(this,'por_recuperar')">Por recuperar</button>
+        <button class="filter-pill f-amber"   data-status="en_gestion"          onclick="rec_aplicarFiltro(this,'en_gestion')">En gestión</button>
+        <button class="filter-pill f-blue"    data-status="recogido_tecnico"    onclick="rec_aplicarFiltro(this,'recogido_tecnico')">Recogido</button>
+        <button class="filter-pill f-blue"    data-status="traido_oficina"      onclick="rec_aplicarFiltro(this,'traido_oficina')">En oficina</button>
+        <button class="filter-pill f-purple"  data-status="en_revision"         onclick="rec_aplicarFiltro(this,'en_revision')">En revisión</button>
+        <button class="filter-pill f-green"   data-status="listo_para_asignar"  onclick="rec_aplicarFiltro(this,'listo_para_asignar')">Listo</button>
+        <button class="filter-pill"           data-status="envio_provincia"     onclick="rec_aplicarFiltro(this,'envio_provincia')">Provincia</button>
+        <button class="filter-pill"           data-status="recuperado"          onclick="rec_aplicarFiltro(this,'recuperado')">Recuperados</button>
+    </div>
+
+    <div class="card-ui">
+        <div class="card-head">
+            <h5 style="margin:0;font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;">
+                <i class="bi bi-table"></i> Recuperos activos
+                <span class="badge bg-secondary" id="totalCount" style="font-size:11px;">0</span>
+            </h5>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline" onclick="rec_recargarTabla()"><i class="bi bi-arrow-clockwise me-1"></i>Actualizar</button>
+                <button class="btn btn-sm btn-warning" onclick="rec_abrirModalNuevo()"><i class="bi bi-plus-lg me-1"></i>Nuevo recupero</button>
+            </div>
+        </div>
+        <div style="overflow-x:auto;">
+            <table id="recoveriesTable" class="table table-hover" style="width:100%;margin:0;">
+                <thead>
+                    <tr>
+                        <th>#</th><th>Equipo</th><th>Empleado</th><th>Estado</th>
+                        <th>Método</th><th>Técnico</th><th>Fecha prog.</th>
+                        <th>Departamento</th><th>Días</th><th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+</div><!-- /maintab-recuperos -->
+
+</div><!-- /.pg -->
+
+
+<!-- ══════════════════════════════════════════════════
+     MODALES ALMACÉN (custom backdrop)
+══════════════════════════════════════════════════ -->
+
+<!-- DETALLE EQUIPO -->
+<div class="modal-backdrop-custom" id="modalDetalle" onclick="closeModalById('modalDetalle')">
+    <div class="modal-box md" onclick="event.stopPropagation()">
+        <div class="modal-hdr">
+            <div class="modal-hdr-left">
+                <div class="modal-icon" style="background:rgba(59,130,246,.12);color:var(--primary);"><i class="bi bi-laptop-fill"></i></div>
+                <div><div class="modal-title-txt" id="detalleTitle">Detalle del equipo</div><div class="modal-sub-txt" id="detalleSub"></div></div>
+            </div>
+            <button class="modal-close-btn" onclick="closeModalById('modalDetalle')">&times;</button>
+        </div>
+        <div class="modal-body-custom"><div class="detail-grid" id="detalleGrid"></div></div>
+        <div class="modal-ftr">
+            <button class="btn btn-warning btn-sm" id="btnFallaDesdeDetalle" onclick="abrirFallaDesdeDetalle()"><i class="bi bi-tools"></i> Registrar falla</button>
+            <button class="btn btn-outline btn-sm" onclick="closeModalById('modalDetalle')">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- NUEVO EQUIPO -->
+<div class="modal-backdrop-custom" id="modalNuevo" onclick="closeModalById('modalNuevo')">
+    <div class="modal-box lg" onclick="event.stopPropagation()">
+        <div class="modal-hdr">
+            <div class="modal-hdr-left">
+                <div class="modal-icon" style="background:rgba(16,185,129,.12);color:var(--success);"><i class="bi bi-plus-circle-fill"></i></div>
+                <div><div class="modal-title-txt">Nuevo equipo</div><div class="modal-sub-txt">Se añadirá como Disponible en almacén</div></div>
+            </div>
+            <button class="modal-close-btn" onclick="closeModalById('modalNuevo')">&times;</button>
+        </div>
+        <div class="modal-body-custom">
+            <div id="alertNuevo" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:9px;padding:10px 14px;font-size:13px;color:var(--danger);margin-bottom:14px;"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+                <div><label class="form-label">Código <span class="req">*</span></label><input type="text" class="form-control" id="nCodigo" placeholder="EQ-00123"></div>
+                <div><label class="form-label">Serie</label><input type="text" class="form-control" id="nSerie"></div>
+                <div><label class="form-label">Tipo <span class="req">*</span></label>
+                    <select class="form-select" id="nTipo"><option value="">Seleccionar...</option><option>Laptop</option><option>Desktop</option><option>Monitor</option><option>Tablet</option><option>Otro</option></select>
+                </div>
+                <div><label class="form-label">Marca <span class="req">*</span></label><input type="text" class="form-control" id="nMarca" placeholder="HP, Lenovo..."></div>
+                <div><label class="form-label">Modelo <span class="req">*</span></label><input type="text" class="form-control" id="nModelo"></div>
+                <div><label class="form-label">Sistema Operativo</label><input type="text" class="form-control" id="nSO" placeholder="Windows 11 Pro"></div>
+                <div><label class="form-label">Procesador</label><input type="text" class="form-control" id="nCPU" placeholder="i7-1265U"></div>
+                <div><label class="form-label">RAM</label><input type="text" class="form-control" id="nRAM" placeholder="16 GB"></div>
+                <div><label class="form-label">Disco</label><input type="text" class="form-control" id="nDisco" placeholder="512 GB SSD"></div>
+                <div><label class="form-label">Tipo adquisición</label>
+                    <select class="form-select" id="nAdq"><option value="Propio">Propio</option><option value="Arrendado">Arrendado</option><option value="Leasing">Leasing</option><option value="Donado">Donado</option></select>
+                </div>
+                <div><label class="form-label">Meses de garantía</label><input type="number" class="form-control" id="nGarantia" placeholder="12" min="0"></div>
+                <div><label class="form-label">Años obsolescencia</label><input type="number" class="form-control" id="nObsolescencia" placeholder="5" min="1"></div>
+                <div><label class="form-label">Dominio</label><input type="text" class="form-control" id="nDominio" placeholder="GP-OTF"></div>
+            </div>
+        </div>
+        <div class="modal-ftr">
+            <button class="btn btn-outline btn-sm" onclick="closeModalById('modalNuevo')">Cancelar</button>
+            <button class="btn btn-success" id="btnGuardarNuevo" onclick="guardarNuevoEquipo()"><i class="bi bi-check-circle-fill"></i> Guardar equipo</button>
+        </div>
+    </div>
+</div>
+
+<!-- REGISTRAR FALLA -->
+<div class="modal-backdrop-custom" id="modalFalla" onclick="closeModalById('modalFalla')">
+    <div class="modal-box md" onclick="event.stopPropagation()">
+        <div class="modal-hdr">
+            <div class="modal-hdr-left">
+                <div class="modal-icon" style="background:rgba(245,158,11,.12);color:var(--warning);"><i class="bi bi-tools"></i></div>
+                <div><div class="modal-title-txt">Registrar falla técnica</div><div class="modal-sub-txt" id="fallaEquipoSub">Selecciona un equipo</div></div>
+            </div>
+            <button class="modal-close-btn" onclick="closeModalById('modalFalla')">&times;</button>
+        </div>
+        <div class="modal-body-custom">
+            <div id="alertFalla" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:9px;padding:10px 14px;font-size:13px;color:var(--danger);margin-bottom:14px;"></div>
+            <div style="margin-bottom:14px;" id="fallaEquipoSelector">
+                <label class="form-label">Equipo <span class="req">*</span></label>
+                <div style="position:relative;">
+                    <input type="text" class="form-control" id="fallaEquipoQ" placeholder="Buscar código o modelo..." autocomplete="off" oninput="buscarEquipoFalla(this.value)">
+                    <div id="fallaEquipoDrop" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:9px;z-index:60;max-height:180px;overflow:auto;box-shadow:var(--sh-md);"></div>
+                </div>
+                <input type="hidden" id="fallaEquipoId">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div><label class="form-label">Componente afectado <span class="req">*</span></label>
+                    <select class="form-select" id="fallaComponente">
+                        <option value="">Seleccionar parte...</option>
+                        <option>CPU / Procesador</option><option>RAM / Memoria</option><option>Disco / Almacenamiento</option>
+                        <option>Pantalla / Display</option><option>Batería</option><option>Teclado / Touchpad</option>
+                        <option>Puerto / Conector</option><option>Placa base</option><option>Fuente de poder</option>
+                        <option>Sistema operativo</option><option>Otro</option>
+                    </select>
+                </div>
+                <div><label class="form-label">Estado inicial</label>
+                    <select class="form-select" id="fallaEstado">
+                        <option value="Pendiente">Pendiente</option><option value="En proceso">En proceso</option><option value="Esperando repuesto">Esperando repuesto</option>
+                    </select>
+                </div>
+                <div style="grid-column:1/-1;"><label class="form-label">Descripción del problema <span class="req">*</span></label><textarea class="form-control" id="fallaDesc" rows="3" placeholder="Describe el problema con detalle..."></textarea></div>
+                <div><label class="form-label">Proveedor / Taller</label><input type="text" class="form-control" id="fallaProveedor" placeholder="Nombre del taller"></div>
+                <div><label class="form-label">Costo estimado (S/.)</label><input type="number" class="form-control" id="fallaCosto" placeholder="0.00" min="0" step="0.01"></div>
+            </div>
+        </div>
+        <div class="modal-ftr">
+            <button class="btn btn-outline btn-sm" onclick="closeModalById('modalFalla')">Cancelar</button>
+            <button class="btn btn-warning" id="btnGuardarFalla" onclick="guardarFalla()"><i class="bi bi-exclamation-triangle-fill"></i> Registrar falla</button>
+        </div>
+    </div>
+</div>
+
+<!-- ACTUALIZAR FALLA -->
+<div class="modal-backdrop-custom" id="modalEditFalla" onclick="closeModalById('modalEditFalla')">
+    <div class="modal-box sm" onclick="event.stopPropagation()">
+        <div class="modal-hdr">
+            <div class="modal-hdr-left">
+                <div class="modal-icon" style="background:rgba(59,130,246,.12);color:var(--primary);"><i class="bi bi-pencil-square"></i></div>
+                <div><div class="modal-title-txt">Actualizar falla</div><div class="modal-sub-txt" id="editFallaSub"></div></div>
+            </div>
+            <button class="modal-close-btn" onclick="closeModalById('modalEditFalla')">&times;</button>
+        </div>
+        <div class="modal-body-custom">
+            <input type="hidden" id="editFallaId">
+            <div style="display:flex;flex-direction:column;gap:13px;">
+                <div><label class="form-label">Estado de reparación</label>
+                    <select class="form-select" id="editFallaEstado"><option>Pendiente</option><option>En proceso</option><option>Esperando repuesto</option><option>Resuelto</option><option>Dado de baja</option></select>
+                </div>
+                <div><label class="form-label">Proveedor / Taller</label><input type="text" class="form-control" id="editFallaProveedor"></div>
+                <div><label class="form-label">Costo estimado (S/.)</label><input type="number" class="form-control" id="editFallaCosto" min="0" step="0.01"></div>
+                <div><label class="form-label">Descripción / Notas</label><textarea class="form-control" id="editFallaDesc" rows="3"></textarea></div>
+            </div>
+        </div>
+        <div class="modal-ftr">
+            <button class="btn btn-outline btn-sm" onclick="closeModalById('modalEditFalla')">Cancelar</button>
+            <button class="btn btn-primary" id="btnGuardarEditFalla" onclick="guardarEditFalla()"><i class="bi bi-check-circle-fill"></i> Guardar cambios</button>
+        </div>
+    </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     MODALES RECUPEROS (Bootstrap nativo — usa jQuery)
+══════════════════════════════════════════════════ -->
+
+<!-- NUEVO RECUPERO -->
+<div class="modal fade" id="newRecoveryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background:var(--card);border:1px solid var(--border);border-radius:16px;">
+            <div class="modal-header" style="border-bottom:1px solid var(--border);padding:18px 24px;">
+                <h5 class="modal-title" style="font-weight:700;font-size:16px;color:var(--text);"><i class="bi bi-plus-circle me-2 text-warning"></i>Nuevo recupero</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="background:var(--card);">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" style="color:var(--muted);">Equipo <span class="text-danger">*</span></label>
+                        <div class="position-relative">
+                            <input type="text" id="newEquipmentCode" class="form-control" placeholder="Buscar por código...">
+                            <div class="search-results-dropdown" id="newEquipmentResults"></div>
+                        </div>
+                        <input type="hidden" id="newEquipmentId">
+                        <small style="color:var(--muted);font-size:11px;" id="newEquipmentStatus">Escribe al menos 2 caracteres</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" style="color:var(--muted);">Empleado <span class="text-danger">*</span></label>
+                        <div class="position-relative">
+                            <input type="text" id="newEmployeeName" class="form-control" placeholder="Buscar por nombre o CIP...">
+                            <div class="search-results-dropdown" id="newEmployeeResults"></div>
+                        </div>
+                        <input type="hidden" id="newEmployeeId">
+                        <small style="color:var(--muted);font-size:11px;" id="newEmployeeStatus">Escribe al menos 3 caracteres</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" style="color:var(--muted);">Método de recupero</label>
+                        <select id="newRecoveryMethod" class="form-select">
+                            <option value="pendiente">Pendiente (definir después)</option>
+                            <option value="recojo_tecnico">Técnico va a recoger</option>
+                            <option value="entrega_usuario">Usuario trae a oficina</option>
+                            <option value="envio_courier">Envío por courier</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" style="color:var(--muted);">Técnico responsable</label>
+                        <input type="text" id="newTechnicianName" class="form-control" placeholder="Nombre del técnico">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" style="color:var(--muted);">Fecha programada</label>
+                        <input type="date" id="newScheduledDate" class="form-control">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" style="color:var(--muted);">Notas</label>
+                        <textarea id="newNotes" class="form-control" rows="2" placeholder="Observaciones..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid var(--border);background:var(--hdr);">
+                <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning" id="btnGuardarNuevo">
+                    <span class="spinner-border spinner-border-sm d-none me-1" id="spinnerNuevo"></span>
+                    <span id="btnNuevoText">Crear recupero</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- EDITAR RECUPERO -->
+<div class="modal fade" id="editRecoveryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background:var(--card);border:1px solid var(--border);border-radius:16px;">
+            <div class="modal-header" style="border-bottom:1px solid var(--border);padding:18px 24px;">
+                <h5 class="modal-title" style="font-weight:700;font-size:16px;color:var(--text);">
+                    <i class="bi bi-pencil-square me-2 text-primary"></i>Gestionar recupero
+                    <span id="editRecoveryIdLabel" style="color:var(--muted);font-weight:400;font-size:14px;margin-left:4px;"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="background:var(--card);">
+                <div class="mb-3">
+                    <label class="form-label" style="color:var(--muted);">Flujo del recupero</label>
+                    <div class="flow-stepper" id="flowStepper"></div>
+                </div>
+                <hr style="border-color:var(--border);">
+                <div class="row g-3">
+                    <input type="hidden" id="editRecoveryId">
+                    <div class="col-md-6">
+                        <label class="form-label" style="color:var(--muted);">Nuevo estado <span class="text-danger">*</span></label>
+                        <select id="editNewStatus" class="form-select"></select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" style="color:var(--muted);">Método</label>
+                        <select id="editRecoveryMethod" class="form-select">
+                            <option value="">Sin cambio</option>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="recojo_tecnico">Técnico va a recoger</option>
+                            <option value="entrega_usuario">Usuario trae a oficina</option>
+                            <option value="envio_courier">Envío por courier</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" style="color:var(--muted);">Técnico responsable</label>
+                        <input type="text" id="editTechnicianName" class="form-control" placeholder="Nombre del técnico">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" style="color:var(--muted);">Fecha programada</label>
+                        <input type="date" id="editScheduledDate" class="form-control">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" style="color:var(--muted);">Nota del cambio</label>
+                        <textarea id="editTechnicianNote" class="form-control" rows="2" placeholder="¿Qué se hizo? ¿Qué falta?"></textarea>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label class="form-label" style="color:var(--muted);"><i class="bi bi-clock-history me-1"></i>Historial de cambios</label>
+                    <div id="logTimeline" class="log-timeline">
+                        <div style="text-align:center;padding:12px;font-size:12px;color:var(--muted);">Cargando historial...</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid var(--border);background:var(--hdr);">
+                <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarEdicion">
+                    <span class="spinner-border spinner-border-sm d-none me-1" id="spinnerEdicion"></span>
+                    <span id="btnEdicionText">Guardar cambio</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- TOAST ZONES -->
+<div id="toastZone"></div>
+<div class="toast-container-custom"></div>
+
+
+<!-- ══════════════════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="/js/sidebar.js"></script>
+<script src="/js/almacen-dashboard.js"></script>
+<script src="/js/recoveries-dashboard.js"></script>
+
+<script>
+/* ── Aliases de seguridad: cubren el caso de JS viejo en caché ── */
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof window.rec_abrirModalNuevo !== 'function') {
+        window.rec_abrirModalNuevo = function() {
+            var m = document.getElementById('newRecoveryModal');
+            if (m) new bootstrap.Modal(m).show();
+        };
+    }
+    if (typeof window.rec_aplicarFiltro !== 'function' && typeof window.aplicarFiltro === 'function')
+        window.rec_aplicarFiltro = window.aplicarFiltro;
+    if (typeof window.rec_recargarTabla !== 'function' && typeof window.recargarTabla === 'function')
+        window.rec_recargarTabla = window.recargarTabla;
+    if (typeof window.rec_abrirModalEdicion !== 'function' && typeof window.abrirModalEdicion === 'function')
+        window.rec_abrirModalEdicion = window.abrirModalEdicion;
+    if (typeof window.rec_eliminarRecupero !== 'function' && typeof window.eliminarRecupero === 'function')
+        window.rec_eliminarRecupero = window.eliminarRecupero;
+});
+</script>
+
+<script>
+/* ════════════════════════════════════════════════════
+   MAIN TAB SWITCHER
+════════════════════════════════════════════════════ */
+function switchMainTab(name, btn) {
+    document.querySelectorAll('.main-tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.main-tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('maintab-' + name).classList.add('active');
+    btn.classList.add('active');
+
+    // Si se activa recuperos, recargar la tabla
+    if (name === 'recuperos' && typeof rec_recargarTabla === 'function') {
+        setTimeout(() => { if (typeof $.fn.DataTable !== 'undefined') rec_recargarTabla(); }, 100);
+    }
+}
+
+/* ════════════════════════════════════════════════════
+   CHARTS — init después de que los JS carguen datos
+════════════════════════════════════════════════════ */
+let chartStockTipo      = null;
+let chartFallasComp     = null;
+let chartRecuperosEst   = null;
+
+function initCharts() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const gridColor  = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.05)';
+    const tickColor  = isDark ? '#94a3b8' : '#64748b';
+
+    // ── Stock por tipo (doughnut) ──
+    const ctxStock = document.getElementById('chartStockTipo').getContext('2d');
+    if (chartStockTipo) chartStockTipo.destroy();
+    chartStockTipo = new Chart(ctxStock, {
+        type: 'doughnut',
+        data: {
+            labels: ['Laptops','Desktops','Monitores','Otros'],
+            datasets: [{ data: [0,0,0,0], backgroundColor: ['#06b6d4','#10b981','#f59e0b','#8b5cf6'], borderWidth: 0, hoverOffset: 6 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: tickColor, font: { size: 11 }, padding: 10 } } }, cutout: '65%' }
+    });
+
+    // ── Fallas por componente (bar horizontal) ──
+    const ctxFallas = document.getElementById('chartFallasComp').getContext('2d');
+    if (chartFallasComp) chartFallasComp.destroy();
+    chartFallasComp = new Chart(ctxFallas, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{ data: [], backgroundColor: '#f59e0b', borderRadius: 5 }]
+        },
+        options: {
+            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 10 } } },
+                y: { grid: { display: false }, ticks: { color: tickColor, font: { size: 10 } } }
+            }
+        }
+    });
+
+    // ── Recuperos por estado (bar) ──
+    const ctxRec = document.getElementById('chartRecuperosEstado').getContext('2d');
+    if (chartRecuperosEst) chartRecuperosEst.destroy();
+    chartRecuperosEst = new Chart(ctxRec, {
+        type: 'bar',
+        data: {
+            labels: ['Por recuperar','En gestión','Recogido','En oficina','En revisión','Listo','Recuperado'],
+            datasets: [{ data: [0,0,0,0,0,0,0], backgroundColor: ['#ef4444','#f59e0b','#6366f1','#6366f1','#8b5cf6','#10b981','#94a3b8'], borderRadius: 5 }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: tickColor, font: { size: 9 } } },
+                y: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 10 } } }
+            }
+        }
+    });
+}
+
+/* ════════════════════════════════════════════════════
+   ACTUALIZAR CHARTS con datos reales
+════════════════════════════════════════════════════ */
+function updateChartStock(stats) {
+    if (!chartStockTipo || !stats) return;
+    const laptop  = stats.find(s => s.tipo === 'Laptop')?.total  || 0;
+    const desktop = stats.find(s => s.tipo === 'Desktop')?.total || 0;
+    const monitor = stats.find(s => s.tipo === 'Monitor')?.total || 0;
+    const otros   = stats.reduce((a, s) => !['Laptop','Desktop','Monitor'].includes(s.tipo) ? a + (s.total||0) : a, 0);
+    chartStockTipo.data.datasets[0].data = [laptop, desktop, monitor, otros];
+    chartStockTipo.update();
+}
+
+function updateChartFallas(rows) {
+    if (!chartFallasComp || !rows?.length) return;
+    const counts = {};
+    rows.forEach(r => { counts[r.component] = (counts[r.component] || 0) + 1; });
+    const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,6);
+    chartFallasComp.data.labels   = sorted.map(e => e[0]);
+    chartFallasComp.data.datasets[0].data = sorted.map(e => e[1]);
+    chartFallasComp.update();
+}
+
+function updateChartRecuperos(kpis) {
+    if (!chartRecuperosEst || !kpis) return;
+    chartRecuperosEst.data.datasets[0].data = [
+        kpis.por_recuperar||0, kpis.en_proceso||0, 0, 0,
+        kpis.en_revision||0, kpis.listos||0, kpis.recuperados_mes||0
+    ];
+    chartRecuperosEst.update();
+}
+
+/* ════════════════════════════════════════════════════
+   COUNTER TABS
+════════════════════════════════════════════════════ */
+function updateMainTabCounts(disponibles, recuperos) {
+    if (disponibles !== undefined) document.getElementById('mtc-almacen').textContent  = disponibles;
+    if (recuperos   !== undefined) document.getElementById('mtc-recuperos').textContent = recuperos;
+}
+
+/* ════════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+    initCharts();
+
+    // Hook: cuando almacen-dashboard.js cargue KPIs, actualizar chart
+    const origLoadStats = window.cargarStats;
+    if (typeof origLoadStats === 'function') {
+        window.cargarStats = async function() {
+            const result = await origLoadStats.apply(this, arguments);
+            return result;
+        };
+    }
+
+    // Hook: escuchar cuando disponibles se carguen para actualizar tab count
+    const _origCargarDisponibles = window.cargarDisponibles;
+    if (typeof _origCargarDisponibles === 'function') {
+        window.cargarDisponibles = async function() {
+            const r = await _origCargarDisponibles.apply(this, arguments);
+            const cnt = document.getElementById('cnt-disponibles');
+            if (cnt) updateMainTabCounts(cnt.textContent, undefined);
+            return r;
+        };
+    }
+
+    // Hook: KPIs de recuperos para chart
+    const _origCargarKPIs = window.cargarKPIs;
+    if (typeof _origCargarKPIs === 'function') {
+        window.cargarKPIs = async function() {
+            const r = await _origCargarKPIs.apply(this, arguments);
+            // Leer los valores ya renderizados
+            setTimeout(() => {
+                const kpis = {
+                    por_recuperar:   parseInt(document.getElementById('kpiPorRecuperar')?.textContent) || 0,
+                    en_proceso:      parseInt(document.getElementById('kpiEnProceso')?.textContent)    || 0,
+                    en_revision:     parseInt(document.getElementById('kpiEnRevision')?.textContent)   || 0,
+                    listos:          parseInt(document.getElementById('kpiListos')?.textContent)        || 0,
+                    recuperados_mes: parseInt(document.getElementById('kpiRecuperadosMes')?.textContent)|| 0,
+                };
+                updateChartRecuperos(kpis);
+                const total = kpis.por_recuperar + kpis.en_proceso + kpis.en_revision + kpis.listos;
+                updateMainTabCounts(undefined, total);
+            }, 300);
+            return r;
+        };
+    }
+
+    // Observar cambios en el totalCount (DataTable recoveries)
+    const totalCount = document.getElementById('totalCount');
+    if (totalCount) {
+        new MutationObserver(() => {
+            updateMainTabCounts(undefined, totalCount.textContent);
+        }).observe(totalCount, { childList: true, characterData: true, subtree: true });
+    }
+
+    // Observar fallas para chart
+    const tblFallas = document.getElementById('tbl-fallas');
+    if (tblFallas) {
+        new MutationObserver(() => {
+            const rows = [];
+            tblFallas.querySelectorAll('tr[data-component]').forEach(tr => {
+                rows.push({ component: tr.dataset.component });
+            });
+            // fallback: leer celdas
+            tblFallas.querySelectorAll('tr:not(.empty-row)').forEach(tr => {
+                const td = tr.querySelectorAll('td')[1];
+                if (td && td.textContent.trim()) rows.push({ component: td.textContent.trim() });
+            });
+            if (rows.length) updateChartFallas(rows);
+        }).observe(tblFallas, { childList: true, subtree: true });
+    }
+
+    // Observar KPI stock para chart
+    ['kpi-laptop','kpi-desktop','kpi-monitor'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) new MutationObserver(() => {
+            const laptop  = parseInt(document.getElementById('kpi-laptop')?.textContent)  || 0;
+            const desktop = parseInt(document.getElementById('kpi-desktop')?.textContent) || 0;
+            const monitor = parseInt(document.getElementById('kpi-monitor')?.textContent) || 0;
+            const total   = parseInt(document.getElementById('kpi-total')?.textContent)   || 0;
+            const otros   = Math.max(0, total - laptop - desktop - monitor);
+            if (chartStockTipo) {
+                chartStockTipo.data.datasets[0].data = [laptop, desktop, monitor, otros];
+                chartStockTipo.update();
+            }
+        }).observe(el, { childList: true, characterData: true, subtree: true });
+    });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Asignaciones - Equipment Management</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+
+    <script>
+    /* Aplicar tema guardado inmediatamente — evita flash */
+    (function () {
+        const saved = localStorage.getItem('dashboardTheme') || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+    })();
+    </script>
+
+    <style>
+/* ══════════════════════════════════════════════════
+   VARIABLES — LIGHT & DARK (mismo sistema que dashboard.ejs)
+══════════════════════════════════════════════════ */
+:root,
+[data-theme="light"] {
+    --bg-main:    #f5f7fa;
+    --bg-card:    #ffffff;
+    --bg-header:  #fafbfc;
+    --border-soft:#e2e8f0;
+    --text-main:  #1e293b;
+    --text-muted: #64748b;
+    --primary:    #3b82f6;
+    --success:    #10b981;
+    --warning:    #f59e0b;
+    --info:       #06b6d4;
+    --danger:     #ef4444;
+    --hover-row:  #f8fafc;
+    --input-bg:   #ffffff;
+    --shadow-card: 0 1px 3px rgba(0,0,0,.05);
+    --shadow-hover: 0 4px 12px rgba(0,0,0,.08);
+    --scrollbar-thumb: #cbd5e1;
+    --scrollbar-thumb-hover: #94a3b8;
+    --scrollbar-track: #f1f5f9;
+    --input-readonly-bg: #f8fafc;
+    --modal-bg:   #ffffff;
+    --modal-border: #e2e8f0;
+    --chart-grid: #f1f5f9;
+    --chart-tick: #64748b;
+    --search-results-bg: #ffffff;
+    --search-results-border: #dddddd;
+    --search-results-hover: #f8fafc;
+    --alert-success-bg: #f0fdf4;
+    --alert-success-color: #166534;
+    --alert-success-border: #86efac;
+}
+
+[data-theme="dark"] {
+    --bg-main:    #0f172a;
+    --bg-card:    #1e293b;
+    --bg-header:  #162032;
+    --border-soft:#2d3f55;
+    --text-main:  #e2e8f0;
+    --text-muted: #94a3b8;
+    --primary:    #60a5fa;
+    --success:    #34d399;
+    --warning:    #fbbf24;
+    --info:       #22d3ee;
+    --danger:     #f87171;
+    --hover-row:  #243348;
+    --input-bg:   #1e293b;
+    --shadow-card: 0 1px 3px rgba(0,0,0,.3);
+    --shadow-hover: 0 4px 12px rgba(0,0,0,.4);
+    --scrollbar-thumb: #334155;
+    --scrollbar-thumb-hover: #475569;
+    --scrollbar-track: #1e293b;
+    --input-readonly-bg: #162032;
+    --modal-bg:   #1e293b;
+    --modal-border: #2d3f55;
+    --chart-grid: #2d3f55;
+    --chart-tick: #94a3b8;
+    --search-results-bg: #1e293b;
+    --search-results-border: #2d3f55;
+    --search-results-hover: #243348;
+    --alert-success-bg: #064e3b;
+    --alert-success-color: #a7f3d0;
+    --alert-success-border: #34d399;
+}
+
+/* ══════════════════════════════════════════════════
+   BASE
+══════════════════════════════════════════════════ */
+body {
+    margin: 0;
+    background: var(--bg-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--text-main);
+    overflow-x: hidden;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+.dashboard-wrapper { width:100%; padding:12px; margin-top:60px; }
+.dashboard-content { width:100%; max-width:1680px; margin:0 auto; }
+
+/* ══════════════════════════════════════════════════
+   KPI CARDS — 3 tarjetas
+══════════════════════════════════════════════════ */
+.cards-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+}
+@media (max-width:992px) { .cards-3 { grid-template-columns: repeat(2,1fr); } }
+@media (max-width:576px) { .cards-3 { grid-template-columns: 1fr; } }
+
+.kpi-card {
+    background: var(--bg-card);
+    border-radius: 12px; height: 80px; padding: 12px 14px;
+    display: flex; justify-content: space-between; align-items: center;
+    border: 1px solid var(--border-soft); box-shadow: var(--shadow-card);
+    transition: all 0.2s, background 0.3s, border-color 0.3s;
+}
+.kpi-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-hover); }
+.kpi-title { font-size:9px; letter-spacing:.5px; text-transform:uppercase; color:var(--text-muted); font-weight:600; margin-bottom:5px; transition: color 0.3s; }
+.kpi-value { font-size:24px; font-weight:700; line-height:1; }
+.kpi-icon  { font-size:28px; opacity:.25; }
+.primary { color:var(--primary); }
+.success { color:var(--success); }
+.info    { color:var(--info); }
+
+/* ══════════════════════════════════════════════════
+   LAYOUT — 3 gráficos
+══════════════════════════════════════════════════ */
+.row-dashboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 14px;
+}
+@media (max-width:1200px) { .row-dashboard { grid-template-columns:1fr; } }
+
+/* ══════════════════════════════════════════════════
+   CARD BI
+══════════════════════════════════════════════════ */
+.card-bi {
+    background: var(--bg-card);
+    border-radius: 12px; border: 1px solid var(--border-soft);
+    box-shadow: var(--shadow-card);
+    display: flex; flex-direction: column; overflow: hidden;
+    transition: background 0.3s, border-color 0.3s;
+}
+.card-bi-header {
+    padding: 14px 20px; border-bottom: 1px solid var(--border-soft);
+    font-weight: 600; font-size: 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg-header); flex-shrink: 0;
+    color: var(--text-main);
+    transition: background 0.3s, border-color 0.3s, color 0.3s;
+}
+.card-bi-body { padding:0; flex:1; overflow:auto; min-height:0; }
+.card-grafico { height:360px; }
+.card-grafico .card-bi-body { padding:20px; }
+
+/* ══════════════════════════════════════════════════
+   TABLE
+══════════════════════════════════════════════════ */
+.table { width:100%; margin-bottom:0; font-size:13px; color:var(--text-main); }
+.table thead th {
+    font-size:10px; text-transform:uppercase; color:var(--text-muted);
+    background: var(--bg-header); border-bottom:1px solid var(--border-soft);
+    padding:12px 16px; font-weight:600; text-align:center;
+    position:sticky; top:0; z-index:10;
+    transition: background 0.3s, color 0.3s, border-color 0.3s;
+}
+.table tbody td {
+    padding:14px 16px; font-size:13px;
+    vertical-align:middle; text-align:center;
+    border-bottom:1px solid var(--border-soft);
+    color:var(--text-main); background:transparent;
+    transition: background 0.15s, border-color 0.3s, color 0.3s;
+}
+.table tbody td:first-child { text-align:left; font-weight:600; }
+.table-hover tbody tr:hover td { background-color:var(--hover-row) !important; }
+
+/* Bootstrap table dark overrides */
+[data-theme="dark"] .table { --bs-table-bg: transparent; --bs-table-border-color: var(--border-soft); }
+[data-theme="dark"] .table-hover > tbody > tr:hover > * { --bs-table-accent-bg: var(--hover-row); }
+
+/* ══════════════════════════════════════════════════
+   BADGE
+══════════════════════════════════════════════════ */
+.badge { font-size:11px; padding:5px 10px; border-radius:6px; font-weight:600; }
+
+/* ══════════════════════════════════════════════════
+   SEARCH BOX
+══════════════════════════════════════════════════ */
+.search-box { position:relative; margin-bottom:12px; }
+.search-box input {
+    width:100%; padding:11px 16px;
+    border:2px solid var(--border-soft); border-radius:12px;
+    font-size:14px; transition:all 0.2s;
+    background: var(--input-bg); color:var(--text-main);
+}
+.search-box input::placeholder { color:var(--text-muted); }
+.search-box input:focus {
+    outline:none; border-color:var(--primary);
+    box-shadow:0 0 0 3px rgba(59,130,246,.1);
+    background: var(--input-bg); color:var(--text-main);
+}
+
+/* ══════════════════════════════════════════════════
+   TABLA ASIGNACIONES
+══════════════════════════════════════════════════ */
+.card-asignaciones .card-bi-body { max-height:600px; }
+.table-asignaciones thead th { background:var(--bg-header); position:sticky; top:0; z-index:10; }
+
+/* ══════════════════════════════════════════════════
+   MINI SPINNER
+══════════════════════════════════════════════════ */
+.mini-spin {
+    display:inline-block; width:14px; height:14px;
+    border:2px solid var(--border-soft); border-top-color:var(--primary);
+    border-radius:50%; animation:spin .65s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ══════════════════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════════════════ */
+.btn-sm { padding:6px 14px; font-size:12px; font-weight:600; }
+.btn-outline-secondary {
+    border-color:var(--border-soft); color:var(--text-muted); background:transparent;
+}
+.btn-outline-secondary:hover { background-color:var(--border-soft); color:var(--text-main); }
+.btn-outline-primary {
+    border-color:var(--primary); color:var(--primary); background:transparent;
+}
+.btn-outline-primary:hover { background-color:var(--primary); color:white; }
+[data-theme="dark"] .btn-secondary {
+    background-color:#334155; border-color:#475569; color:#e2e8f0;
+}
+[data-theme="dark"] .btn-secondary:hover { background-color:#475569; }
+
+/* ══════════════════════════════════════════════════
+   FORM CONTROLS & MODALS
+══════════════════════════════════════════════════ */
+.form-label { font-weight:600; font-size:13px; color:var(--text-main); margin-bottom:8px; transition: color 0.3s; }
+.form-control, .form-select {
+    background-color: var(--input-bg); color:var(--text-main);
+    border-color:var(--border-soft);
+    transition: background 0.3s, border-color 0.3s, color 0.3s;
+}
+.form-control:focus, .form-select:focus {
+    background-color: var(--input-bg); color:var(--text-main);
+    border-color:var(--primary);
+    box-shadow:0 0 0 3px rgba(59,130,246,.1);
+}
+.form-control::placeholder { color:var(--text-muted); }
+.form-control.bg-light, .form-control[readonly] {
+    background-color: var(--input-readonly-bg) !important;
+    color:var(--text-muted);
+}
+.form-text { color:var(--text-muted) !important; transition: color 0.3s; }
+
+/* Resultados de búsqueda en modales */
+#addEmployeeSearchResults,
+#addEquipmentSearchResults,
+#addDepartmentSearchResults,
+#addLocationSearchResults,
+#employeeSearchResults,
+#equipmentSearchResults,
+#departmentSearchResults,
+#locationSearchResults {
+    background: var(--search-results-bg);
+    border-color: var(--search-results-border) !important;
+    border-radius: 4px;
+    transition: background 0.3s, border-color 0.3s;
+}
+
+/* Items dentro de los divs de búsqueda */
+[data-theme="dark"] #addEmployeeSearchResults div,
+[data-theme="dark"] #addEquipmentSearchResults div,
+[data-theme="dark"] #addDepartmentSearchResults div,
+[data-theme="dark"] #addLocationSearchResults div,
+[data-theme="dark"] #employeeSearchResults div,
+[data-theme="dark"] #equipmentSearchResults div,
+[data-theme="dark"] #departmentSearchResults div,
+[data-theme="dark"] #locationSearchResults div {
+    background: var(--search-results-bg);
+    color: var(--text-main);
+    border-bottom-color: var(--border-soft);
+}
+[data-theme="dark"] #addEmployeeSearchResults div:hover,
+[data-theme="dark"] #addEquipmentSearchResults div:hover,
+[data-theme="dark"] #addDepartmentSearchResults div:hover,
+[data-theme="dark"] #addLocationSearchResults div:hover,
+[data-theme="dark"] #employeeSearchResults div:hover,
+[data-theme="dark"] #equipmentSearchResults div:hover,
+[data-theme="dark"] #departmentSearchResults div:hover,
+[data-theme="dark"] #locationSearchResults div:hover {
+    background: var(--search-results-hover) !important;
+}
+
+/* Alertas de confirmación en modales */
+.alert-success,
+#addCipUpdateMessage,
+#addEquipmentUpdateMessage,
+#addDepartmentUpdateMessage,
+#addLocationUpdateMessage,
+#cipUpdateMessage,
+#equipmentUpdateMessage,
+#departmentUpdateMessage,
+#locationUpdateMessage {
+    background-color: var(--alert-success-bg) !important;
+    color: var(--alert-success-color) !important;
+    border-color: var(--alert-success-border) !important;
+    transition: background 0.3s, color 0.3s, border-color 0.3s;
+}
+
+/* Modales */
+[data-theme="dark"] .modal-content {
+    background-color: var(--modal-bg);
+    border-color: var(--modal-border);
+    color: var(--text-main);
+}
+[data-theme="dark"] .modal-body,
+[data-theme="dark"] .modal-footer,
+[data-theme="dark"] .modal-header {
+    background-color: var(--modal-bg);
+    border-color: var(--modal-border);
+}
+
+/* ══════════════════════════════════════════════════
+   TEXT UTILITIES
+══════════════════════════════════════════════════ */
+.text-muted { color:var(--text-muted) !important; transition: color 0.3s; }
+
+/* ══════════════════════════════════════════════════
+   SCROLLBAR
+══════════════════════════════════════════════════ */
+*::-webkit-scrollbar { width:6px; height:6px; }
+*::-webkit-scrollbar-thumb { background:var(--scrollbar-thumb); border-radius:3px; }
+*::-webkit-scrollbar-thumb:hover { background:var(--scrollbar-thumb-hover); }
+*::-webkit-scrollbar-track { background:var(--scrollbar-track); }
+    </style>
+</head>
+<body>
+
+<%- include("partials/sidebar_top") %>
+
+<div class="dashboard-wrapper">
+<div class="dashboard-content">
+
+<!-- KPI CARDS -->
+<div class="cards-3">
+    <div class="kpi-card">
+        <div><div class="kpi-title">Asignaciones Activas</div><div class="kpi-value primary" id="kpiAsignacionesActivas">-</div></div>
+        <i class="bi bi-clipboard-check kpi-icon primary"></i>
+    </div>
+    <div class="kpi-card">
+        <div><div class="kpi-title">Asignaciones Este Mes</div><div class="kpi-value success" id="kpiAsignacionesMes">-</div></div>
+        <i class="bi bi-calendar-check kpi-icon success"></i>
+    </div>
+    <div class="kpi-card">
+        <div><div class="kpi-title">Empleados con Equipo</div><div class="kpi-value info" id="kpiEmpleadosEquipo">-</div></div>
+        <i class="bi bi-people kpi-icon info"></i>
+    </div>
+</div>
+
+<!-- FILA: 3 GRÁFICOS -->
+<div class="row-dashboard">
+    <div class="card-bi card-grafico">
+        <div class="card-bi-header">
+            <span><i class="bi bi-trophy-fill"></i> Top 10 Modelos Asignados</span>
+            <button class="btn btn-sm btn-outline-secondary" onclick="limpiarFiltroTabla()">
+                <i class="bi bi-x-circle"></i> Limpiar
+            </button>
+        </div>
+        <div class="card-bi-body">
+            <canvas id="chartTopModelos" style="max-height:280px;"></canvas>
+            <div class="text-center text-muted small mt-3">
+                👆 Haz clic en una barra para filtrar asignaciones
+            </div>
+        </div>
+    </div>
+
+    <div class="card-bi card-grafico">
+        <div class="card-bi-header">
+            <i class="bi bi-geo-alt-fill"></i> Top 10 Ubicaciones
+        </div>
+        <div class="card-bi-body">
+            <canvas id="chartTopUbicaciones" style="max-height:280px;"></canvas>
+            <div class="text-center text-muted small mt-3">
+                👆 Haz clic en una barra para filtrar por ubicación
+            </div>
+        </div>
+    </div>
+
+    <div class="card-bi card-grafico">
+        <div class="card-bi-header">
+            <i class="bi bi-building-fill"></i> Top 10 Departamentos
+        </div>
+        <div class="card-bi-body">
+            <canvas id="chartTopDepartamentos" style="max-height:280px;"></canvas>
+            <div class="text-center text-muted small mt-3">
+                👆 Haz clic en una barra para filtrar por departamento
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BÚSQUEDA Y TABLA -->
+<div class="search-box">
+    <input 
+        type="text" 
+        id="globalSearch" 
+        class="form-control" 
+        placeholder="🔍 Buscar por empleado, equipo, CIP o ubicación..."
+    >
+</div>
+
+<div class="card-bi card-asignaciones" style="margin-bottom:12px;">
+    <div class="card-bi-header" style="justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:8px;">
+            <i class="bi bi-list-check"></i> Lista de Asignaciones
+            <span class="badge bg-primary" id="totalAsignacionesTabla">0</span>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addAssignmentModal">
+                <i class="bi bi-plus-circle"></i> Nueva Asignación
+            </button>
+            <button class="btn btn-sm btn-outline-primary" onclick="location.reload()">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+        </div>
+    </div>
+    <div class="card-bi-body">
+        <table class="table table-hover table-asignaciones mb-0" id="asignacionesTable">
+            <thead>
+                <tr>
+                    <th style="text-align:left;">ID</th>
+                    <th>EMPLEADO</th>
+                    <th>CIP</th>
+                    <th>EQUIPO</th>
+                    <th>MODELO</th>
+                    <th>FECHA ASIG.</th>
+                    <th>DEPARTAMENTO</th>
+                    <th>UBICACIÓN</th>
+                    <th>ACCIONES</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="9" class="text-center py-5">
+                    <span class="mini-spin"></span>
+                    <p class="text-muted mt-2 mb-0" style="font-size:12px;">Cargando asignaciones...</p>
+                </td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</div><!-- /.dashboard-content -->
+</div><!-- /.dashboard-wrapper -->
+
+<!-- MODAL: AÑADIR ASIGNACIÓN -->
+<div class="modal fade" id="addAssignmentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Nueva Asignación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addAssignmentForm">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Empleado <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="addEmployeeName" placeholder="Escribe para buscar..." required>
+                            <small class="form-text text-muted" id="addEmployeeSearchStatus">Escribe al menos 3 caracteres...</small>
+                            <div id="addEmployeeSearchResults" style="display:none; max-height:200px; overflow-y:auto; border:1px solid var(--border-soft); border-radius:4px; margin-top:5px;"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">CIP</label>
+                            <input type="text" class="form-control" id="addEmployeeCip" readonly>
+                            <div id="addCipUpdateMessage" class="alert mt-2" style="display:none; padding:8px; font-size:12px;">✅ CIP actualizado</div>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Código del Equipo <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="addEquipmentCode" placeholder="Escribe para buscar..." required>
+                            <small class="form-text text-muted" id="addEquipmentSearchStatus">Escribe al menos 2 caracteres...</small>
+                            <div id="addEquipmentSearchResults" style="display:none; max-height:200px; overflow-y:auto; border:1px solid var(--border-soft); border-radius:4px; margin-top:5px;"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Modelo</label>
+                            <input type="text" class="form-control" id="addEquipmentModel" readonly>
+                            <div id="addEquipmentUpdateMessage" class="alert mt-2" style="display:none; padding:8px; font-size:12px;">✅ Equipo actualizado</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Departamento (Opcional)</label>
+                            <input type="text" class="form-control" id="addDepartmentName" placeholder="Escribe para buscar...">
+                            <input type="hidden" id="addDepartmentId">
+                            <small class="form-text text-muted" id="addDepartmentSearchStatus">Opcional - Escribe para buscar...</small>
+                            <div id="addDepartmentSearchResults" style="display:none; max-height:200px; overflow-y:auto; border:1px solid var(--border-soft); border-radius:4px; margin-top:5px;"></div>
+                            <div id="addDepartmentUpdateMessage" class="alert mt-2" style="display:none; padding:8px; font-size:12px;">✅ Departamento actualizado</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Ubicación (Opcional)</label>
+                            <input type="text" class="form-control" id="addLocationName" placeholder="Escribe para buscar...">
+                            <input type="hidden" id="addLocationId">
+                            <small class="form-text text-muted" id="addLocationSearchStatus">Opcional - Escribe para buscar...</small>
+                            <div id="addLocationSearchResults" style="display:none; max-height:200px; overflow-y:auto; border:1px solid var(--border-soft); border-radius:4px; margin-top:5px;"></div>
+                            <div id="addLocationUpdateMessage" class="alert mt-2" style="display:none; padding:8px; font-size:12px;">✅ Ubicación actualizada</div>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Fecha de Asignación <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="addAssignmentDate" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="saveNewAssignment">
+                    <span id="saveNewSpinner" class="spinner-border spinner-border-sm d-none"></span>
+                    <span id="saveNewButtonText">Guardar Asignación</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: EDITAR ASIGNACIÓN -->
+<div class="modal fade" id="editAssignmentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Editar Asignación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editAssignmentForm">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">ID</label>
+                            <input type="text" class="form-control" id="editAssignmentId" readonly>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Empleado</label>
+                            <input type="text" class="form-control" id="editEmployeeName" placeholder="Escribe para buscar...">
+                            <small class="form-text text-muted" id="employeeSearchStatus">Escribe al menos 3 caracteres...</small>
+                            <div id="employeeSearchResults" style="display:none; max-height:200px; overflow-y:auto; border:1px solid var(--border-soft); border-radius:4px; margin-top:5px;"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">CIP</label>
+                            <input type="text" class="form-control" id="editEmployeeCip" readonly>
+                            <div id="cipUpdateMessage" class="alert mt-2" style="display:none; padding:8px; font-size:12px;">✅ CIP actualizado</div>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Código del Equipo</label>
+                            <input type="text" class="form-control" id="editEquipmentCode" placeholder="Escribe para buscar...">
+                            <small class="form-text text-muted" id="equipmentSearchStatus">Escribe al menos 2 caracteres...</small>
+                            <div id="equipmentSearchResults" style="display:none; max-height:200px; overflow-y:auto; border:1px solid var(--border-soft); border-radius:4px; margin-top:5px;"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Modelo</label>
+                            <input type="text" class="form-control" id="editEquipmentModel" readonly>
+                            <div id="equipmentUpdateMessage" class="alert mt-2" style="display:none; padding:8px; font-size:12px;">✅ Equipo actualizado</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Departamento</label>
+                            <input type="text" class="form-control" id="editDepartmentName" placeholder="Escribe para buscar...">
+                            <input type="hidden" id="editDepartmentId">
+                            <small class="form-text text-muted" id="departmentSearchStatus">Opcional...</small>
+                            <div id="departmentSearchResults" style="display:none; max-height:200px; overflow-y:auto; border:1px solid var(--border-soft); border-radius:4px; margin-top:5px;"></div>
+                            <div id="departmentUpdateMessage" class="alert mt-2" style="display:none; padding:8px; font-size:12px;">✅ Departamento actualizado</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Ubicación</label>
+                            <input type="text" class="form-control" id="editLocationName" placeholder="Escribe para buscar...">
+                            <input type="hidden" id="editLocationId">
+                            <small class="form-text text-muted" id="locationSearchStatus">Opcional...</small>
+                            <div id="locationSearchResults" style="display:none; max-height:200px; overflow-y:auto; border:1px solid var(--border-soft); border-radius:4px; margin-top:5px;"></div>
+                            <div id="locationUpdateMessage" class="alert mt-2" style="display:none; padding:8px; font-size:12px;">✅ Ubicación actualizada</div>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Fecha de Asignación</label>
+                            <input type="date" class="form-control" id="editAssignmentDate">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="saveAssignmentChanges">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="/js/sidebar.js"></script>
+<script src="/js/functions.js"></script>
+<script src="/js/assignments-dashboard.js"></script>
+
+<script>
+/* ══════════════════════════════════════════════════
+   DARK MODE — idéntico a dashboard.ejs
+══════════════════════════════════════════════════ */
+function toggleTheme() {
+    const html    = document.documentElement;
+    const current = html.getAttribute('data-theme');
+    const next    = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('dashboardTheme', next);
+    if (typeof updateChartsTheme === 'function') updateChartsTheme(next);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const saved = localStorage.getItem('dashboardTheme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+});
+</script>
+ <script>(function(){const s=localStorage.getItem('dashboardTheme')||'light';document.documentElement.setAttribute('data-theme',s);})();</script>
+</body>
+</html>

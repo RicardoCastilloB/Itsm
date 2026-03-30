@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Endpoints - Equipment Management</title>
+    
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+    
+    <!-- Bootstrap CSS (opcional, para mejor diseño) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .badge {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .method-get { background-color: #28a745; color: white; }
+        .method-post { background-color: #007bff; color: white; }
+        .method-put { background-color: #ffc107; color: #333; }
+        .method-delete { background-color: #dc3545; color: white; }
+        
+        .category-badge {
+            background-color: #6c757d;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            margin-right: 5px;
+        }
+        
+        table.dataTable thead th {
+            background-color: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .dataTables_wrapper .dataTables_filter input {
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            padding: 5px 10px;
+        }
+        
+        .dataTables_wrapper .dataTables_length select {
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            padding: 5px;
+        }
+        
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 API REST - Equipment Management</h1>
+        <p class="subtitle">Versión 1.0.0 - Documentación de Endpoints</p>
+        
+        <table id="endpointsTable" class="display" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Categoría</th>
+                    <th>Método</th>
+                    <th>Endpoint</th>
+                    <th>Descripción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- EMPLOYEES -->
+                <tr>
+                    <td><span class="category-badge">Employees</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/employees</code></td>
+                    <td>Listar todos los empleados</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Employees</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/employees/:id</code></td>
+                    <td>Obtener empleado por ID</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Employees</span></td>
+                    <td><span class="badge method-post">POST</span></td>
+                    <td><code>/api/employees</code></td>
+                    <td>Crear nuevo empleado</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Employees</span></td>
+                    <td><span class="badge method-put">PUT</span></td>
+                    <td><code>/api/employees/:id</code></td>
+                    <td>Actualizar empleado</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Employees</span></td>
+                    <td><span class="badge method-delete">DELETE</span></td>
+                    <td><code>/api/employees/:id</code></td>
+                    <td>Eliminar empleado</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Employees</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/employees/search?q=nombre</code></td>
+                    <td>Buscar empleados</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Employees</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/employees/planilla</code></td>
+                    <td>Total de empleados en planilla</td>
+                </tr>
+                
+                <!-- EQUIPMENT -->
+                <tr>
+                    <td><span class="category-badge">Equipment</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/equipment</code></td>
+                    <td>Listar todos los equipos</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Equipment</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/equipment/:id</code></td>
+                    <td>Obtener equipo por ID</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Equipment</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/equipment/available</code></td>
+                    <td>Equipos disponibles</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Equipment</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/equipment/obsolete</code></td>
+                    <td>Equipos obsoletos</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Equipment</span></td>
+                    <td><span class="badge method-post">POST</span></td>
+                    <td><code>/api/equipment</code></td>
+                    <td>Crear nuevo equipo</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Equipment</span></td>
+                    <td><span class="badge method-put">PUT</span></td>
+                    <td><code>/api/equipment/:id</code></td>
+                    <td>Actualizar equipo</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Equipment</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/equipment/desktop</code></td>
+                    <td>Total de equipos Desktop</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Equipment</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/equipment/laptop</code></td>
+                    <td>Total de equipos Laptop</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Equipment</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/equipment/ultra</code></td>
+                    <td>Total de equipos con procesador Ultra</td>
+                </tr>
+                
+                <!-- ASSIGNMENTS -->
+                <tr>
+                    <td><span class="category-badge">Assignments</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/assignments</code></td>
+                    <td>Asignaciones activas</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Assignments</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/assignments/employee/:id</code></td>
+                    <td>Asignaciones por empleado</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Assignments</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/assignments/equipment/:id</code></td>
+                    <td>Historial de equipo</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Assignments</span></td>
+                    <td><span class="badge method-post">POST</span></td>
+                    <td><code>/api/assignments</code></td>
+                    <td>Asignar equipo a empleado</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Assignments</span></td>
+                    <td><span class="badge method-put">PUT</span></td>
+                    <td><code>/api/assignments/:id/return</code></td>
+                    <td>Devolver equipo</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Assignments</span></td>
+                    <td><span class="badge method-post">POST</span></td>
+                    <td><code>/api/assignments/:id/transfer</code></td>
+                    <td>Transferir equipo</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Assignments</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/assignments/period/:period</code></td>
+                    <td>Asignaciones por periodo</td>
+                </tr>
+                
+                <!-- LOCATIONS -->
+                <tr>
+                    <td><span class="category-badge">Locations</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/locations</code></td>
+                    <td>Listar localizaciones</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Locations</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/locations/:id</code></td>
+                    <td>Obtener ubicación por ID</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Locations</span></td>
+                    <td><span class="badge method-post">POST</span></td>
+                    <td><code>/api/locations</code></td>
+                    <td>Crear ubicación</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Locations</span></td>
+                    <td><span class="badge method-put">PUT</span></td>
+                    <td><code>/api/locations/:id</code></td>
+                    <td>Actualizar ubicación</td>
+                </tr>
+                
+                <!-- DEPARTMENTS -->
+                <tr>
+                    <td><span class="category-badge">Departments</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/departments</code></td>
+                    <td>Listar departamentos</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Departments</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/departments/search</code></td>
+                    <td>Buscar departamentos</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Departments</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/departments/:id</code></td>
+                    <td>Obtener departamento por ID</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Departments</span></td>
+                    <td><span class="badge method-post">POST</span></td>
+                    <td><code>/api/departments</code></td>
+                    <td>Crear departamento</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Departments</span></td>
+                    <td><span class="badge method-put">PUT</span></td>
+                    <td><code>/api/departments/:id</code></td>
+                    <td>Actualizar departamento</td>
+                </tr>
+                
+                <!-- DASHBOARD -->
+                <tr>
+                    <td><span class="category-badge">Dashboard</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/dashboard/stats</code></td>
+                    <td>Estadísticas generales</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Dashboard</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/dashboard/equipos-por-ubicacion</code></td>
+                    <td>Equipos por ubicación</td>
+                </tr>
+                <tr>
+                    <td><span class="category-badge">Dashboard</span></td>
+                    <td><span class="badge method-get">GET</span></td>
+                    <td><code>/api/dashboard/empleados-por-departamento</code></td>
+                    <td>Empleados por departamento</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            $('#endpointsTable').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+                },
+                pageLength: 25,
+                order: [[0, 'asc'], [1, 'asc']],
+                dom: 'Bfrtip',
+                buttons: [
+                    'copy', 'excel', 'print'
+                ],
+                columnDefs: [
+                    { width: '15%', targets: 0 },
+                    { width: '10%', targets: 1 },
+                    { width: '35%', targets: 2 },
+                    { width: '40%', targets: 3 }
+                ]
+            });
+        });
+    </script>
+</body>
+</html>

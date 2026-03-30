@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Permisos - Equipment Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --admin-color: #dc3545;
+            --editor-color: #ffc107;
+            --visor-color: #0dcaf0;
+        }
+
+        body {
+            background: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .page-header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 40px 0;
+            margin-bottom: 30px;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+
+        .role-badge.admin {
+            background: var(--admin-color);
+            color: white;
+        }
+
+        .role-badge.editor {
+            background: var(--editor-color);
+            color: #000;
+        }
+
+        .role-badge.visor {
+            background: var(--visor-color);
+            color: #000;
+        }
+
+        .permission-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .permission-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .permission-card h5 {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .permission-card h5 i {
+            font-size: 24px;
+            color: #667eea;
+        }
+
+        .permission-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: background 0.2s;
+        }
+
+        .permission-item:hover {
+            background: #f8f9fa;
+        }
+
+        .permission-item.granted {
+            background: #d1e7dd;
+        }
+
+        .permission-item.denied {
+            background: #f8d7da;
+            opacity: 0.6;
+        }
+
+        .permission-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 20px;
+        }
+
+        .permission-icon.granted {
+            background: #198754;
+            color: white;
+        }
+
+        .permission-icon.denied {
+            background: #dc3545;
+            color: white;
+        }
+
+        .permission-label {
+            flex-grow: 1;
+            font-weight: 500;
+        }
+
+        .permission-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-read {
+            background: #cfe2ff;
+            color: #084298;
+        }
+
+        .badge-create {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .badge-update {
+            background: #fff3cd;
+            color: #664d03;
+        }
+
+        .badge-delete {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .role-comparison {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .comparison-table {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .comparison-table th {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .comparison-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .check-icon {
+            color: #198754;
+            font-size: 20px;
+        }
+
+        .cross-icon {
+            color: #dc3545;
+            font-size: 20px;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #0dcaf0;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .btn-back {
+            background: white;
+            color: #667eea;
+            border: 2px solid white;
+            padding: 10px 25px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-back:hover {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border-color: rgba(255,255,255,0.5);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="page-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1><i class="bi bi-shield-check"></i> Mis Permisos</h1>
+                    <p class="mb-0">Sistema de control de acceso basado en roles</p>
+                </div>
+                <a href="/dashboard" class="btn-back">
+                    <i class="bi bi-arrow-left"></i> Volver al Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="container">
+        <!-- Información del Usuario -->
+        <div class="info-box">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h4><i class="bi bi-person-circle"></i> <%= user.full_name || user.username %></h4>
+                    <p class="mb-0"><strong>Usuario:</strong> <%= user.username %> | <strong>Email:</strong> <%= user.email %></p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="role-badge <%= user.role === 'administrador' ? 'admin' : user.role === 'editor' ? 'editor' : 'visor' %>">
+                        <%= user.role === 'administrador' ? '🔐 Administrador' : user.role === 'editor' ? '✏️ Editor' : '👁️ Visor' %>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Permisos por Módulo -->
+        <h3 class="mb-4">Permisos por Módulo</h3>
+        <div class="row" id="permissionsContainer">
+            <!-- Se llenará dinámicamente -->
+        </div>
+
+        <!-- Comparación de Roles -->
+        <div class="role-comparison">
+            <h3><i class="bi bi-bar-chart"></i> Comparación de Roles</h3>
+            <p class="text-muted">Conoce qué puede hacer cada tipo de usuario en el sistema</p>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Recurso / Acción</th>
+                        <th>👁️ Visor</th>
+                        <th>✏️ Editor</th>
+                        <th>🔐 Administrador</th>
+                    </tr>
+                </thead>
+                <tbody id="comparisonTableBody">
+                    <!-- Se llenará dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Definición de módulos y sus acciones
+        const modules = {
+            employees: { name: 'Empleados', icon: 'bi-people', actions: ['read', 'create', 'update', 'delete'] },
+            equipment: { name: 'Equipos', icon: 'bi-laptop', actions: ['read', 'create', 'update', 'delete'] },
+            assignments: { name: 'Asignaciones', icon: 'bi-arrow-left-right', actions: ['read', 'create', 'update', 'delete'] },
+            locations: { name: 'Ubicaciones', icon: 'bi-geo-alt', actions: ['read', 'create', 'update', 'delete'] },
+            departments: { name: 'Departamentos', icon: 'bi-building', actions: ['read', 'create', 'update', 'delete'] },
+            reports: { name: 'Reportes', icon: 'bi-file-earmark-text', actions: ['read', 'export'] },
+            settings: { name: 'Configuración', icon: 'bi-gear', actions: ['read', 'update'] }
+        };
+
+        const actionLabels = {
+            read: { label: 'Ver', icon: 'bi-eye', class: 'badge-read' },
+            create: { label: 'Crear', icon: 'bi-plus-circle', class: 'badge-create' },
+            update: { label: 'Editar', icon: 'bi-pencil', class: 'badge-update' },
+            delete: { label: 'Eliminar', icon: 'bi-trash', class: 'badge-delete' },
+            export: { label: 'Exportar', icon: 'bi-download', class: 'badge-create' }
+        };
+
+        // Cargar permisos del usuario
+        async function loadPermissions() {
+            try {
+                const response = await fetch('/api/permissions/me');
+                const data = await response.json();
+
+                if (data.success) {
+                    renderPermissions(data.permissions);
+                    renderComparison();
+                }
+            } catch (error) {
+                console.error('Error cargando permisos:', error);
+            }
+        }
+
+        // Renderizar permisos del usuario actual
+        function renderPermissions(permissions) {
+            const container = document.getElementById('permissionsContainer');
+            container.innerHTML = '';
+
+            for (const [resource, moduleInfo] of Object.entries(modules)) {
+                const userPermissions = permissions[resource] || [];
+                
+                const card = document.createElement('div');
+                card.className = 'col-md-6';
+                card.innerHTML = `
+                    <div class="permission-card">
+                        <h5><i class="bi ${moduleInfo.icon}"></i> ${moduleInfo.name}</h5>
+                        ${moduleInfo.actions.map(action => {
+                            const hasPermission = userPermissions.includes(action);
+                            const actionInfo = actionLabels[action];
+                            return `
+                                <div class="permission-item ${hasPermission ? 'granted' : 'denied'}">
+                                    <div class="permission-icon ${hasPermission ? 'granted' : 'denied'}">
+                                        <i class="bi ${hasPermission ? 'bi-check-lg' : 'bi-x-lg'}"></i>
+                                    </div>
+                                    <span class="permission-label">${actionInfo.label}</span>
+                                    <span class="permission-badge ${actionInfo.class}">
+                                        <i class="bi ${actionInfo.icon}"></i> ${action}
+                                    </span>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                container.appendChild(card);
+            }
+        }
+
+        // Renderizar tabla de comparación
+        async function renderComparison() {
+            try {
+                const response = await fetch('/api/permissions/matrix');
+                const data = await response.json();
+
+                if (data.success) {
+                    const tbody = document.getElementById('comparisonTableBody');
+                    tbody.innerHTML = '';
+
+                    for (const [resource, moduleInfo] of Object.entries(modules)) {
+                        for (const action of moduleInfo.actions) {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td style="text-align: left;"><strong>${moduleInfo.name}</strong> - ${actionLabels[action].label}</td>
+                                <td>${data.matrix.visor[resource][action] ? '<i class="bi bi-check-circle-fill check-icon"></i>' : '<i class="bi bi-x-circle-fill cross-icon"></i>'}</td>
+                                <td>${data.matrix.editor[resource][action] ? '<i class="bi bi-check-circle-fill check-icon"></i>' : '<i class="bi bi-x-circle-fill cross-icon"></i>'}</td>
+                                <td>${data.matrix.administrador[resource][action] ? '<i class="bi bi-check-circle-fill check-icon"></i>' : '<i class="bi bi-x-circle-fill cross-icon"></i>'}</td>
+                            `;
+                            tbody.appendChild(row);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error cargando matriz de permisos:', error);
+            }
+        }
+
+        // Cargar al iniciar
+        loadPermissions();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Envío de Reportes - Equipment Management</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+
+<script>
+/* Aplica tema guardado — evita flash */
+(function(){
+  const s = localStorage.getItem('dashboardTheme') || 'light';
+  document.documentElement.setAttribute('data-theme', s);
+})();
+</script>
+
+<style>
+/* ══════════════════════════════════════════════════
+   VARIABLES — idénticas al resto de la app
+══════════════════════════════════════════════════ */
+:root,[data-theme="light"]{
+  --bg-main:#f5f7fa;--bg-card:#ffffff;--bg-header:#fafbfc;
+  --border-soft:#e2e8f0;--text-main:#1e293b;--text-muted:#64748b;
+  --primary:#3b82f6;--success:#10b981;--warning:#f59e0b;--info:#06b6d4;--danger:#ef4444;
+  --hover-row:#f8fafc;--input-bg:#ffffff;
+  --shadow-card:0 1px 3px rgba(0,0,0,.05);--shadow-hover:0 4px 12px rgba(0,0,0,.08);
+  --scrollbar-thumb:#cbd5e1;--scrollbar-thumb-hover:#94a3b8;--scrollbar-track:#f1f5f9;
+  --input-readonly-bg:#f8fafc;--modal-bg:#ffffff;--modal-border:#e2e8f0;
+  --alert-success-bg:#f0fdf4;--alert-success-color:#166534;--alert-success-border:#86efac;
+}
+[data-theme="dark"]{
+  --bg-main:#0f172a;--bg-card:#1e293b;--bg-header:#162032;
+  --border-soft:#2d3f55;--text-main:#e2e8f0;--text-muted:#94a3b8;
+  --primary:#60a5fa;--success:#34d399;--warning:#fbbf24;--info:#22d3ee;--danger:#f87171;
+  --hover-row:#243348;--input-bg:#1e293b;
+  --shadow-card:0 1px 3px rgba(0,0,0,.3);--shadow-hover:0 4px 12px rgba(0,0,0,.4);
+  --scrollbar-thumb:#334155;--scrollbar-thumb-hover:#475569;--scrollbar-track:#1e293b;
+  --input-readonly-bg:#162032;--modal-bg:#1e293b;--modal-border:#2d3f55;
+  --alert-success-bg:#064e3b;--alert-success-color:#a7f3d0;--alert-success-border:#34d399;
+}
+
+*,*::before,*::after{box-sizing:border-box;}
+body{
+  margin:0;background:var(--bg-main);color:var(--text-main);
+  font-family:'DM Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-size:13.5px;transition:background .3s,color .3s;overflow-x:hidden;
+}
+
+/* ── Layout ── */
+.sr-wrap{
+  margin-top:60px;padding:16px 20px;
+  display:grid;grid-template-columns:1fr 320px;gap:16px;
+  max-width:1680px;margin-left:auto;margin-right:auto;
+}
+@media(max-width:1100px){.sr-wrap{grid-template-columns:1fr;}}
+
+/* ── Card ── */
+.card-bi{
+  background:var(--bg-card);border:1px solid var(--border-soft);border-radius:12px;
+  box-shadow:var(--shadow-card);overflow:hidden;margin-bottom:14px;
+  display:flex;flex-direction:column;
+  transition:background .3s,border-color .3s;
+}
+.card-bi-header{
+  padding:12px 18px;background:var(--bg-header);border-bottom:1px solid var(--border-soft);
+  display:flex;align-items:center;justify-content:space-between;
+  font-weight:700;font-size:13px;color:var(--text-main);flex-shrink:0;
+  transition:background .3s,border-color .3s,color .3s;
+}
+.card-bi-header i{color:var(--primary);margin-right:6px;}
+.card-bi-body{padding:16px 18px;flex:1;}
+
+/* ── Forms ── */
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:13px;}
+.fg:last-child{margin-bottom:0;}
+.fl{font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted);}
+.req{color:var(--danger);}
+.fc{
+  padding:9px 12px;border:1.5px solid var(--border-soft);border-radius:9px;
+  font-size:13px;font-family:'DM Sans',sans-serif;
+  background:var(--input-bg);color:var(--text-main);outline:none;width:100%;
+  transition:border-color .2s,box-shadow .2s,background .3s,color .3s;
+}
+.fc::placeholder{color:var(--text-muted);}
+.fc:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(59,130,246,.1);}
+.fc[readonly]{background:var(--input-readonly-bg);color:var(--text-muted);cursor:default;}
+textarea.fc{resize:vertical;min-height:88px;line-height:1.65;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+@media(max-width:600px){.grid2{grid-template-columns:1fr;}}
+
+/* ── Tags ── */
+.tags-wrap{
+  min-height:42px;padding:5px 8px;display:flex;flex-wrap:wrap;
+  gap:5px;align-items:center;cursor:text;
+  border:1.5px solid var(--border-soft);border-radius:9px;background:var(--input-bg);
+  transition:border-color .2s,box-shadow .2s,background .3s;
+}
+.tags-wrap:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px rgba(59,130,246,.1);}
+.tag{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:600;
+  background:rgba(59,130,246,.1);color:var(--primary);
+  animation:tagPop .15s ease;max-width:220px;
+}
+.tag.ext{background:rgba(6,182,212,.1);color:var(--info);}
+.tag.dist{background:rgba(245,158,11,.1);color:var(--warning);}
+.tag span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tag-x{background:none;border:none;cursor:pointer;color:inherit;opacity:.6;padding:0;font-size:14px;line-height:1;transition:opacity .15s;flex-shrink:0;}
+.tag-x:hover{opacity:1;}
+@keyframes tagPop{from{opacity:0;transform:scale(.82);}to{opacity:1;transform:scale(1);}}
+.tags-input{
+  border:none;outline:none;background:transparent;
+  font-size:13px;font-family:'DM Sans',sans-serif;
+  color:var(--text-main);min-width:130px;flex:1;padding:2px 4px;
+}
+.tags-input::placeholder{color:var(--text-muted);}
+
+/* ── Autocomplete ── */
+.ac-wrap{position:relative;}
+.ac-drop{
+  display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:200;
+  background:var(--bg-card);border:1px solid var(--border-soft);border-radius:10px;
+  box-shadow:var(--shadow-hover);max-height:190px;overflow-y:auto;
+  transition:background .3s;
+}
+.ac-item{
+  padding:8px 12px;cursor:pointer;font-size:12.5px;border-bottom:1px solid var(--border-soft);
+  display:flex;align-items:center;gap:9px;transition:background .1s;
+}
+.ac-item:last-child{border-bottom:none;}
+.ac-item:hover{background:var(--hover-row);}
+.ac-av{
+  width:28px;height:28px;border-radius:50%;flex-shrink:0;
+  background:rgba(59,130,246,.1);color:var(--primary);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:800;
+}
+.ac-name{font-weight:600;color:var(--text-main);font-size:12.5px;}
+.ac-email{font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace;}
+.ac-dept{font-size:10px;color:var(--text-muted);margin-left:auto;white-space:nowrap;}
+
+/* ── CC/BCC row ── */
+.cc-row{display:flex;gap:7px;margin-bottom:13px;}
+.btn-cc{
+  padding:4px 11px;border-radius:7px;font-size:12px;font-weight:600;
+  border:1.5px solid var(--border-soft);background:transparent;color:var(--text-muted);
+  cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;
+}
+.btn-cc:hover{border-color:var(--primary);color:var(--primary);}
+.btn-cc.on{border-color:var(--primary);color:var(--primary);background:rgba(59,130,246,.08);}
+
+/* ── Distribution chips ── */
+.dc-row{display:flex;flex-wrap:wrap;gap:7px;}
+.dc{
+  padding:4px 11px;border-radius:20px;font-size:12px;font-weight:600;
+  border:1.5px solid var(--border-soft);background:transparent;color:var(--text-muted);
+  cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;
+  display:flex;align-items:center;gap:5px;
+}
+.dc:hover,.dc.active{border-color:var(--warning);color:var(--warning);background:rgba(245,158,11,.08);}
+.dc i{font-size:11px;}
+
+/* ── Templates ── */
+.tpl-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.tpl-btn{
+  padding:4px 11px;border-radius:7px;font-size:11.5px;font-weight:500;
+  border:1.5px solid var(--border-soft);background:var(--bg-header);
+  color:var(--text-main);cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;
+}
+.tpl-btn:hover{border-color:var(--primary);color:var(--primary);background:rgba(59,130,246,.06);}
+
+/* ── File tabs ── */
+.file-tabs{display:flex;border-bottom:2px solid var(--border-soft);margin-bottom:14px;}
+.ft-tab{
+  padding:8px 17px;font-size:13px;font-weight:600;
+  border:none;background:transparent;color:var(--text-muted);cursor:pointer;
+  border-bottom:2.5px solid transparent;margin-bottom:-2px;
+  transition:all .2s;font-family:'DM Sans',sans-serif;
+  display:flex;align-items:center;gap:7px;
+}
+.ft-tab:hover{color:var(--text-main);}
+.ft-tab.active{color:var(--primary);border-bottom-color:var(--primary);}
+
+/* ── Drop zone ── */
+.drop-zone{
+  border:2px dashed var(--border-soft);border-radius:10px;
+  padding:28px 18px;text-align:center;cursor:pointer;
+  background:var(--bg-header);position:relative;transition:all .25s;
+}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--primary);background:rgba(59,130,246,.04);}
+.drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.dz-icon{font-size:30px;color:var(--primary);opacity:.4;margin-bottom:7px;display:block;transition:transform .2s;}
+.drop-zone:hover .dz-icon{transform:translateY(-4px);opacity:.65;}
+.dz-title{font-weight:700;font-size:13.5px;margin-bottom:3px;color:var(--text-main);}
+.dz-sub{font-size:11.5px;color:var(--text-muted);}
+.dz-types{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin-top:8px;}
+.dz-type{padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700;background:var(--bg-card);border:1px solid var(--border-soft);color:var(--text-muted);}
+
+/* ── App reports ── */
+.rep-list{display:flex;flex-direction:column;gap:7px;}
+.rep-item{
+  display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:9px;
+  border:1.5px solid var(--border-soft);background:var(--bg-header);
+  cursor:pointer;transition:all .2s;position:relative;overflow:hidden;
+}
+.rep-item:hover{border-color:var(--primary);background:rgba(59,130,246,.04);}
+.rep-item.sel{border-color:var(--primary);background:rgba(59,130,246,.07);}
+.rep-check{
+  width:17px;height:17px;border-radius:50%;background:var(--primary);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;flex-shrink:0;opacity:0;transition:opacity .15s;
+}
+.rep-item.sel .rep-check{opacity:1;}
+.rep-name{font-size:13px;font-weight:600;color:var(--text-main);}
+.rep-meta{font-size:11px;color:var(--text-muted);}
+.rep-badge{margin-left:auto;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;}
+.rb-pdf{background:rgba(239,68,68,.1);color:#ef4444;}
+.rb-xls{background:rgba(16,185,129,.1);color:#10b981;}
+.rep-gen-overlay{
+  display:none;position:absolute;inset:0;border-radius:9px;
+  background:rgba(59,130,246,.07);
+  align-items:center;justify-content:center;gap:7px;
+  font-size:12px;font-weight:700;color:var(--primary);
+}
+.rep-item.generating .rep-gen-overlay{display:flex;}
+.rep-item.generating{pointer-events:none;}
+
+/* ── Attached files ── */
+.att-list{display:flex;flex-direction:column;gap:7px;margin-top:11px;}
+.att-item{
+  display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;
+  border:1px solid var(--border-soft);background:var(--bg-header);
+  animation:tagPop .2s ease;transition:background .3s,border-color .3s;
+}
+.att-icon{font-size:19px;flex-shrink:0;}
+.att-pdf{color:#ef4444;}.att-word{color:#3b82f6;}.att-excel{color:#10b981;}
+.att-ppt{color:#f97316;}.att-img{color:#8b5cf6;}.att-other{color:var(--text-muted);}
+.att-info{flex:1;min-width:0;}
+.att-name{font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.att-size{font-size:11px;color:var(--text-muted);}
+.att-src{font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:4px;vertical-align:middle;}
+.att-src.app{background:rgba(59,130,246,.1);color:var(--primary);}
+.att-src.upload{background:var(--bg-header);border:1px solid var(--border-soft);color:var(--text-muted);}
+.att-rm{background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px;border-radius:6px;display:flex;align-items:center;transition:all .15s;}
+.att-rm:hover{background:rgba(239,68,68,.1);color:var(--danger);}
+
+/* ── Email preview ── */
+.ep-wrap{border:1.5px solid var(--border-soft);border-radius:11px;overflow:hidden;animation:slideDown .22s ease;margin-bottom:14px;}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+.ep-bar{
+  padding:8px 12px;background:var(--bg-header);border-bottom:1px solid var(--border-soft);
+  display:flex;align-items:center;gap:5px;transition:background .3s,border-color .3s;
+}
+.ep-dot{width:11px;height:11px;border-radius:50%;}
+.ep-lbl{font-size:11px;color:var(--text-muted);margin-left:7px;font-family:'DM Mono',monospace;}
+.ep-body{padding:14px 16px;background:var(--bg-card);transition:background .3s;}
+.ep-row{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border-soft);font-size:12.5px;}
+.ep-row:last-of-type{border-bottom:none;}
+.ep-k{font-weight:700;color:var(--text-muted);min-width:58px;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;padding-top:1px;}
+.ep-v{color:var(--text-main);flex:1;word-break:break-word;}
+.ep-content{
+  margin-top:10px;padding:11px;border-radius:8px;
+  background:var(--bg-header);border:1px solid var(--border-soft);
+  white-space:pre-wrap;line-height:1.65;font-size:12.5px;color:var(--text-muted);
+  transition:background .3s,border-color .3s;
+}
+.ep-atts{margin-top:9px;display:flex;flex-wrap:wrap;gap:6px;}
+.ep-att-chip{
+  display:flex;align-items:center;gap:5px;padding:3px 9px;
+  border-radius:7px;background:var(--bg-header);border:1px solid var(--border-soft);
+  font-size:11.5px;font-weight:600;color:var(--text-main);transition:background .3s;
+}
+
+/* ── Buttons ── */
+.btn-sr-primary{
+  background:var(--primary);color:#fff;border:none;border-radius:10px;
+  padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;
+  display:inline-flex;align-items:center;gap:7px;transition:all .2s;white-space:nowrap;
+  font-family:'DM Sans',sans-serif;
+}
+.btn-sr-primary:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px);}
+.btn-sr-primary:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+.btn-sr-primary.green{background:var(--success);}
+.btn-sr-ghost{
+  background:transparent;color:var(--primary);border:1.5px solid var(--primary);
+  border-radius:10px;padding:8px 16px;font-size:13px;font-weight:600;
+  cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all .2s;
+  font-family:'DM Sans',sans-serif;
+}
+.btn-sr-ghost:hover{background:var(--primary);color:#fff;}
+.btn-sr-sm{
+  padding:5px 11px;font-size:12px;border-radius:7px;
+  border:1.5px solid var(--border-soft);background:transparent;color:var(--text-muted);
+  cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+  font-family:'DM Sans',sans-serif;font-weight:600;
+}
+.btn-sr-sm:hover{border-color:var(--primary);color:var(--primary);}
+.btn-preview{
+  padding:5px 12px;border-radius:7px;font-size:12px;font-weight:600;
+  border:1.5px solid var(--border-soft);background:transparent;color:var(--text-muted);
+  cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;
+  display:flex;align-items:center;gap:6px;
+}
+.btn-preview:hover,.btn-preview.on{border-color:var(--info);color:var(--info);background:rgba(6,182,212,.08);}
+
+/* ── Badge counter ── */
+.cbadge{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:17px;height:17px;border-radius:9px;
+  background:var(--primary);color:#fff;font-size:10px;font-weight:800;padding:0 4px;
+}
+
+/* ── Status bar ── */
+.sr-status{display:none;padding:11px 14px;border-radius:9px;margin-top:10px;align-items:center;gap:10px;font-size:13px;font-weight:600;animation:slideDown .2s ease;}
+.sr-status.show{display:flex;}
+.sr-status.sending{background:rgba(6,182,212,.1);color:var(--info);}
+.sr-status.ok{background:var(--alert-success-bg);color:var(--alert-success-color);border:1px solid var(--alert-success-border);}
+.sr-status.err{background:rgba(239,68,68,.1);color:var(--danger);}
+.mini-prog{height:3px;background:var(--border-soft);border-radius:2px;margin-top:7px;overflow:hidden;}
+.mini-prog-fill{height:100%;border-radius:2px;background:var(--primary);width:0%;transition:width .3s;}
+@keyframes prog-ind{0%{transform:translateX(-100%);}100%{transform:translateX(300%);}}
+.mini-prog-fill.ind{width:30%;animation:prog-ind 1.1s infinite;}
+
+/* ── Spinner ── */
+@keyframes spin{to{transform:rotate(360deg);}}
+.mini-spin{display:inline-block;width:14px;height:14px;border-radius:50%;flex-shrink:0;border:2.5px solid currentColor;border-top-color:transparent;animation:spin .65s linear infinite;}
+
+/* ── History ── */
+.hist-title{font-weight:800;font-size:13px;color:var(--text-main);display:flex;align-items:center;gap:7px;margin-bottom:10px;}
+.hist-title i{color:var(--primary);}
+.hist-search{position:relative;margin-bottom:10px;}
+.hist-search i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:12px;pointer-events:none;}
+.hist-search input{
+  width:100%;padding:7px 10px 7px 30px;border:1.5px solid var(--border-soft);border-radius:9px;font-size:12.5px;
+  background:var(--input-bg);color:var(--text-main);outline:none;font-family:'DM Sans',sans-serif;transition:border-color .2s,background .3s;
+}
+.hist-search input:focus{border-color:var(--primary);}
+.hist-search input::placeholder{color:var(--text-muted);}
+.hi{padding:10px 12px;border-radius:10px;border:1px solid var(--border-soft);background:var(--bg-header);cursor:pointer;transition:all .2s;margin-bottom:7px;}
+.hi:hover{border-color:var(--primary);transform:translateX(2px);}
+.hi-top{display:flex;justify-content:space-between;gap:6px;margin-bottom:3px;}
+.hi-subj{font-size:12.5px;font-weight:700;color:var(--text-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+.hi-time{font-size:10px;color:var(--text-muted);white-space:nowrap;font-family:'DM Mono',monospace;}
+.hi-to{font-size:11px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hi-badges{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;}
+.hb{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;}
+.hb-ok{background:var(--alert-success-bg);color:var(--alert-success-color);border:1px solid var(--alert-success-border);}
+.hb-err{background:rgba(239,68,68,.1);color:var(--danger);}
+.hb-att{background:var(--bg-header);border:1px solid var(--border-soft);color:var(--text-muted);}
+.hist-empty{text-align:center;padding:28px 16px;color:var(--text-muted);font-size:12.5px;}
+.hist-empty i{font-size:26px;display:block;margin-bottom:7px;opacity:.3;}
+
+/* ── Modals dark override ── */
+[data-theme="dark"] .modal-content{background-color:var(--modal-bg)!important;border-color:var(--modal-border)!important;color:var(--text-main)!important;}
+[data-theme="dark"] .modal-body,[data-theme="dark"] .modal-footer,[data-theme="dark"] .modal-header{background-color:var(--modal-bg)!important;border-color:var(--modal-border)!important;}
+.confirm-row{padding:10px 13px;background:var(--bg-header);border-radius:9px;border:1px solid var(--border-soft);margin-bottom:9px;transition:background .3s,border-color .3s;}
+.confirm-key{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);margin-bottom:3px;}
+.confirm-val{font-size:13px;font-weight:600;color:var(--text-main);white-space:pre-wrap;word-break:break-all;}
+
+/* ── Toast ── */
+.toast-wrap{position:fixed;bottom:22px;right:22px;z-index:9999;display:flex;flex-direction:column;gap:7px;}
+.toast-item{background:var(--bg-card);border:1px solid var(--border-soft);color:var(--text-main);border-radius:11px;padding:11px 16px;font-size:13px;font-weight:500;box-shadow:var(--shadow-hover);display:flex;align-items:center;gap:9px;min-width:260px;animation:toastIn .22s ease;}
+.toast-item.ok{border-left:4px solid var(--success);}
+.toast-item.err{border-left:4px solid var(--danger);}
+.toast-item.inf{border-left:4px solid var(--info);}
+@keyframes toastIn{from{opacity:0;transform:translateX(22px);}to{opacity:1;transform:translateX(0);}}
+
+/* ── Scrollbar ── */
+*::-webkit-scrollbar{width:6px;height:6px;}
+*::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb);border-radius:3px;}
+*::-webkit-scrollbar-thumb:hover{background:var(--scrollbar-thumb-hover);}
+*::-webkit-scrollbar-track{background:var(--scrollbar-track);}
+</style>
+</head>
+<body>
+
+<%- include("partials/sidebar_top") %>
+
+<div class="sr-wrap">
+
+  <!-- ══════════════════════════
+       COLUMNA PRINCIPAL
+  ══════════════════════════ -->
+  <div>
+
+    <!-- Header -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+      <div>
+        <div style="font-size:20px;font-weight:800;letter-spacing:-.3px;color:var(--text-main);display:flex;align-items:center;gap:9px;">
+          <i class="bi bi-send-fill" style="color:var(--primary);"></i> Envío de Reportes
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">
+          Genera reportes de la app o adjunta archivos y envíalos directamente por correo
+        </div>
+      </div>
+      <button class="btn-preview" id="btnPreview" onclick="togglePreview()">
+        <i class="bi bi-eye"></i> Vista previa
+      </button>
+    </div>
+
+    <!-- PREVIEW -->
+    <div id="previewPanel" style="display:none;">
+      <div class="ep-wrap">
+        <div class="ep-bar">
+          <div class="ep-dot" style="background:#ef4444;"></div>
+          <div class="ep-dot" style="background:#f59e0b;"></div>
+          <div class="ep-dot" style="background:#10b981;"></div>
+          <span class="ep-lbl">Vista previa del correo</span>
+        </div>
+        <div class="ep-body">
+          <div class="ep-row"><span class="ep-k">Para</span><span class="ep-v" id="pvTo">—</span></div>
+          <div class="ep-row" id="pvCcRow"  style="display:none;"><span class="ep-k">CC</span><span class="ep-v" id="pvCc"></span></div>
+          <div class="ep-row" id="pvBccRow" style="display:none;"><span class="ep-k">CCO</span><span class="ep-v" id="pvBcc"></span></div>
+          <div class="ep-row"><span class="ep-k">Asunto</span><span class="ep-v" id="pvSubject" style="font-weight:700;">—</span></div>
+          <div class="ep-content" id="pvBody">—</div>
+          <div class="ep-atts" id="pvAtts"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DESTINATARIOS -->
+    <div class="card-bi">
+      <div class="card-bi-header">
+        <span><i class="bi bi-people-fill"></i>Destinatarios</span>
+        <span class="cbadge" id="rcCount">0</span>
+      </div>
+      <div class="card-bi-body">
+
+        <div class="fg">
+          <label class="fl">Para <span class="req">*</span></label>
+          <div class="ac-wrap">
+            <div class="tags-wrap" id="toWrap" onclick="focusTI('toInput')">
+              <input class="tags-input" id="toInput" placeholder="nombre o correo, Enter para añadir…"
+                     oninput="acSearch(this,'toAc','to')" onkeydown="tagKD(event,'to')" autocomplete="off">
+            </div>
+            <div class="ac-drop" id="toAc"></div>
+          </div>
+          <small class="text-muted" style="font-size:11px;">
+            Pulsa <kbd style="background:var(--bg-header);border:1px solid var(--border-soft);border-radius:4px;padding:1px 5px;font-size:10px;">Enter</kbd>
+            o coma para añadir. Escribe nombre o email — autocompletado desde empleados activos.
+          </small>
+        </div>
+
+        <div class="cc-row">
+          <button class="btn-cc" id="ccToggle"  onclick="toggleCC('cc')">+ CC</button>
+          <button class="btn-cc" id="bccToggle" onclick="toggleCC('bcc')">+ CCO</button>
+        </div>
+
+        <div class="fg" id="ccRow" style="display:none;">
+          <label class="fl">CC</label>
+          <div class="ac-wrap">
+            <div class="tags-wrap" id="ccWrap" onclick="focusTI('ccInput')">
+              <input class="tags-input" id="ccInput" placeholder="correo en copia…"
+                     oninput="acSearch(this,'ccAc','cc')" onkeydown="tagKD(event,'cc')" autocomplete="off">
+            </div>
+            <div class="ac-drop" id="ccAc"></div>
+          </div>
+        </div>
+
+        <div class="fg" id="bccRow" style="display:none;">
+          <label class="fl">CCO (Copia Oculta)</label>
+          <div class="ac-wrap">
+            <div class="tags-wrap" id="bccWrap" onclick="focusTI('bccInput')">
+              <input class="tags-input" id="bccInput" placeholder="correo en copia oculta…"
+                     oninput="acSearch(this,'bccAc','bcc')" onkeydown="tagKD(event,'bcc')" autocomplete="off">
+            </div>
+            <div class="ac-drop" id="bccAc"></div>
+          </div>
+        </div>
+
+        <div class="fg" style="margin-bottom:0;">
+          <label class="fl">Listas de distribución</label>
+          <div class="dc-row" id="dcRow"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENIDO -->
+    <div class="card-bi">
+      <div class="card-bi-header"><i class="bi bi-pencil-square"></i>Contenido del correo</div>
+      <div class="card-bi-body">
+        <div class="fg">
+          <label class="fl">Asunto <span class="req">*</span></label>
+          <input class="fc" id="subject" placeholder="Asunto del correo…" oninput="updatePreview()">
+          <div class="tpl-row" id="tplRow"></div>
+        </div>
+        <div class="fg" style="margin-bottom:0;">
+          <label class="fl">Mensaje</label>
+          <textarea class="fc" id="body" rows="5" placeholder="Cuerpo del correo…" oninput="updatePreview()"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADJUNTOS -->
+    <div class="card-bi">
+      <div class="card-bi-header">
+        <span><i class="bi bi-paperclip"></i>Adjuntos</span>
+        <span class="cbadge" id="attCount">0</span>
+      </div>
+      <div class="card-bi-body">
+        <div class="file-tabs">
+          <button class="ft-tab active" id="ftUpload" onclick="switchFT('upload')">
+            <i class="bi bi-upload"></i> Subir archivo
+          </button>
+          <button class="ft-tab" id="ftApp" onclick="switchFT('app')">
+            <i class="bi bi-grid-3x3-gap-fill"></i> Reportes de la app
+          </button>
+        </div>
+
+        <div id="panelUpload">
+          <div class="drop-zone" id="dropZone">
+            <input type="file" id="fileInput" multiple
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.txt,.csv"
+              onchange="handleFiles(this.files)">
+            <i class="bi bi-cloud-arrow-up dz-icon"></i>
+            <div class="dz-title">Arrastra archivos aquí o haz clic</div>
+            <div class="dz-sub">Máximo 25 MB por archivo</div>
+            <div class="dz-types">
+              <span class="dz-type">PDF</span><span class="dz-type">Word</span>
+              <span class="dz-type">Excel</span><span class="dz-type">PPT</span>
+              <span class="dz-type">Imagen</span><span class="dz-type">CSV</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="panelApp" style="display:none;">
+          <div id="repListWrap">
+            <div style="text-align:center;padding:28px;color:var(--text-muted);font-size:12.5px;">
+              <span class="mini-spin" style="border-color:var(--border-soft);border-top-color:var(--primary);display:inline-block;vertical-align:middle;margin-right:7px;"></span>
+              Cargando reportes disponibles…
+            </div>
+          </div>
+        </div>
+
+        <div id="attList" class="att-list"></div>
+      </div>
+    </div>
+
+    <!-- ACCIONES -->
+    <div style="display:flex;justify-content:flex-end;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
+      <button class="btn-sr-sm" onclick="clearForm()"><i class="bi bi-trash3"></i> Limpiar</button>
+      <button class="btn-sr-ghost" onclick="togglePreview()"><i class="bi bi-eye"></i> Vista previa</button>
+      <button class="btn-sr-primary green" id="btnSend" onclick="sendEmail()">
+        <i class="bi bi-send-fill"></i> Enviar reporte
+      </button>
+    </div>
+    <div class="sr-status" id="srStatus"></div>
+    <div class="mini-prog" id="miniProg" style="display:none;"><div class="mini-prog-fill ind"></div></div>
+
+  </div><!-- /.main -->
+
+  <!-- ══════════════════════════
+       HISTORIAL (lateral)
+  ══════════════════════════ -->
+  <div>
+    <div class="card-bi" style="position:sticky;top:76px;margin-bottom:0;">
+      <div class="card-bi-header"><i class="bi bi-clock-history"></i>Historial de envíos</div>
+      <div class="card-bi-body">
+        <div class="hist-search">
+          <i class="bi bi-search"></i>
+          <input id="histSearch" placeholder="Buscar en historial…" oninput="filterHist()">
+        </div>
+        <div id="histList"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.sr-wrap -->
+
+<!-- MODAL: Confirmar envío -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" style="display:flex;align-items:center;gap:8px;">
+          <i class="bi bi-send-check-fill" style="color:var(--success);"></i> Confirmar envío
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="confirmBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success" onclick="doSend()">
+          <i class="bi bi-send-fill"></i> Sí, enviar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Detalle historial -->
+<div class="modal fade" id="histModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" style="display:flex;align-items:center;gap:8px;">
+          <i class="bi bi-envelope-open" style="color:var(--primary);"></i> Detalle de envío
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="histModalBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-primary" onclick="reuseEmail()">
+          <i class="bi bi-arrow-repeat"></i> Reutilizar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/sidebar.js"></script>
+
+<script>
+/* ════════════════════════════════════════
+   REPORT DEFS — apuntan a GET /api/reports/:id
+   El backend genera el archivo al vuelo
+════════════════════════════════════════ */
+const REPORT_DEFS = [
+  { id:'empleados',     name:'Reporte de Empleados',        icon:'bi-people-fill',         color:'#3b82f6', type:'PDF',   size:'~280 KB' },
+  { id:'asignaciones',  name:'Asignaciones Activas',        icon:'bi-clipboard-check-fill', color:'#10b981', type:'Excel', size:'~195 KB' },
+  { id:'print-queue',   name:'Cola de Impresión',           icon:'bi-printer-fill',         color:'#f97316', type:'PDF',   size:'~110 KB' },
+  { id:'kpis',          name:'KPIs del Mes',                icon:'bi-bar-chart-fill',       color:'#8b5cf6', type:'PDF',   size:'~450 KB' },
+  { id:'inventario',    name:'Inventario de Equipos',       icon:'bi-laptop-fill',          color:'#10b981', type:'Excel', size:'~320 KB' },
+  { id:'mantenimiento', name:'Historial de Mantenimientos', icon:'bi-tools',                color:'#f59e0b', type:'PDF',   size:'~175 KB' },
+];
+
+const DISTRIB_LISTS = [
+  { id:'gerencia',    label:'Gerencia',    icon:'bi-building',   emails:['gerencia@empresa.com'] },
+  { id:'rrhh',        label:'RRHH',        icon:'bi-people',     emails:['rrhh@empresa.com'] },
+  { id:'ti',          label:'TI',          icon:'bi-cpu',        emails:['ti@empresa.com'] },
+  { id:'finanzas',    label:'Finanzas',    icon:'bi-cash-stack', emails:['finanzas@empresa.com'] },
+  { id:'operaciones', label:'Operaciones', icon:'bi-gear',       emails:['operaciones@empresa.com'] },
+];
+
+const TEMPLATES = [
+  { label:'📊 KPIs del mes',   fn:()=>`[Reporte] KPIs – ${mesActual()} ${anio()}` },
+  { label:'👥 Personal',       fn:()=>`[RRHH] Reporte de Personal – ${hoy()}` },
+  { label:'💻 Inventario TI',  fn:()=>`[TI] Inventario de Equipos – ${hoy()}` },
+  { label:'🖨️ Cola impresión', fn:()=>`[Impresión] Resumen cola – ${hoy()}` },
+  { label:'📋 Asignaciones',   fn:()=>`[Asignaciones] Estado actual – ${hoy()}` },
+];
+
+/* STATE */
+let tags={to:[],cc:[],bcc:[]}, attachments=[], selectedReps=new Set(), repBlobs={};
+let histItems=loadHist(), currentHistItem=null, acTimers={}, employees=[];
+
+/* INIT */
+document.addEventListener('DOMContentLoaded', async()=>{
+  await loadEmployees();
+  renderDistrib(); renderTemplates(); renderAppReports();
+  renderHist(); initDrop(); setDefaultBody(); updateRcCount();
+});
+
+/* HELPERS */
+const pad=n=>String(n).padStart(2,'0');
+const hoy=()=>{const d=new Date();return`${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;};
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const mesActual=()=>MESES[new Date().getMonth()];
+const anio=()=>new Date().getFullYear();
+const esc=s=>(s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const fmtSize=b=>{if(!b||typeof b==='string')return b||'—';if(b<1024)return b+'B';if(b<1048576)return(b/1024).toFixed(1)+'KB';return(b/1048576).toFixed(1)+'MB';};
+const isToday=d=>{const n=new Date();return d.getDate()===n.getDate()&&d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear();};
+
+function setDefaultBody(){
+  document.getElementById('body').value=`Estimado equipo,\n\nAdjunto el reporte solicitado generado el ${hoy()}.\n\nSaludos,\nSistema EquipManager`;
+  updatePreview();
+}
+
+/* Carga empleados del API real */
+async function loadEmployees(){
+  try{
+    const j=await fetch('/api/employees?limit=500&page=1',{credentials:'include'}).then(r=>r.json());
+    if(j.success&&j.data) employees=j.data;
+  }catch(e){console.warn('Autocomplete empleados no disponible:',e.message);}
+}
+
+/* TOAST */
+function showToast(msg,type='inf',dur=4500){
+  const icons={ok:'bi-check-circle-fill',err:'bi-x-circle-fill',inf:'bi-info-circle-fill'};
+  const clrs ={ok:'var(--success)',err:'var(--danger)',inf:'var(--info)'};
+  const el=document.createElement('div');
+  el.className=`toast-item ${type}`;
+  el.innerHTML=`<i class="bi ${icons[type]}" style="color:${clrs[type]};font-size:17px;flex-shrink:0;"></i><span>${msg}</span>`;
+  document.getElementById('toastWrap').appendChild(el);
+  setTimeout(()=>{el.style.cssText='opacity:0;transform:translateX(20px);transition:.3s;';setTimeout(()=>el.remove(),300);},dur);
+}
+
+/* ── TAGS ── */
+const focusTI=id=>document.getElementById(id)?.focus();
+function tagKD(e,field){
+  const inp=e.target;
+  if((e.key==='Enter'||e.key===',')&&inp.value.trim()){e.preventDefault();addTag(field,inp.value.trim());inp.value='';closeAc(field+'Ac');}
+  else if(e.key==='Backspace'&&!inp.value&&tags[field].length) removeTag(field,tags[field].length-1);
+}
+function addTag(field,email,name){
+  const clean=email.replace(/,/g,'').trim();
+  if(!clean||tags[field].some(t=>t.email===clean))return;
+  const internal=employees.some(e=>e.email===clean);
+  const distrib=DISTRIB_LISTS.some(d=>d.emails.includes(clean));
+  tags[field].push({email:clean,name:name||clean,internal,distrib});
+  renderTags(field);updatePreview();updateRcCount();
+}
+function removeTag(field,idx){tags[field].splice(idx,1);renderTags(field);updatePreview();updateRcCount();}
+function renderTags(field){
+  const wrap=document.getElementById(field+'Wrap');
+  const inp=document.getElementById(field+'Input');
+  wrap.querySelectorAll('.tag').forEach(t=>t.remove());
+  tags[field].forEach((t,i)=>{
+    const cls=t.distrib?'dist':t.internal?'':'ext';
+    const d=document.createElement('div');d.className=`tag ${cls}`;
+    const short=t.name!==t.email?t.name:(t.email.length>22?t.email.split('@')[0]+'@…':t.email);
+    d.innerHTML=`<span title="${esc(t.email)}">${esc(short)}</span><button class="tag-x" onclick="removeTag('${field}',${i});event.stopPropagation()">×</button>`;
+    wrap.insertBefore(d,inp);
+  });
+}
+const updateRcCount=()=>{document.getElementById('rcCount').textContent=tags.to.length+tags.cc.length+tags.bcc.length;};
+
+/* ── AUTOCOMPLETE ── */
+function acSearch(inp,dropId,field){
+  const q=inp.value.toLowerCase().trim();
+  clearTimeout(acTimers[field]);
+  if(q.length<2){closeAc(dropId);return;}
+  acTimers[field]=setTimeout(()=>{
+    const matches=employees.filter(e=>(e.full_name||'').toLowerCase().includes(q)||(e.email||'').toLowerCase().includes(q)).slice(0,8);
+    const drop=document.getElementById(dropId);
+    if(!matches.length){closeAc(dropId);return;}
+    drop.innerHTML=matches.map(e=>{
+      const init=(e.full_name||e.email||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+      return`<div class="ac-item" onclick="pickAc('${field}','${esc(e.email)}','${esc(e.full_name||e.email)}')">
+        <div class="ac-av">${init}</div>
+        <div><div class="ac-name">${esc(e.full_name||e.email)}</div><div class="ac-email">${esc(e.email)}</div></div>
+        <span class="ac-dept">${esc(e.department||e.position_name||'')}</span>
+      </div>`;
+    }).join('');
+    drop.style.display='block';
+  },200);
+}
+function pickAc(field,email,name){addTag(field,email,name);document.getElementById(field+'Input').value='';closeAc(field+'Ac');}
+const closeAc=id=>{const d=document.getElementById(id);if(d)d.style.display='none';};
+document.addEventListener('click',e=>{['toAc','ccAc','bccAc'].forEach(id=>{if(!document.getElementById(id)?.contains(e.target)&&!e.target.closest('.tags-wrap'))closeAc(id);});});
+
+/* CC/BCC */
+function toggleCC(field){
+  const row=document.getElementById(field+'Row');
+  const btn=document.getElementById(field+'Toggle');
+  const vis=row.style.display!=='none';
+  row.style.display=vis?'none':'';
+  btn.classList.toggle('on',!vis);
+  btn.textContent=vis?`+ ${field.toUpperCase()}`:`− ${field.toUpperCase()}`;
+  updatePreview();
+}
+
+/* DISTRIB */
+function renderDistrib(){
+  document.getElementById('dcRow').innerHTML=DISTRIB_LISTS.map(d=>`
+    <button class="dc" id="dc_${d.id}" onclick="toggleDistrib('${d.id}')">
+      <i class="bi ${d.icon}"></i> ${d.label}
+      <span style="font-size:10px;opacity:.7;">(${d.emails.length})</span>
+    </button>`).join('');
+}
+function toggleDistrib(id){
+  const list=DISTRIB_LISTS.find(d=>d.id===id);
+  const btn=document.getElementById('dc_'+id);
+  if(!list)return;
+  const allIn=list.emails.every(e=>tags.to.some(t=>t.email===e));
+  if(allIn){list.emails.forEach(e=>{const i=tags.to.findIndex(t=>t.email===e);if(i>-1)tags.to.splice(i,1);});btn.classList.remove('active');}
+  else{list.emails.forEach(e=>{if(!tags.to.some(t=>t.email===e))tags.to.push({email:e,name:e,internal:false,distrib:true});});btn.classList.add('active');}
+  renderTags('to');updatePreview();updateRcCount();
+}
+
+/* TEMPLATES */
+function renderTemplates(){
+  document.getElementById('tplRow').innerHTML=TEMPLATES.map(t=>`<button class="tpl-btn" onclick="applyTpl('${esc(t.fn())}')">${t.label}</button>`).join('');
+}
+const applyTpl=text=>{document.getElementById('subject').value=text;updatePreview();};
+
+/* FILE TABS */
+function switchFT(tab){
+  document.getElementById('panelUpload').style.display=tab==='upload'?'':'none';
+  document.getElementById('panelApp').style.display=tab==='app'?'':'none';
+  document.getElementById('ftUpload').classList.toggle('active',tab==='upload');
+  document.getElementById('ftApp').classList.toggle('active',tab==='app');
+  if(tab==='app')renderAppReports();
+}
+
+/* DROP ZONE */
+function initDrop(){
+  const zone=document.getElementById('dropZone');
+  zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-over');});
+  zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));
+  zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag-over');handleFiles(e.dataTransfer.files);});
+}
+function handleFiles(files){
+  Array.from(files).forEach(f=>{
+    if(attachments.some(a=>a.name===f.name&&a.type==='upload'))return;
+    if(f.size>25*1024*1024){showToast(`${f.name} excede 25 MB`,'err');return;}
+    attachments.push({id:`up_${Date.now()}_${Math.random().toString(36).slice(2)}`,name:f.name,size:f.size,file:f,type:'upload'});
+  });
+  renderAtts();updatePreview();
+}
+
+/* APP REPORTS — llama a GET /api/reports/:id */
+function renderAppReports(){
+  document.getElementById('repListWrap').innerHTML=`<div class="rep-list">`+
+    REPORT_DEFS.map(r=>`
+      <div class="rep-item" id="repI_${r.id}" onclick="toggleRep('${r.id}')">
+        <div class="rep-check" id="repCk_${r.id}"><i class="bi bi-check"></i></div>
+        <i class="bi ${r.icon}" style="font-size:20px;color:${r.color};flex-shrink:0;"></i>
+        <div>
+          <div class="rep-name">${r.name}</div>
+          <div class="rep-meta">${r.size} · Generado al vuelo</div>
+        </div>
+        <span class="rep-badge ${r.type==='PDF'?'rb-pdf':'rb-xls'}">${r.type}</span>
+        <div class="rep-gen-overlay">
+          <span class="mini-spin" style="border-color:rgba(59,130,246,.3);border-top-color:var(--primary);"></span>
+          Generando…
+        </div>
+      </div>`).join('')+`</div>`;
+}
+
+async function toggleRep(id){
+  const def=REPORT_DEFS.find(r=>r.id===id);
+  const item=document.getElementById('repI_'+id);
+  if(!def||!item)return;
+  if(selectedReps.has(id)){
+    selectedReps.delete(id);item.classList.remove('sel');
+    attachments=attachments.filter(a=>a.id!==id);delete repBlobs[id];
+    renderAtts();updatePreview();return;
+  }
+  item.classList.add('generating');
+  showToast(`Generando ${def.name}…`,'inf',6000);
+  try{
+    const resp=await fetch(`/api/reports/${def.id}`,{method:'GET',credentials:'include'});
+    if(!resp.ok)throw new Error(`HTTP ${resp.status}`);
+    const cd=resp.headers.get('Content-Disposition')||'';
+    const fnM=cd.match(/filename[^;=\n]*=['"]?([^'";\n]+)/i);
+    const filename=fnM?fnM[1].trim():`${def.id}.${def.type==='PDF'?'pdf':'xlsx'}`;
+    const blob=await resp.blob();
+    repBlobs[id]={blob,filename};
+    selectedReps.add(id);item.classList.add('sel');
+    attachments.push({id,name:filename,size:blob.size,type:'app',def});
+    showToast(`✅ ${def.name} listo`,'ok',3000);
+    renderAtts();updatePreview();
+  }catch(e){showToast(`❌ Error generando ${def.name}: ${e.message}`,'err',6000);}
+  finally{item.classList.remove('generating');}
+}
+
+/* FILE ICON */
+function fileIcon(name){
+  const ext=('.'+(name.split('.').pop()||'')).toLowerCase();
+  if(['.pdf'].includes(ext))return{cls:'att-pdf',icon:'bi-file-earmark-pdf'};
+  if(['.doc','.docx'].includes(ext))return{cls:'att-word',icon:'bi-file-earmark-word'};
+  if(['.xls','.xlsx','.csv'].includes(ext))return{cls:'att-excel',icon:'bi-file-earmark-excel'};
+  if(['.ppt','.pptx'].includes(ext))return{cls:'att-ppt',icon:'bi-file-earmark-ppt'};
+  if(['.png','.jpg','.jpeg'].includes(ext))return{cls:'att-img',icon:'bi-file-image'};
+  return{cls:'att-other',icon:'bi-file-earmark'};
+}
+
+function renderAtts(){
+  const list=document.getElementById('attList');
+  document.getElementById('attCount').textContent=attachments.length;
+  if(!attachments.length){list.innerHTML='';return;}
+  list.innerHTML=attachments.map((a,i)=>{
+    const fi=fileIcon(a.name);
+    const src=a.type==='app'?`<span class="att-src app">APP</span>`:`<span class="att-src upload">SUBIDO</span>`;
+    return`<div class="att-item">
+      <i class="bi ${fi.icon} att-icon ${fi.cls}"></i>
+      <div class="att-info">
+        <div class="att-name">${esc(a.name)}</div>
+        <div class="att-size">${fmtSize(a.size)} ${src}</div>
+      </div>
+      <button class="att-rm" onclick="removeAtt(${i})" title="Quitar adjunto">
+        <i class="bi bi-x-lg" style="font-size:12px;"></i>
+      </button>
+    </div>`;
+  }).join('');
+}
+function removeAtt(idx){
+  const a=attachments[idx];
+  if(a.type==='app'){selectedReps.delete(a.id);document.getElementById('repI_'+a.id)?.classList.remove('sel');delete repBlobs[a.id];}
+  attachments.splice(idx,1);renderAtts();updatePreview();
+}
+
+/* PREVIEW */
+function togglePreview(){
+  const panel=document.getElementById('previewPanel');
+  const btn=document.getElementById('btnPreview');
+  const vis=panel.style.display!=='none';
+  panel.style.display=vis?'none':'';
+  btn.classList.toggle('on',!vis);
+  if(!vis)updatePreview();
+}
+function updatePreview(){
+  const toStr=tags.to.map(t=>t.name!==t.email?`${t.name} <${t.email}>`:t.email).join(', ')||'—';
+  const ccStr=tags.cc.map(t=>t.email).join(', ');
+  const bccStr=tags.bcc.map(t=>t.email).join(', ');
+  document.getElementById('pvTo').textContent=toStr;
+  document.getElementById('pvSubject').textContent=document.getElementById('subject').value||'(sin asunto)';
+  document.getElementById('pvBody').textContent=document.getElementById('body').value||'';
+  const ccRow=document.getElementById('pvCcRow'),bccRow=document.getElementById('pvBccRow');
+  if(ccStr){ccRow.style.display='';document.getElementById('pvCc').textContent=ccStr;}else ccRow.style.display='none';
+  if(bccStr){bccRow.style.display='';document.getElementById('pvBcc').textContent=bccStr;}else bccRow.style.display='none';
+  document.getElementById('pvAtts').innerHTML=attachments.map(a=>{
+    const fi=fileIcon(a.name);
+    return`<div class="ep-att-chip"><i class="bi ${fi.icon} ${fi.cls}"></i> ${esc(a.name)}</div>`;
+  }).join('');
+}
+
+/* SEND */
+function sendEmail(){
+  if(!tags.to.length){shakeEl('toWrap');showToast('Añade al menos un destinatario','inf');return;}
+  if(!document.getElementById('subject').value.trim()){shakeEl('subject');showToast('Escribe el asunto','inf');return;}
+  const toStr=tags.to.map(t=>t.name!==t.email?`${t.name} <${t.email}>`:t.email).join('\n');
+  const ccStr=tags.cc.map(t=>t.email).join(', ');
+  const bccStr=tags.bcc.map(t=>t.email).join(', ');
+  let html=`
+    <div class="confirm-row"><div class="confirm-key">Para</div><div class="confirm-val">${esc(toStr)}</div></div>
+    ${ccStr?`<div class="confirm-row"><div class="confirm-key">CC</div><div class="confirm-val">${esc(ccStr)}</div></div>`:''}
+    ${bccStr?`<div class="confirm-row"><div class="confirm-key">CCO</div><div class="confirm-val">${esc(bccStr)}</div></div>`:''}
+    <div class="confirm-row"><div class="confirm-key">Asunto</div><div class="confirm-val" style="font-weight:700;">${esc(document.getElementById('subject').value)}</div></div>`;
+  if(attachments.length)html+=`<div class="confirm-row"><div class="confirm-key">Adjuntos (${attachments.length})</div><div class="confirm-val">${attachments.map(a=>`📎 ${esc(a.name)} (${fmtSize(a.size)})`).join('\n')}</div></div>`;
+  document.getElementById('confirmBody').innerHTML=html;
+  new bootstrap.Modal(document.getElementById('confirmModal')).show();
+}
+
+async function doSend(){
+  bootstrap.Modal.getInstance(document.getElementById('confirmModal'))?.hide();
+  const btnSend=document.getElementById('btnSend');
+  btnSend.disabled=true;
+  showSrStatus('Enviando correo…','sending');
+  document.getElementById('miniProg').style.display='';
+  try{
+    const fd=new FormData();
+    fd.append('to',JSON.stringify(tags.to.map(t=>t.email)));
+    fd.append('cc',JSON.stringify(tags.cc.map(t=>t.email)));
+    fd.append('bcc',JSON.stringify(tags.bcc.map(t=>t.email)));
+    fd.append('subject',document.getElementById('subject').value);
+    fd.append('body',document.getElementById('body').value);
+    attachments.filter(a=>a.type==='upload').forEach(a=>fd.append('files',a.file,a.name));
+    Object.entries(repBlobs).forEach(([,{blob,filename}])=>fd.append('files',blob,filename));
+    const resp=await fetch('/api/mailer/send',{method:'POST',body:fd,credentials:'include'});
+    const result=await resp.json();
+    if(!result.success)throw new Error(result.error||'Error desconocido');
+    saveHistEntry('ok');showSrStatus(`✅ Correo enviado correctamente a ${tags.to.length} destinatario(s)`,'ok');
+    showToast('✅ Correo enviado','ok');
+    setTimeout(()=>{clearForm(true);document.getElementById('srStatus').classList.remove('show');},3500);
+  }catch(e){
+    saveHistEntry('err');
+    showSrStatus(`❌ Error al enviar: ${e.message}`,'err');
+    showToast('Error: '+e.message,'err',7000);
+  }finally{document.getElementById('miniProg').style.display='none';btnSend.disabled=false;}
+}
+
+function saveHistEntry(status){
+  histItems.unshift({
+    id:Date.now(),
+    to:tags.to.map(t=>t.email),cc:tags.cc.map(t=>t.email),bcc:tags.bcc.map(t=>t.email),
+    subject:document.getElementById('subject').value,body:document.getElementById('body').value,
+    atts:attachments.map(a=>({name:a.name,size:fmtSize(a.size),type:a.type})),
+    sentAt:new Date().toISOString(),status,
+  });
+  saveHist();renderHist();
+}
+
+function showSrStatus(msg,type){
+  const el=document.getElementById('srStatus');
+  el.className=`sr-status show ${type}`;
+  el.innerHTML=type==='sending'
+    ?`<span class="mini-spin" style="border-color:rgba(6,182,212,.3);border-top-color:var(--info);"></span><span>${msg}</span>`
+    :`<span>${msg}</span>`;
+  if(type!=='sending')setTimeout(()=>el.classList.remove('show'),6000);
+}
+function shakeEl(id){
+  const el=document.getElementById(id);if(!el)return;
+  el.style.animation='shk .4s ease';el.style.borderColor='var(--danger)';el.style.boxShadow='0 0 0 3px rgba(239,68,68,.12)';
+  setTimeout(()=>{el.style.animation='';el.style.borderColor='';el.style.boxShadow='';},500);
+}
+const shkStyle=document.createElement('style');
+shkStyle.textContent='@keyframes shk{0%,100%{transform:translateX(0);}20%,60%{transform:translateX(-5px);}40%,80%{transform:translateX(5px);}}';
+document.head.appendChild(shkStyle);
+
+/* HISTORIAL */
+function loadHist(){try{return JSON.parse(localStorage.getItem('srMailHist')||'[]');}catch{return[];}}
+function saveHist(){try{localStorage.setItem('srMailHist',JSON.stringify(histItems.slice(0,60)));}catch{}}
+function renderHist(q=''){
+  const list=document.getElementById('histList');
+  const items=q?histItems.filter(h=>h.subject.toLowerCase().includes(q)||h.to.join(',').toLowerCase().includes(q)):histItems;
+  if(!items.length){list.innerHTML=`<div class="hist-empty"><i class="bi bi-inbox"></i>Sin envíos recientes</div>`;return;}
+  list.innerHTML=items.map(h=>{
+    const d=new Date(h.sentAt);
+    const ts=isToday(d)?d.toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'}):d.toLocaleDateString('es-PE',{day:'2-digit',month:'short'});
+    return`<div class="hi" onclick="openHistDetail(${h.id})">
+      <div class="hi-top"><div class="hi-subj">${esc(h.subject)}</div><div class="hi-time">${ts}</div></div>
+      <div class="hi-to">Para: ${h.to.slice(0,2).join(', ')}${h.to.length>2?` +${h.to.length-2}`:''}</div>
+      <div class="hi-badges">
+        <span class="hb ${h.status==='ok'?'hb-ok':'hb-err'}">${h.status==='ok'?'✅ Enviado':'❌ Error'}</span>
+        ${h.atts.length?`<span class="hb hb-att">📎 ${h.atts.length}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+const filterHist=()=>renderHist(document.getElementById('histSearch').value.toLowerCase());
+function openHistDetail(id){
+  const h=histItems.find(x=>x.id===id);if(!h)return;
+  currentHistItem=h;
+  const d=new Date(h.sentAt);
+  document.getElementById('histModalBody').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:9px;">
+      <div class="confirm-row"><div class="confirm-key">Para</div><div class="confirm-val">${esc(h.to.join(', '))}</div></div>
+      ${h.cc.length?`<div class="confirm-row"><div class="confirm-key">CC</div><div class="confirm-val">${esc(h.cc.join(', '))}</div></div>`:''}
+      ${h.bcc.length?`<div class="confirm-row"><div class="confirm-key">CCO</div><div class="confirm-val">${esc(h.bcc.join(', '))}</div></div>`:''}
+      <div class="confirm-row"><div class="confirm-key">Asunto</div><div class="confirm-val" style="font-weight:700;">${esc(h.subject)}</div></div>
+      <div class="confirm-row"><div class="confirm-key">Enviado</div><div class="confirm-val" style="font-family:'DM Mono',monospace;font-size:12px;">${d.toLocaleString('es-PE')}</div></div>
+      ${h.body?`<div class="confirm-row"><div class="confirm-key">Mensaje</div><div class="confirm-val" style="font-weight:400;white-space:pre-wrap;">${esc(h.body)}</div></div>`:''}
+      ${h.atts.length?`<div class="confirm-row"><div class="confirm-key">Adjuntos</div><div class="confirm-val">${h.atts.map(a=>`📎 ${esc(a.name)} (${a.size})`).join('\n')}</div></div>`:''}
+    </div>`;
+  new bootstrap.Modal(document.getElementById('histModal')).show();
+}
+function reuseEmail(){
+  if(!currentHistItem)return;
+  bootstrap.Modal.getInstance(document.getElementById('histModal'))?.hide();
+  const h=currentHistItem;
+  tags.to=h.to.map(e=>({email:e,name:e,internal:false}));
+  tags.cc=h.cc.map(e=>({email:e,name:e,internal:false}));
+  tags.bcc=h.bcc.map(e=>({email:e,name:e,internal:false}));
+  ['to','cc','bcc'].forEach(f=>renderTags(f));
+  if(h.cc.length){document.getElementById('ccRow').style.display='';document.getElementById('ccToggle').textContent='− CC';document.getElementById('ccToggle').classList.add('on');}
+  if(h.bcc.length){document.getElementById('bccRow').style.display='';document.getElementById('bccToggle').textContent='− CCO';document.getElementById('bccToggle').classList.add('on');}
+  document.getElementById('subject').value=h.subject;
+  document.getElementById('body').value=h.body||'';
+  updatePreview();updateRcCount();
+  showToast('Formulario rellenado desde historial','ok',3000);
+}
+
+function clearForm(keepBody=false){
+  tags={to:[],cc:[],bcc:[]};['to','cc','bcc'].forEach(f=>renderTags(f));
+  attachments=[];selectedReps.clear();repBlobs={};
+  renderAtts();renderAppReports();
+  document.getElementById('subject').value='';
+  if(!keepBody)setDefaultBody();
+  document.getElementById('ccRow').style.display='none';
+  document.getElementById('bccRow').style.display='none';
+  document.getElementById('ccToggle').textContent='+ CC';
+  document.getElementById('bccToggle').textContent='+ CCO';
+  document.getElementById('ccToggle').classList.remove('on');
+  document.getElementById('bccToggle').classList.remove('on');
+  document.querySelectorAll('.dc').forEach(c=>c.classList.remove('active'));
+  updatePreview();updateRcCount();
+}
+</script>
+</body>
+</html>

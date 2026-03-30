@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recupero de Equipos</title>
+
+    <!-- CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="../css/style.css">
+
+    <%- /* Reutilizar los estilos base del sistema */ '' %>
+    <style>
+        /* ── Variables del sistema (misma paleta que el resto del app) ── */
+        :root {
+            --bg-main:    #f1f5f9;
+            --bg-card:    #ffffff;
+            --bg-sidebar: #0f172a;
+            --text-primary:   #1e293b;
+            --text-secondary: #64748b;
+            --border-color:   #e2e8f0;
+            --accent-blue:    #3b82f6;
+            --accent-green:   #10b981;
+            --accent-amber:   #f59e0b;
+            --accent-red:     #ef4444;
+            --accent-purple:  #8b5cf6;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+            --shadow-md: 0 4px 16px rgba(0,0,0,.1);
+        }
+        [data-theme="dark"] {
+            --bg-main:    #0f172a;
+            --bg-card:    #1e293b;
+            --text-primary:   #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color:   #334155;
+        }
+
+        /* ── Layout base ── */
+  /* Heredar variables del sistema — no redefinir */
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-main, #f1f5f9);
+    color: var(--text-primary, #1e293b);
+    padding-top: 64px;
+    transition: background .3s, color .3s;
+}
+        .main-content { padding: 24px; }
+
+        /* ── Page header ── */
+        .page-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+        .page-header-icon {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 22px;
+            box-shadow: 0 4px 12px rgba(245,158,11,.35);
+        }
+        .page-header h1 {
+            font-size: 22px; font-weight: 700;
+            margin: 0; color: var(--text-primary);
+        }
+        .page-header p {
+            margin: 2px 0 0; font-size: 13px; color: var(--text-secondary);
+        }
+
+        /* ── KPI cards ── */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .kpi-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 18px 20px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            display: flex; flex-direction: column; gap: 4px;
+            transition: transform .2s, box-shadow .2s;
+        }
+        .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .kpi-label {
+            font-size: 11px; font-weight: 600; text-transform: uppercase;
+            letter-spacing: .6px; color: var(--text-secondary);
+        }
+        .kpi-value {
+            font-size: 28px; font-weight: 700; color: var(--text-primary);
+            line-height: 1.1;
+        }
+        .kpi-sub { font-size: 11px; color: var(--text-secondary); }
+        .kpi-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            display: inline-block; margin-right: 5px;
+        }
+
+        /* ── Filters bar ── */
+        .filters-bar {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+        }
+        .filter-pill {
+            padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+            border: 1.5px solid var(--border-color); background: transparent;
+            color: var(--text-secondary); cursor: pointer; transition: all .2s;
+        }
+        .filter-pill:hover, .filter-pill.active {
+            border-color: var(--accent-blue); color: var(--accent-blue);
+            background: rgba(59,130,246,.08);
+        }
+        .filter-pill.f-amber.active  { border-color: var(--accent-amber); color: var(--accent-amber); background: rgba(245,158,11,.08); }
+        .filter-pill.f-blue.active   { border-color: #6366f1; color: #6366f1; background: rgba(99,102,241,.08); }
+        .filter-pill.f-purple.active { border-color: var(--accent-purple); color: var(--accent-purple); background: rgba(139,92,246,.08); }
+        .filter-pill.f-green.active  { border-color: var(--accent-green); color: var(--accent-green); background: rgba(16,185,129,.08); }
+        .filter-pill.f-red.active    { border-color: var(--accent-red); color: var(--accent-red); background: rgba(239,68,68,.08); }
+
+        /* ── Main card ── */
+        .main-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+        .main-card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 10px;
+        }
+        .main-card-header h5 {
+            margin: 0; font-size: 15px; font-weight: 600; color: var(--text-primary);
+        }
+        .table-container { padding: 0 4px 4px; overflow-x: auto; }
+
+        /* ── DataTable tweaks ── */
+        #recoveriesTable thead th {
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .5px; color: var(--text-secondary);
+            background: var(--bg-main); border-bottom: 2px solid var(--border-color);
+            padding: 10px 12px;
+        }
+        #recoveriesTable tbody td { padding: 10px 12px; vertical-align: middle; font-size: 13px; }
+        #recoveriesTable tbody tr { border-bottom: 1px solid var(--border-color); }
+        #recoveriesTable tbody tr:hover { background: rgba(59,130,246,.04); }
+        .dataTables_wrapper .dataTables_length select,
+        .dataTables_wrapper .dataTables_filter input {
+            background: var(--bg-card); color: var(--text-primary);
+            border: 1px solid var(--border-color); border-radius: 8px;
+            padding: 4px 8px;
+        }
+        .dataTables_wrapper { padding: 12px 16px 16px; }
+
+        /* ── Status badges ── */
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 4px 10px; border-radius: 20px;
+            font-size: 11px; font-weight: 600; white-space: nowrap;
+        }
+        .status-por_recuperar   { background: rgba(239,68,68,.12);  color: #dc2626; }
+        .status-en_gestion      { background: rgba(245,158,11,.12); color: #d97706; }
+        .status-recogido_tecnico{ background: rgba(99,102,241,.12); color: #6366f1; }
+        .status-traido_oficina  { background: rgba(99,102,241,.12); color: #6366f1; }
+        .status-en_revision     { background: rgba(139,92,246,.12); color: #7c3aed; }
+        .status-listo_para_asignar{ background: rgba(16,185,129,.12); color: #059669; }
+        .status-envio_provincia { background: rgba(59,130,246,.12); color: #2563eb; }
+        .status-recuperado      { background: rgba(100,116,139,.12); color: #475569; }
+
+        /* ── Method badge ── */
+        .method-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 10px;
+            font-size: 10px; font-weight: 600;
+            background: var(--bg-main); color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        /* ── Action buttons ── */
+        .btn-action {
+            width: 30px; height: 30px; border-radius: 8px;
+            border: 1px solid var(--border-color); background: var(--bg-card);
+            color: var(--text-secondary); display: inline-flex;
+            align-items: center; justify-content: center;
+            font-size: 13px; cursor: pointer; transition: all .2s;
+        }
+        .btn-action:hover { border-color: var(--accent-blue); color: var(--accent-blue); background: rgba(59,130,246,.08); }
+        .btn-action.btn-advance:hover { border-color: var(--accent-green); color: var(--accent-green); background: rgba(16,185,129,.08); }
+        .btn-action.btn-delete:hover  { border-color: var(--accent-red);   color: var(--accent-red);   background: rgba(239,68,68,.08); }
+
+        /* ── Modal ── */
+        .modal-content {
+            background: var(--bg-card); border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+        .modal-header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 18px 24px;
+        }
+        .modal-title { font-weight: 700; font-size: 16px; }
+        .modal-footer { border-top: 1px solid var(--border-color); }
+        .form-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
+        .form-control, .form-select {
+            background: var(--bg-main); color: var(--text-primary);
+            border: 1px solid var(--border-color); border-radius: 9px;
+            font-size: 13px;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+            background: var(--bg-card);
+        }
+
+        /* ── Status flow stepper ── */
+        .flow-stepper {
+            display: flex; align-items: center; gap: 0;
+            overflow-x: auto; padding: 8px 0 12px;
+            scrollbar-width: thin;
+        }
+        .flow-step {
+            display: flex; flex-direction: column; align-items: center;
+            min-width: 90px; position: relative;
+        }
+        .flow-step::after {
+            content: ''; position: absolute;
+            top: 14px; left: calc(50% + 14px);
+            width: calc(100% - 28px); height: 2px;
+            background: var(--border-color);
+        }
+        .flow-step:last-child::after { display: none; }
+        .flow-step-dot {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--border-color); color: var(--text-secondary);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 700; z-index: 1;
+            border: 2px solid var(--border-color);
+            transition: all .3s;
+        }
+        .flow-step.completed .flow-step-dot  { background: var(--accent-green); border-color: var(--accent-green); color: #fff; }
+        .flow-step.active .flow-step-dot     { background: var(--accent-blue); border-color: var(--accent-blue); color: #fff; box-shadow: 0 0 0 4px rgba(59,130,246,.2); }
+        .flow-step.completed::after          { background: var(--accent-green); }
+        .flow-step-label { font-size: 9px; font-weight: 600; text-align: center; margin-top: 4px; color: var(--text-secondary); max-width: 80px; line-height: 1.2; }
+        .flow-step.completed .flow-step-label, .flow-step.active .flow-step-label { color: var(--text-primary); }
+
+        /* ── Search autocomplete ── */
+        .search-results-dropdown {
+            position: absolute; z-index: 1050; width: 100%;
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: 10px; box-shadow: var(--shadow-md);
+            max-height: 220px; overflow-y: auto; display: none;
+        }
+        .search-result-item {
+            padding: 10px 14px; cursor: pointer; font-size: 13px;
+            border-bottom: 1px solid var(--border-color);
+            transition: background .15s;
+        }
+        .search-result-item:last-child { border-bottom: none; }
+        .search-result-item:hover { background: rgba(59,130,246,.07); }
+        .search-result-item strong { display: block; font-weight: 600; }
+        .search-result-item small { color: var(--text-secondary); }
+
+        /* ── Logs timeline ── */
+        .log-timeline { padding: 8px 0; }
+        .log-entry {
+            display: flex; gap: 12px; padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .log-entry:last-child { border-bottom: none; }
+        .log-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: var(--accent-blue); flex-shrink: 0; margin-top: 4px;
+        }
+        .log-text { font-size: 12px; color: var(--text-primary); }
+        .log-meta { font-size: 11px; color: var(--text-secondary); }
+
+        /* ── Toast notification ── */
+        .toast-container-custom {
+            position: fixed; top: 72px; right: 20px; z-index: 9999;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center; padding: 60px 20px; color: var(--text-secondary);
+        }
+        .empty-state i { font-size: 48px; margin-bottom: 12px; opacity: .4; display: block; }
+        .empty-state p { margin: 0; font-size: 14px; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .main-content { padding: 16px; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .filters-bar { gap: 6px; }
+        }
+        [data-theme="dark"] body { background: #0f172a !important; color: #e2e8f0 !important; }
+[data-theme="dark"] .main-content { background: #0f172a !important; }
+[data-theme="dark"] .kpi-card { background: #1e293b !important; border-color: #2d3f55 !important; }
+[data-theme="dark"] .kpi-label { color: #94a3b8 !important; }
+[data-theme="dark"] .kpi-value { color: #e2e8f0 !important; }
+[data-theme="dark"] .kpi-sub { color: #94a3b8 !important; }
+[data-theme="dark"] .filters-bar { background: #1e293b !important; border-color: #2d3f55 !important; }
+[data-theme="dark"] .filter-pill { border-color: #2d3f55 !important; color: #94a3b8 !important; }
+[data-theme="dark"] .main-card { background: #1e293b !important; border-color: #2d3f55 !important; }
+[data-theme="dark"] .main-card-header { background: #162032 !important; border-color: #2d3f55 !important; }
+[data-theme="dark"] .main-card-header h5 { color: #e2e8f0 !important; }
+[data-theme="dark"] .page-header h1 { color: #e2e8f0 !important; }
+[data-theme="dark"] .page-header p { color: #94a3b8 !important; }
+[data-theme="dark"] .method-badge { background: #243348 !important; border-color: #2d3f55 !important; color: #94a3b8 !important; }
+[data-theme="dark"] .btn-action { background: #1e293b !important; border-color: #2d3f55 !important; color: #94a3b8 !important; }
+[data-theme="dark"] .search-results-dropdown { background: #1e293b !important; border-color: #2d3f55 !important; }
+[data-theme="dark"] .search-result-item { color: #e2e8f0 !important; border-color: #2d3f55 !important; }
+[data-theme="dark"] .search-result-item:hover { background: #243348 !important; }
+[data-theme="dark"] .log-entry { border-color: #2d3f55 !important; }
+[data-theme="dark"] .log-text { color: #e2e8f0 !important; }
+[data-theme="dark"] .log-meta { color: #94a3b8 !important; }
+[data-theme="dark"] .flow-step-dot { background: #2d3f55 !important; border-color: #2d3f55 !important; color: #94a3b8 !important; }
+[data-theme="dark"] .flow-step-label { color: #94a3b8 !important; }
+[data-theme="dark"] .flow-step::after { background: #2d3f55 !important; }
+
+/* DataTable — esto es lo que fija las filas blancas */
+[data-theme="dark"] table.dataTable tbody tr { background: #1e293b !important; }
+[data-theme="dark"] table.dataTable tbody tr:hover { background: #243348 !important; }
+[data-theme="dark"] table.dataTable tbody tr td { background: #1e293b !important; color: #e2e8f0 !important; border-color: #2d3f55 !important; }
+[data-theme="dark"] table.dataTable tbody tr:hover td { background: #243348 !important; }
+[data-theme="dark"] #recoveriesTable thead th { background: #162032 !important; color: #94a3b8 !important; border-color: #2d3f55 !important; }
+[data-theme="dark"] .dataTables_wrapper { background: #1e293b !important; color: #e2e8f0 !important; }
+[data-theme="dark"] .dataTables_wrapper .dataTables_filter input,
+[data-theme="dark"] .dataTables_wrapper .dataTables_length select { background: #162032 !important; color: #e2e8f0 !important; border-color: #2d3f55 !important; }
+[data-theme="dark"] .dataTables_wrapper .dataTables_info,
+[data-theme="dark"] .dataTables_wrapper .dataTables_paginate { color: #94a3b8 !important; }
+[data-theme="dark"] .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #3b82f6 !important; color: #fff !important; border-color: #3b82f6 !important; }
+[data-theme="dark"] .dataTables_wrapper .dataTables_paginate .paginate_button:hover { background: #243348 !important; color: #e2e8f0 !important; }
+    </style>
+</head>
+
+<body>
+    <%- include('partials/sidebar_top') %>
+
+    <div class="main-content">
+
+        <!-- ── PAGE HEADER ── -->
+        <div class="page-header">
+            <div class="page-header-icon">
+                <i class="bi bi-arrow-return-left"></i>
+            </div>
+            <div>
+                <h1>Recupero de Equipos</h1>
+                <p>Seguimiento de equipos pendientes de devolución</p>
+            </div>
+        </div>
+
+        <!-- ── KPIs ── -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <span class="kpi-label"><span class="kpi-dot" style="background:#ef4444"></span>Por recuperar</span>
+                <span class="kpi-value" id="kpiPorRecuperar">—</span>
+                <span class="kpi-sub">Sin gestión iniciada</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label"><span class="kpi-dot" style="background:#f59e0b"></span>En proceso</span>
+                <span class="kpi-value" id="kpiEnProceso">—</span>
+                <span class="kpi-sub">Gestión + recogidos</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label"><span class="kpi-dot" style="background:#8b5cf6"></span>En revisión</span>
+                <span class="kpi-value" id="kpiEnRevision">—</span>
+                <span class="kpi-sub">Revisión técnica</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label"><span class="kpi-dot" style="background:#10b981"></span>Listos</span>
+                <span class="kpi-value" id="kpiListos">—</span>
+                <span class="kpi-sub">Para reasignar</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label"><span class="kpi-dot" style="background:#64748b"></span>Recuperados (mes)</span>
+                <span class="kpi-value" id="kpiRecuperadosMes">—</span>
+                <span class="kpi-sub">Este mes</span>
+            </div>
+        </div>
+
+        <!-- ── FILTERS ── -->
+        <div class="filters-bar">
+            <span style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-right:4px;">Estado:</span>
+            <button class="filter-pill active" data-status="todos" onclick="aplicarFiltro(this,'todos')">Todos</button>
+            <button class="filter-pill f-red"   data-status="por_recuperar"    onclick="aplicarFiltro(this,'por_recuperar')">Por recuperar</button>
+            <button class="filter-pill f-amber" data-status="en_gestion"       onclick="aplicarFiltro(this,'en_gestion')">En gestión</button>
+            <button class="filter-pill f-blue"  data-status="recogido_tecnico" onclick="aplicarFiltro(this,'recogido_tecnico')">Recogido</button>
+            <button class="filter-pill f-blue"  data-status="traido_oficina"   onclick="aplicarFiltro(this,'traido_oficina')">En oficina</button>
+            <button class="filter-pill f-purple"data-status="en_revision"      onclick="aplicarFiltro(this,'en_revision')">En revisión</button>
+            <button class="filter-pill f-green" data-status="listo_para_asignar" onclick="aplicarFiltro(this,'listo_para_asignar')">Listo</button>
+            <button class="filter-pill"         data-status="envio_provincia"  onclick="aplicarFiltro(this,'envio_provincia')">Provincia</button>
+            <button class="filter-pill"         data-status="recuperado"       onclick="aplicarFiltro(this,'recuperado')">Recuperados</button>
+        </div>
+
+        <!-- ── TABLE CARD ── -->
+        <div class="main-card">
+            <div class="main-card-header">
+                <h5><i class="bi bi-table me-2"></i>Recuperos activos <span class="badge bg-secondary ms-1" id="totalCount" style="font-size:11px;">0</span></h5>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="recargarTabla()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
+                    </button>
+                    <button class="btn btn-sm btn-warning text-white" onclick="abrirModalNuevo()">
+                        <i class="bi bi-plus-lg me-1"></i>Nuevo recupero
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="recoveriesTable" class="table table-hover" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Equipo</th>
+                            <th>Empleado</th>
+                            <th>Estado</th>
+                            <th>Método</th>
+                            <th>Técnico</th>
+                            <th>Fecha prog.</th>
+                            <th>Departamento</th>
+                            <th>Días</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div><!-- /main-card -->
+    </div><!-- /main-content -->
+
+
+    <!-- ═══════════════════════════════════════════════
+         MODAL: NUEVO RECUPERO
+    ═══════════════════════════════════════════════ -->
+    <div class="modal fade" id="newRecoveryModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-plus-circle me-2 text-warning"></i>Nuevo recupero</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <!-- Equipo -->
+                        <div class="col-md-6">
+                            <label class="form-label">Equipo <span class="text-danger">*</span></label>
+                            <div class="position-relative">
+                                <input type="text" id="newEquipmentCode" class="form-control" placeholder="Buscar por código...">
+                                <div class="search-results-dropdown" id="newEquipmentResults"></div>
+                            </div>
+                            <input type="hidden" id="newEquipmentId">
+                            <small class="text-muted" id="newEquipmentStatus">Escribe al menos 2 caracteres</small>
+                        </div>
+                        <!-- Empleado -->
+                        <div class="col-md-6">
+                            <label class="form-label">Empleado <span class="text-danger">*</span></label>
+                            <div class="position-relative">
+                                <input type="text" id="newEmployeeName" class="form-control" placeholder="Buscar por nombre o CIP...">
+                                <div class="search-results-dropdown" id="newEmployeeResults"></div>
+                            </div>
+                            <input type="hidden" id="newEmployeeId">
+                            <small class="text-muted" id="newEmployeeStatus">Escribe al menos 3 caracteres</small>
+                        </div>
+                        <!-- Método -->
+                        <div class="col-md-6">
+                            <label class="form-label">Método de recupero</label>
+                            <select id="newRecoveryMethod" class="form-select">
+                                <option value="pendiente">Pendiente (definir después)</option>
+                                <option value="recojo_tecnico">Técnico va a recoger</option>
+                                <option value="entrega_usuario">Usuario trae a oficina</option>
+                                <option value="envio_courier">Envío por courier</option>
+                            </select>
+                        </div>
+                        <!-- Técnico -->
+                        <div class="col-md-6">
+                            <label class="form-label">Técnico responsable</label>
+                            <input type="text" id="newTechnicianName" class="form-control" placeholder="Nombre del técnico">
+                        </div>
+                        <!-- Fecha programada -->
+                        <div class="col-md-6">
+                            <label class="form-label">Fecha programada</label>
+                            <input type="date" id="newScheduledDate" class="form-control">
+                        </div>
+                        <!-- Notas -->
+                        <div class="col-12">
+                            <label class="form-label">Notas</label>
+                            <textarea id="newNotes" class="form-control" rows="2" placeholder="Observaciones..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning text-white" id="btnGuardarNuevo">
+                        <span class="spinner-border spinner-border-sm d-none me-1" id="spinnerNuevo"></span>
+                        <span id="btnNuevoText">Crear recupero</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         MODAL: EDITAR / AVANZAR ESTADO
+    ═══════════════════════════════════════════════ -->
+    <div class="modal fade" id="editRecoveryModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil-square me-2 text-primary"></i>Gestionar recupero <span id="editRecoveryIdLabel" class="text-muted fw-normal fs-6 ms-1"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Stepper -->
+                    <div class="mb-3">
+                        <label class="form-label">Flujo del recupero</label>
+                        <div class="flow-stepper" id="flowStepper"></div>
+                    </div>
+
+                    <hr style="border-color:var(--border-color)">
+
+                    <div class="row g-3">
+                        <input type="hidden" id="editRecoveryId">
+                        <!-- Nuevo estado -->
+                        <div class="col-md-6">
+                            <label class="form-label">Nuevo estado <span class="text-danger">*</span></label>
+                            <select id="editNewStatus" class="form-select"></select>
+                        </div>
+                        <!-- Método -->
+                        <div class="col-md-6">
+                            <label class="form-label">Método</label>
+                            <select id="editRecoveryMethod" class="form-select">
+                                <option value="">Sin cambio</option>
+                                <option value="pendiente">Pendiente</option>
+                                <option value="recojo_tecnico">Técnico va a recoger</option>
+                                <option value="entrega_usuario">Usuario trae a oficina</option>
+                                <option value="envio_courier">Envío por courier</option>
+                            </select>
+                        </div>
+                        <!-- Técnico -->
+                        <div class="col-md-6">
+                            <label class="form-label">Técnico responsable</label>
+                            <input type="text" id="editTechnicianName" class="form-control" placeholder="Nombre del técnico">
+                        </div>
+                        <!-- Fecha programada -->
+                        <div class="col-md-6">
+                            <label class="form-label">Fecha programada</label>
+                            <input type="date" id="editScheduledDate" class="form-control">
+                        </div>
+                        <!-- Nota del cambio -->
+                        <div class="col-12">
+                            <label class="form-label">Nota del cambio</label>
+                            <textarea id="editTechnicianNote" class="form-control" rows="2" placeholder="¿Qué se hizo? ¿Qué falta?"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Historial -->
+                    <div class="mt-4">
+                        <label class="form-label"><i class="bi bi-clock-history me-1"></i>Historial de cambios</label>
+                        <div id="logTimeline" class="log-timeline">
+                            <div class="text-muted text-center py-3" style="font-size:12px;">Cargando historial...</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarEdicion">
+                        <span class="spinner-border spinner-border-sm d-none me-1" id="spinnerEdicion"></span>
+                        <span id="btnEdicionText">Guardar cambio</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ── Scripts ── -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script src="/js/recoveries-dashboard.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/sidebar.js"></script>
+</body>
+</html>

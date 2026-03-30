@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perfil de Empleados - Equipment Management</title>
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+<!-- Tus estilos globales -->
+<link rel="stylesheet" href="/css/style.css">
+
+<style>
+/* =========================================================
+   VARIABLES — mismas del dashboard
+========================================================= */
+:root {
+  --bg-main: #f5f7fa;
+  --bg-card: #ffffff;
+  --border-soft: #e2e8f0;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --primary:  #3b82f6;
+  --success:  #10b981;
+  --warning:  #f59e0b;
+  --danger:   #ef4444;
+  --info:     #06b6d4;
+  --especialista: #10b981;
+  --analista:     #f59e0b;
+  --coordinador:  #3b82f6;
+  --gerente:      #8b5cf6;
+  --asistente:    #06b6d4;
+  --tecnico:      #6b7280;
+}
+
+/* =========================================================
+   PAGE WRAPPER (igual que el dashboard)
+========================================================= */
+body {
+  background: var(--bg-main);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--text-main);
+  overflow-x: hidden;
+}
+
+.page-wrapper {
+  width: 100%;
+  padding: 16px;
+  margin-top: 60px;
+  min-height: calc(100vh - 60px);
+}
+
+.page-content {
+  width: 100%;
+  max-width: 1680px;
+  margin: 0 auto;
+}
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.page-title i { color: var(--primary); }
+
+.page-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* =========================================================
+   SEARCH BOX (misma estética que el dashboard)
+========================================================= */
+.search-wrapper {
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.search-emp-input {
+  width: 100%;
+  padding: 14px 48px 14px 20px;
+  border: 2px solid var(--border-soft);
+  border-radius: 12px;
+  font-size: 14px;
+  background: var(--bg-card);
+  color: var(--text-main);
+  transition: all .2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  outline: none;
+}
+
+.search-emp-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59,130,246,.1);
+}
+
+.search-emp-input::placeholder { color: #94a3b8; }
+
+.search-emp-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: var(--text-muted);
+  pointer-events: none;
+  transition: color .2s;
+}
+
+.search-emp-input:focus ~ .search-emp-icon { color: var(--primary); }
+
+/* =========================================================
+   AUTOCOMPLETE DROPDOWN
+========================================================= */
+.emp-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0; right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.12);
+  z-index: 1050;
+  overflow: hidden;
+  display: none;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.emp-dropdown.show { display: block; animation: empSlide .15s ease; }
+
+@keyframes empSlide {
+  from { opacity:0; transform:translateY(-6px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.emp-dd-item {
+  padding: 12px 18px;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background .15s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.emp-dd-item:last-child { border-bottom: none; }
+.emp-dd-item:hover { background: #f8fafc; }
+
+.emp-dd-avatar {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.emp-dd-info { flex: 1; min-width: 0; }
+.emp-dd-name { font-weight: 600; font-size: 13px; }
+.emp-dd-meta { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+.emp-dd-status {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+.emp-dd-status.active   { background: #dcfce7; color: #16a34a; }
+.emp-dd-status.inactive { background: #fee2e2; color: #dc2626; }
+
+.emp-dd-empty, .emp-dd-loading {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.search-stats-bar {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  padding: 0 2px;
+  min-height: 18px;
+}
+
+/* highlight de búsqueda */
+mark.emp-hl {
+  background: #fef9c3;
+  border-radius: 3px;
+  padding: 0 2px;
+  color: #92400e;
+  font-weight: 600;
+}
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+#empEmptyState {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text-muted);
+}
+#empEmptyState i { font-size: 56px; opacity: .2; display: block; margin-bottom: 12px; }
+#empEmptyState p { font-size: 14px; }
+
+/* =========================================================
+   EMPLOYEE CARD
+========================================================= */
+#empCard {
+  background: var(--bg-card);
+  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+  box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  overflow: hidden;
+  display: none;
+  animation: empCardIn .25s ease;
+}
+
+#empCard.show { display: block; }
+
+@keyframes empCardIn {
+  from { opacity:0; transform:translateY(10px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* Band de color top */
+.emp-band {
+  height: 6px;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--info) 100%);
+  transition: background .4s;
+}
+.emp-band.baja {
+  background: linear-gradient(90deg, var(--danger) 0%, #f97316 100%);
+}
+
+/* Card header */
+.emp-card-top {
+  padding: 24px 28px 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.emp-profile-left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.emp-avatar-wrap { position: relative; }
+
+.emp-big-avatar {
+  width: 70px; height: 70px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 24px;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+}
+
+.emp-dot {
+  position: absolute;
+  bottom: 3px; right: 3px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 2px solid white;
+  transition: background .3s;
+}
+.emp-dot.active   { background: var(--success); }
+.emp-dot.inactive { background: var(--danger); }
+
+.emp-card-name     { font-size: 19px; font-weight: 700; line-height: 1.2; }
+.emp-card-position { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+.emp-card-cip {
+  display: inline-block;
+  margin-top: 6px;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary);
+  background: #eff6ff;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+/* Status badge grande */
+.emp-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: all .3s;
+  flex-shrink: 0;
+}
+.emp-status-badge.active   { background:#dcfce7; color:#16a34a; border-color:#bbf7d0; }
+.emp-status-badge.inactive { background:#fee2e2; color:#dc2626; border-color:#fecaca; }
+
+/* Divider */
+.emp-divider { height:1px; background: var(--border-soft); margin: 0 28px; }
+
+/* Info grid */
+.emp-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  padding: 22px 28px;
+}
+
+@media (max-width: 900px) { .emp-info-grid { grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 540px) {
+  .emp-info-grid { grid-template-columns: 1fr; }
+  .emp-card-top  { padding: 18px; }
+  .emp-info-grid { padding: 18px; }
+  .emp-card-footer { padding: 14px 18px; }
+}
+
+.emp-field-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.emp-field-value {
+  font-size: 13px;
+  color: var(--text-main);
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.emp-field-value.mono {
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
+}
+
+.emp-field-value.empty { color: #94a3b8; font-style: italic; font-weight: 400; }
+.emp-field-value a { color: var(--primary); text-decoration: none; }
+.emp-field-value a:hover { text-decoration: underline; }
+
+/* Badges de categoría (mismos colores que el dashboard) */
+.badge-especialista { background: var(--especialista) !important; color: #fff !important; }
+.badge-analista     { background: var(--analista)     !important; color: #000 !important; }
+.badge-coordinador  { background: var(--coordinador)  !important; color: #fff !important; }
+.badge-gerente      { background: #8b5cf6             !important; color: #fff !important; }
+.badge-asistente    { background: var(--asistente)    !important; color: #fff !important; }
+.badge-tecnico      { background: var(--tecnico)      !important; color: #fff !important; }
+
+/* Card footer */
+.emp-card-footer {
+  padding: 16px 28px;
+  background: #fafbfc;
+  border-top: 1px solid var(--border-soft);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.emp-footer-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'SFMono-Regular', Consolas, monospace;
+}
+
+.emp-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* =========================================================
+   BOTONES (mismos que dashboard)
+========================================================= */
+.btn { font-weight: 600; border-radius: 8px; font-size: 13px; transition: all .2s; }
+.btn:active { transform: scale(.97); }
+
+.btn-baja {
+  background: white;
+  color: var(--danger);
+  border: 1.5px solid var(--danger);
+}
+.btn-baja:hover { background: #fee2e2; color: var(--danger); border-color: var(--danger); }
+
+.btn-reactivar {
+  background: white;
+  color: var(--success);
+  border: 1.5px solid var(--success);
+}
+.btn-reactivar:hover { background: #dcfce7; color: var(--success); border-color: var(--success); }
+
+/* =========================================================
+   SPINNER (igual que el loading del dashboard)
+========================================================= */
+.emp-spin {
+  display: inline-block;
+  width: 15px; height: 15px;
+  border: 2px solid #e2e8f0;
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* =========================================================
+   CONFIRM MODAL overlay
+========================================================= */
+#empConfirmOverlay {
+  position: fixed; inset: 0;
+  background: rgba(15,23,42,.45);
+  backdrop-filter: blur(3px);
+  z-index: 1055;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+#empConfirmOverlay.show { display: flex; }
+
+.emp-confirm-box {
+  background: white;
+  border-radius: 14px;
+  padding: 32px 28px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.18);
+  text-align: center;
+  animation: empCardIn .2s ease;
+}
+
+.emp-confirm-icon  { font-size: 42px; margin-bottom: 10px; display: block; }
+.emp-confirm-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.emp-confirm-msg   { font-size: 13px; color: var(--text-muted); margin-bottom: 22px; line-height: 1.5; }
+.emp-confirm-btns  { display: flex; gap: 10px; justify-content: center; }
+
+/* =========================================================
+   TOAST
+========================================================= */
+#empToastContainer {
+  position: fixed;
+  top: 72px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.emp-toast {
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.15);
+  min-width: 260px;
+  animation: empSlide .2s ease;
+}
+.emp-toast.success { background: var(--success); }
+.emp-toast.error   { background: var(--danger); }
+.emp-toast.info    { background: var(--primary); }
+</style>
+</head>
+<body>
+
+<!-- ── Sidebar y Navbar (tu partial) ── -->
+<%- include("partials/sidebar_top") %>
+
+<!-- ── Toast container ── -->
+<div id="empToastContainer"></div>
+
+<!-- ── Confirm overlay ── -->
+<div id="empConfirmOverlay">
+  <div class="emp-confirm-box">
+    <span class="emp-confirm-icon" id="empConfirmIcon">⚠️</span>
+    <div class="emp-confirm-title" id="empConfirmTitle">¿Confirmar acción?</div>
+    <div class="emp-confirm-msg"   id="empConfirmMsg">Esta acción modificará el estado del empleado.</div>
+    <div class="emp-confirm-btns">
+      <button class="btn btn-outline-secondary btn-sm" onclick="empCloseConfirm()">Cancelar</button>
+      <button class="btn btn-sm" id="empConfirmBtn" onclick="empExecuteConfirm()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Page Wrapper ── -->
+<div class="page-wrapper">
+  <div class="page-content">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">
+          <i class="bi bi-person-badge-fill"></i>
+          Perfil de Empleados
+        </h1>
+        <div class="page-subtitle">Busca un empleado para ver su información y gestionar su estado</div>
+      </div>
+      <!-- Botón volver al dashboard -->
+      <a href="/dashboard" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Dashboard
+      </a>
+    </div>
+
+    <!-- Search box -->
+    <div class="search-wrapper">
+      <input
+        type="text"
+        id="empSearchInput"
+        class="search-emp-input"
+        placeholder="🔍 Buscar por nombre, CIP, email o cargo..."
+        autocomplete="off"
+      >
+      <i class="bi bi-search search-emp-icon"></i>
+      <div class="emp-dropdown" id="empDropdown"></div>
+    </div>
+
+    <div class="search-stats-bar" id="empSearchStats"></div>
+
+    <!-- Empty state -->
+    <div id="empEmptyState">
+      <i class="bi bi-person-search"></i>
+      <p>Escribe en el buscador para encontrar un empleado</p>
+    </div>
+
+    <!-- Employee card -->
+    <div id="empCard">
+
+      <!-- Color band -->
+      <div class="emp-band" id="empBand"></div>
+
+      <!-- Top section: avatar + nombre + status -->
+      <div class="emp-card-top">
+        <div class="emp-profile-left">
+          <div class="emp-avatar-wrap">
+            <div class="emp-big-avatar" id="empBigAvatar">
+              <span id="empAvatarInitials"></span>
+            </div>
+            <div class="emp-dot" id="empAvatarDot"></div>
+          </div>
+          <div>
+            <div class="emp-card-name"     id="empCardName"></div>
+            <div class="emp-card-position" id="empCardPosition"></div>
+            <div class="emp-card-cip"      id="empCardCip"></div>
+          </div>
+        </div>
+
+        <!-- Badge de estado -->
+        <div class="emp-status-badge" id="empStatusBadge">
+          <i class="bi" id="empStatusIcon"></i>
+          <span id="empStatusText"></span>
+        </div>
+      </div>
+
+      <div class="emp-divider"></div>
+
+      <!-- Info grid -->
+      <div class="emp-info-grid">
+
+        <div>
+          <div class="emp-field-label">DNI / N° Documento</div>
+          <div class="emp-field-value mono" id="fDni">—</div>
+        </div>
+
+        <div>
+          <div class="emp-field-label">Email corporativo</div>
+          <div class="emp-field-value" id="fEmail">—</div>
+        </div>
+
+        <div>
+          <div class="emp-field-label">Categoría</div>
+          <div class="emp-field-value" id="fCategory">—</div>
+        </div>
+
+        <div>
+          <div class="emp-field-label">Cargo / Posición</div>
+          <div class="emp-field-value" id="fPosition">—</div>
+        </div>
+
+        <div>
+          <div class="emp-field-label">Supervisor directo</div>
+          <div class="emp-field-value" id="fSupervisor">—</div>
+        </div>
+
+        <div>
+          <div class="emp-field-label">Oficina / Sucursal</div>
+          <div class="emp-field-value mono" id="fOffice">—</div>
+        </div>
+
+      </div>
+
+      <div class="emp-divider"></div>
+
+      <!-- Footer con acciones -->
+      <div class="emp-card-footer">
+        <div class="emp-footer-meta" id="empFooterMeta"></div>
+        <div class="emp-actions">
+
+          <button class="btn btn-outline-secondary btn-sm" id="btnCopyEmail" onclick="empCopyEmail()">
+            <i class="bi bi-clipboard"></i> Copiar email
+          </button>
+
+          <!-- ⭐ BOTÓN CLAVE: Dar de baja / Reactivar -->
+          <button class="btn btn-sm" id="empToggleBtn" onclick="empPromptToggle()">
+            <!-- se rellena dinámicamente -->
+          </button>
+
+        </div>
+      </div>
+
+    </div>
+    <!-- /empCard -->
+
+  </div>
+</div>
+
+<!-- Scripts base -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/sidebar.js"></script>
+
+<!-- Script de la página -->
+<script src="/js/employees-profile.js"></script>
+
+<!-- Pasar datos del servidor al cliente de forma segura -->
+<script>
+  // El usuario logueado (del middleware authenticateToken)
+
+</script>
+
+</body>
+</html>

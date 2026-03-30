@@ -1,0 +1,1749 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Equipment Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+/* ── Design System — Light & Dark ── */
+:root, [data-theme="light"] {
+    --bg-main:     #f5f7fa;
+    --bg-card:     #ffffff;
+    --bg-header:   #fafbfc;
+    --border-soft: #e2e8f0;
+    --border-row:  #f1f5f9;
+    --text-main:   #1e293b;
+    --text-muted:  #64748b;
+    --primary:     #3b82f6;
+    --success:     #10b981;
+    --warning:     #f59e0b;
+    --info:        #06b6d4;
+    --danger:      #ef4444;
+    --purple:      #8b5cf6;
+    --jira-blue:   #0052cc;
+    --jira-hover:  #003d99;
+    --hover-row:   #f8fafc;
+    --input-bg:    #ffffff;
+    --pill-bg:     #ffffff;
+    --upload-bg:   transparent;
+    --detail-row-bg:  #f8fafc;
+    --detail-desc-bg: #f8fafc;
+    --detail-close-bg:#f0fdf4;
+    --result-box-bg:  #eff6ff;
+    --result-box-border: #bfdbfe;
+    --result-box-color:  #1e40af;
+    --step1-bg: #eff6ff; --step1-border: #bfdbfe; --step1-color: #1d4ed8; --step1-text: #1e40af;
+    --step2-bg: #f0fdf4; --step2-border: #bbf7d0; --step2-color: #065f46;
+    --detail-border: #e2e8f0;
+    --queue-tab-active: #0052cc;
+    --queue-unassigned-bg: #fff7ed;
+    --queue-unassigned-border: #fed7aa;
+    --queue-assigned-bg: #eff6ff;
+    --queue-assigned-border: #bfdbfe;
+}
+
+[data-theme="dark"] {
+    --bg-main:     #0f172a;
+    --bg-card:     #1e293b;
+    --bg-header:   #162032;
+    --border-soft: #2d3f55;
+    --border-row:  #2d3f55;
+    --text-main:   #e2e8f0;
+    --text-muted:  #94a3b8;
+    --primary:     #60a5fa;
+    --success:     #34d399;
+    --warning:     #fbbf24;
+    --info:        #22d3ee;
+    --danger:      #f87171;
+    --purple:      #a78bfa;
+    --jira-blue:   #3b7dd8;
+    --jira-hover:  #2563b0;
+    --hover-row:   #243348;
+    --input-bg:    #162032;
+    --pill-bg:     #1e293b;
+    --upload-bg:   #162032;
+    --detail-row-bg:  #162032;
+    --detail-desc-bg: #162032;
+    --detail-close-bg:#0a2a1a;
+    --result-box-bg:   #1e3a5f;
+    --result-box-border:#2d5a9e;
+    --result-box-color: #93c5fd;
+    --step1-bg: #1e3a5f; --step1-border: #2d5a9e; --step1-color: #93c5fd; --step1-text: #bfdbfe;
+    --step2-bg: #0a2a1a; --step2-border: #166534; --step2-color: #34d399;
+    --detail-border: #2d3f55;
+    --queue-tab-active: #3b7dd8;
+    --queue-unassigned-bg: #2a1a00;
+    --queue-unassigned-border: #78350f;
+    --queue-assigned-bg: #1e3a5f;
+    --queue-assigned-border: #2d5a9e;
+}
+
+body {
+    margin: 0;
+    background: var(--bg-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--text-main);
+    overflow-x: hidden;
+    transition: background 0.3s, color 0.3s;
+}
+
+.dashboard-wrapper { width: 100%; padding: 16px; margin-top: 60px; }
+.dashboard-content { width: 100%; max-width: 1680px; margin: 0 auto; }
+
+.cards-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 20px; }
+@media (max-width: 1400px) { .cards-6 { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 992px)  { .cards-6 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 576px)  { .cards-6 { grid-template-columns: 1fr; } }
+
+.kpi-card {
+    background: var(--bg-card); border-radius: 12px; height: 100px; padding: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    border: 1px solid var(--border-soft); box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    transition: all 0.2s; cursor: pointer;
+}
+.kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+.kpi-title { font-size: 10px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; }
+.kpi-value { font-size: 28px; font-weight: 700; line-height: 1; }
+.kpi-icon  { font-size: 32px; opacity: .25; }
+
+.primary { color: var(--primary); } .success { color: var(--success); }
+.warning { color: var(--warning); } .info    { color: var(--info); }
+.danger  { color: var(--danger);  } .purple  { color: var(--purple); }
+.jira    { color: var(--jira-blue); }
+
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.page-title  { font-size: 22px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+.page-title .jira-badge { background: var(--jira-blue); color: white; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; letter-spacing: 0.5px; }
+
+.card-panel {
+    background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-soft);
+    box-shadow: 0 1px 3px rgba(0,0,0,.05); padding: 20px; margin-bottom: 20px;
+    transition: background 0.3s, border-color 0.3s;
+}
+.card-panel-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+.badge-status { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; }
+.badge-open     { background: #dbeafe; color: #1d4ed8; }
+.badge-progress { background: #fef3c7; color: #d97706; }
+.badge-closed   { background: #d1fae5; color: #065f46; }
+
+[data-theme="dark"] .badge-open     { background: #1e3a5f; color: #93c5fd; }
+[data-theme="dark"] .badge-progress { background: #422006; color: #fde68a; }
+[data-theme="dark"] .badge-closed   { background: #064e3b; color: #6ee7b7; }
+
+.prio-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+.prio-low    { background: #10b981; }
+.prio-medium { background: #f59e0b; }
+.prio-high   { background: #ef4444; }
+
+.table-tickets thead th {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted);
+    font-weight: 600; border-bottom: 2px solid var(--border-soft); padding: 10px 12px;
+    white-space: nowrap; background: var(--bg-header);
+    transition: background 0.3s, color 0.3s, border-color 0.3s;
+}
+.table-tickets td {
+    padding: 10px 12px; vertical-align: middle; font-size: 13px;
+    border-bottom: 1px solid var(--border-row);
+    color: var(--text-main);
+    transition: border-color 0.3s, color 0.3s;
+}
+.table-tickets tbody tr:hover { background: var(--hover-row); }
+[data-theme="dark"] .table-tickets { --bs-table-bg: transparent; }
+[data-theme="dark"] .table-tickets tbody tr:hover td { background: var(--hover-row) !important; }
+
+.ticket-key { font-family: monospace; font-weight: 700; color: var(--jira-blue); font-size: 12px; }
+.ticket-key a { color: inherit; text-decoration: none; }
+.ticket-key a:hover { text-decoration: underline; }
+
+.quick-form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 768px) { .quick-form { grid-template-columns: 1fr; } }
+
+.form-label-custom { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); margin-bottom: 6px; }
+.form-control-custom, .form-select-custom {
+    border: 1.5px solid var(--border-soft); border-radius: 8px; padding: 9px 12px; font-size: 13px;
+    transition: border-color 0.2s, background 0.3s, color 0.3s; width: 100%;
+    background: var(--input-bg);
+    color: var(--text-main);
+}
+.form-control-custom:focus, .form-select-custom:focus {
+    outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,.1);
+}
+.form-control-custom::placeholder { color: var(--text-muted); }
+textarea.form-control-custom { resize: vertical; }
+
+.btn-create {
+    background: var(--jira-blue); color: white; border: none; border-radius: 8px;
+    padding: 10px 24px; font-size: 13px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 8px; transition: all 0.2s;
+}
+.btn-create:hover { background: var(--jira-hover); transform: translateY(-1px); }
+.btn-create:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.btn-outline-sm {
+    border: 1.5px solid var(--border-soft); background: transparent; border-radius: 6px;
+    padding: 4px 10px; font-size: 11px; font-weight: 600; cursor: pointer;
+    transition: all 0.15s; color: var(--text-muted);
+    display: inline-flex; align-items: center; gap: 4px;
+}
+.btn-outline-sm:hover { border-color: var(--primary); color: var(--primary); background: var(--hover-row); }
+.btn-close-ticket { border-color: #fca5a5; color: #dc2626; }
+.btn-close-ticket:hover { background: #fee2e2; border-color: #dc2626; color: #dc2626; }
+[data-theme="dark"] .btn-close-ticket { border-color: #7f1d1d; color: #f87171; }
+[data-theme="dark"] .btn-close-ticket:hover { background: #450a0a; border-color: #f87171; color: #f87171; }
+
+.search-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+.search-input-wrap { position: relative; flex: 1; min-width: 200px; }
+.search-input-wrap i { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; }
+.search-input-wrap input {
+    padding-left: 34px; border: 1.5px solid var(--border-soft); border-radius: 8px;
+    padding-top: 8px; padding-bottom: 8px; font-size: 13px; width: 100%;
+    background: var(--input-bg); color: var(--text-main);
+    transition: background 0.3s, color 0.3s, border-color 0.3s;
+}
+.search-input-wrap input::placeholder { color: var(--text-muted); }
+.search-input-wrap input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,.1); }
+
+.filter-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.pill {
+    border: 1.5px solid var(--border-soft);
+    background: var(--pill-bg);
+    border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s; color: var(--text-muted);
+}
+.pill.active { background: var(--jira-blue); border-color: var(--jira-blue); color: white; }
+.pill:hover:not(.active) { border-color: var(--jira-blue); color: var(--jira-blue); }
+
+.spinner-wrap { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--text-muted); gap: 10px; font-size: 13px; }
+
+.toast-container-custom { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+.toast-msg { background: var(--text-main); color: white; padding: 12px 18px; border-radius: 10px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.2); animation: slideUp 0.3s ease; min-width: 280px; }
+.toast-msg.success { background: #065f46; }
+.toast-msg.error   { background: #991b1b; }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.upload-zone {
+    border: 2px dashed var(--border-soft); border-radius: 8px; padding: 20px; text-align: center;
+    cursor: pointer; transition: all 0.2s; color: var(--text-muted); font-size: 13px; position: relative;
+    background: var(--upload-bg);
+}
+.upload-zone:hover, .upload-zone.dragover { border-color: var(--primary); color: var(--primary); background: var(--hover-row); }
+.upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.upload-preview { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 12px; color: var(--success); }
+
+.modal-header-custom {
+    background: linear-gradient(135deg, var(--jira-blue), #0065ff);
+    color: white; border-radius: 12px 12px 0 0; padding: 16px 20px;
+}
+.modal-content {
+    border-radius: 12px; border: none; box-shadow: 0 20px 60px rgba(0,0,0,.15);
+}
+
+[data-theme="dark"] .modal-content { background: var(--bg-card) !important; color: var(--text-main) !important; }
+[data-theme="dark"] .modal-body    { background: var(--bg-card) !important; }
+[data-theme="dark"] .modal-footer  { background: var(--bg-header) !important; border-color: var(--border-soft) !important; }
+[data-theme="dark"] .modal-header  { background: var(--bg-header) !important; border-color: var(--border-soft) !important; color: var(--text-main) !important; }
+[data-theme="dark"] .modal-title   { color: var(--text-main) !important; }
+[data-theme="dark"] .btn-close     { filter: invert(1); }
+
+.empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+.empty-state i { font-size: 48px; opacity: 0.3; margin-bottom: 12px; display: block; }
+.empty-state p { font-size: 14px; margin: 0; }
+
+@keyframes flashPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(0,82,204,.4); }
+    70%  { box-shadow: 0 0 0 10px rgba(0,82,204,0); }
+    100% { box-shadow: 0 0 0 0 rgba(0,82,204,0); }
+}
+.flash-new { animation: flashPulse 1s ease 3; }
+
+#paginationWrap { display:flex; justify-content:space-between; align-items:center; margin-top:12px; flex-wrap:wrap; gap:8px; }
+#paginationInfo { font-size:12px; color:var(--text-muted); }
+
+/* ═══════════════════════════════════════════════════════════
+   NUEVOS ESTILOS — Modal de Búsqueda / Cola
+═══════════════════════════════════════════════════════════ */
+
+/* Tabs del modal de búsqueda */
+.search-modal-tabs {
+    display: flex;
+    border-bottom: 2px solid var(--border-soft);
+    margin-bottom: 20px;
+    gap: 0;
+}
+.search-tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 10px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: -2px;
+    white-space: nowrap;
+}
+.search-tab-btn:hover { color: var(--jira-blue); }
+.search-tab-btn.active {
+    color: var(--jira-blue);
+    border-bottom-color: var(--jira-blue);
+}
+.tab-badge {
+    background: var(--jira-blue);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+}
+.tab-badge.orange { background: #f59e0b; }
+
+/* Panel de contenido de tabs */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* Fila de ticket en cola */
+.queue-ticket-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-soft);
+    background: var(--bg-card);
+    margin-bottom: 6px;
+    transition: all 0.15s;
+    flex-wrap: wrap;
+}
+.queue-ticket-row:hover { border-color: var(--jira-blue); background: var(--hover-row); }
+
+.queue-ticket-key {
+    font-family: monospace;
+    font-weight: 700;
+    color: var(--jira-blue);
+    font-size: 12px;
+    min-width: 80px;
+    flex-shrink: 0;
+}
+.queue-ticket-key a { color: inherit; text-decoration: none; }
+.queue-ticket-key a:hover { text-decoration: underline; }
+
+.queue-ticket-summary {
+    flex: 1;
+    font-size: 13px;
+    color: var(--text-main);
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.queue-ticket-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+.queue-ticket-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+/* Botón asignarme */
+.btn-assign-me {
+    border: 1.5px solid var(--jira-blue);
+    background: transparent;
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--jira-blue);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+.btn-assign-me:hover { background: var(--jira-blue); color: white; }
+.btn-assign-me:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Botón asignar a alguien */
+.btn-assign-other {
+    border: 1.5px solid var(--border-soft);
+    background: transparent;
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s;
+}
+.btn-assign-other:hover { border-color: var(--warning); color: var(--warning); }
+
+/* Avatar asignado */
+.assignee-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--queue-assigned-bg);
+    border: 1px solid var(--queue-assigned-border);
+    border-radius: 20px;
+    padding: 2px 8px 2px 2px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--jira-blue);
+}
+.assignee-chip .avatar {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--jira-blue);
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Filtro por correo */
+.email-filter-wrap {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+.email-filter-wrap input {
+    flex: 1;
+}
+.email-filter-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-soft);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.1);
+    z-index: 100;
+    max-height: 150px;
+    overflow-y: auto;
+}
+.email-suggestion-item {
+    padding: 8px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--text-main);
+    transition: background 0.1s;
+}
+.email-suggestion-item:hover { background: var(--hover-row); color: var(--jira-blue); }
+
+/* Queue header info */
+.queue-header-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.queue-count-badge {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.queue-count-badge strong { color: var(--text-main); }
+
+/* Dropdown de asignación */
+.assign-dropdown {
+    position: relative;
+    display: inline-block;
+}
+.assign-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-soft);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.12);
+    z-index: 200;
+    min-width: 220px;
+    overflow: hidden;
+}
+.assign-dropdown-header {
+    padding: 8px 12px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-soft);
+}
+.assign-dropdown-search {
+    padding: 8px;
+    border-bottom: 1px solid var(--border-soft);
+}
+.assign-dropdown-search input {
+    width: 100%;
+    border: 1.5px solid var(--border-soft);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 12px;
+    background: var(--input-bg);
+    color: var(--text-main);
+}
+.assign-dropdown-search input:focus { outline: none; border-color: var(--primary); }
+.assign-agent-list { max-height: 180px; overflow-y: auto; }
+.assign-agent-item {
+    padding: 8px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--text-main);
+    transition: background 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.assign-agent-item:hover { background: var(--hover-row); }
+.assign-agent-avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--jira-blue), #0065ff);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.assign-agent-email { font-size: 10px; color: var(--text-muted); }
+
+/* Ticket detalle con asignación dentro del modal search */
+.ticket-detail-assignee-section {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-soft);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    background: var(--bg-header);
+}
+.ticket-detail-assignee-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.queue-empty {
+    text-align: center;
+    padding: 32px 20px;
+    color: var(--text-muted);
+}
+.queue-empty i { font-size: 36px; opacity: 0.3; display: block; margin-bottom: 8px; }
+.queue-empty p { font-size: 13px; margin: 0; }
+
+/* Scroll en listas de cola */
+.queue-list-scroll {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 2px;
+}
+.queue-list-scroll::-webkit-scrollbar { width: 4px; }
+.queue-list-scroll::-webkit-scrollbar-track { background: transparent; }
+.queue-list-scroll::-webkit-scrollbar-thumb { background: var(--border-soft); border-radius: 2px; }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <button class="close-sidebar" id="closeSidebar">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    
+    <div class="menu-item">
+        <a href="<%= APP_URL %>/home" class="menu-header">
+            <div class="menu-title">
+               <i class="fas fa-home"></i>
+                <span>Home</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item">
+        <a href="<%= APP_URL %>/warranty" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-shield-alt"></i>
+                <span>Garantías</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item">
+        <a href="<%= APP_URL %>/tickets" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-ticket-alt"></i>
+                <span>Tickets</span>
+            </div>
+        </a>
+    </div>
+
+
+
+
+
+    <div class="menu-item">
+        <a href="<%= APP_URL %>/sccm" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-shield-alt"></i>
+                <span>Panda</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item">
+        <a href="#" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-cog"></i>
+                <span>Administración</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item"> 
+        <a href="<%= APP_URL %>/logout" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Navbar Principal -->
+<nav class="navbar navbar-expand-lg fixed-top" id="navbar">
+    <div class="container-fluid">
+        <button class="toggler-btn" id="mainToggleSidebar">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Dark mode toggle — compacto, alineado a la derecha del navbar -->
+        <div class="theme-toggle-wrap ms-auto" id="themeToggle" onclick="toggleTheme()" title="Cambiar tema" role="button" aria-label="Cambiar modo claro/oscuro">
+            <!-- Ícono -->
+            <i class="theme-toggle-icon" id="toggleIcon">🌙</i>
+            <!-- Switch track -->
+            <div class="theme-switch">
+                <div class="theme-switch-knob" id="switchKnob"></div>
+            </div>
+            <!-- Label -->
+            <span class="theme-toggle-label" id="toggleLabel">Oscuro</span>
+        </div>
+    </div>
+</nav>
+
+<style>
+/* ─── Dark Mode Toggle — Navbar ─────────────────────── */
+.theme-toggle-wrap {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    user-select: none;
+    padding: 4px 10px 4px 8px;
+    border-radius: 20px;
+    transition: background 0.2s;
+}
+.theme-toggle-wrap:hover {
+    background: rgba(0,0,0,0.06);
+}
+[data-theme="dark"] .theme-toggle-wrap:hover {
+    background: rgba(255,255,255,0.08);
+}
+
+/* Ícono emoji pequeño */
+.theme-toggle-icon {
+    font-size: 14px;
+    line-height: 1;
+    transition: transform 0.4s cubic-bezier(.4,0,.2,1);
+    display: flex;
+    align-items: center;
+}
+.theme-toggle-wrap:hover .theme-toggle-icon {
+    transform: rotate(20deg);
+}
+
+/* Switch track */
+.theme-switch {
+    width: 34px;
+    height: 18px;
+    background: #cbd5e1;
+    border-radius: 9px;
+    position: relative;
+    transition: background 0.3s ease;
+    flex-shrink: 0;
+}
+[data-theme="dark"] .theme-switch {
+    background: #3b82f6;
+}
+
+/* Knob */
+.theme-switch-knob {
+    width: 13px;
+    height: 13px;
+    background: #ffffff;
+    border-radius: 50%;
+    position: absolute;
+    top: 2.5px;
+    left: 3px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+}
+[data-theme="dark"] .theme-switch-knob {
+    transform: translateX(16px);
+}
+
+/* Label */
+.theme-toggle-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    letter-spacing: 0.2px;
+    transition: color 0.3s;
+    white-space: nowrap;
+}
+[data-theme="dark"] .theme-toggle-label {
+    color: #94a3b8;
+}
+</style>
+
+<script>
+/* ─── Dark Mode — init inmediato (sin flash) ────────── */
+(function () {
+    const saved = localStorage.getItem('dashboardTheme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+})();
+
+function toggleTheme() {
+    const html    = document.documentElement;
+    const current = html.getAttribute('data-theme');
+    const next    = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('dashboardTheme', next);
+    _syncToggleUI(next);
+    if (typeof updateChartsTheme === 'function') updateChartsTheme(next);
+}
+
+function _syncToggleUI(theme) { 
+    const icon  = document.getElementById('toggleIcon');
+    const label = document.getElementById('toggleLabel');
+    if (!icon || !label) return;
+    if (theme === 'dark') {
+        icon.textContent  = '☀️';
+        label.textContent = 'Claro';
+    } else {
+        icon.textContent  = '🌙';
+        label.textContent = 'Oscuro';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const saved = localStorage.getItem('dashboardTheme') || 'light';
+    _syncToggleUI(saved);
+});
+</script>
+
+<div class="dashboard-wrapper">
+<div class="dashboard-content">
+
+    <div class="page-header">
+        <div class="page-title">
+            <i class="bi bi-ticket-detailed-fill" style="color: var(--jira-blue)"></i>
+            Tickets de Incidencias
+            <span class="jira-badge">JIRA</span>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <button class="btn-outline-sm" onclick="loadTickets()">
+                <i class="bi bi-arrow-clockwise"></i> Actualizar
+            </button>
+            <button class="btn-outline-sm" onclick="openSearchModal()" style="border-color:var(--jira-blue); color:var(--jira-blue);">
+                <i class="bi bi-search"></i> Consultar / Cola
+            </button>
+            <button class="btn-create" onclick="openCreateModal()">
+                <i class="bi bi-plus-lg"></i> Nueva Incidencia
+            </button>
+        </div>
+    </div>
+
+    <div class="cards-6" id="kpiSection">
+        <div class="kpi-card"><div><div class="kpi-title">Total Tickets</div><div class="kpi-value primary" id="kpiTotal">—</div></div><div class="kpi-icon"><i class="bi bi-ticket-detailed primary"></i></div></div>
+        <div class="kpi-card"><div><div class="kpi-title">Abiertos</div><div class="kpi-value info" id="kpiOpen">—</div></div><div class="kpi-icon"><i class="bi bi-folder2-open info"></i></div></div>
+        <div class="kpi-card"><div><div class="kpi-title">En Progreso</div><div class="kpi-value warning" id="kpiProgress">—</div></div><div class="kpi-icon"><i class="bi bi-gear-wide-connected warning"></i></div></div>
+        <div class="kpi-card"><div><div class="kpi-title">Cerrados</div><div class="kpi-value success" id="kpiClosed">—</div></div><div class="kpi-icon"><i class="bi bi-check2-circle success"></i></div></div>
+        <div class="kpi-card"><div><div class="kpi-title">Críticos</div><div class="kpi-value danger" id="kpiCritical">—</div></div><div class="kpi-icon"><i class="bi bi-exclamation-triangle danger"></i></div></div>
+        <div class="kpi-card"><div><div class="kpi-title">Este Mes</div><div class="kpi-value purple" id="kpiMonth">—</div></div><div class="kpi-icon"><i class="bi bi-calendar3 purple"></i></div></div>
+    </div>
+
+    <div class="card-panel">
+        <div class="card-panel-title">
+            <i class="bi bi-list-ul" style="color:var(--jira-blue)"></i>
+            Listado de Incidencias
+        </div>
+
+        <div class="search-bar">
+            <div class="search-input-wrap">
+                <i class="bi bi-search"></i>
+                <input type="text" id="searchInput" placeholder="Buscar por clave, resumen, reporter..." oninput="filterTickets()">
+            </div>
+            <div class="filter-pills">
+                <span class="pill active" onclick="setPill(this,'all')">Todos</span>
+                <span class="pill" onclick="setPill(this,'open')">Abiertos</span>
+                <span class="pill" onclick="setPill(this,'progress')">En progreso</span>
+                <span class="pill" onclick="setPill(this,'closed')">Cerrados</span>
+                <span class="pill" onclick="setPill(this,'high')">🔴 Alta urgencia</span>
+            </div>
+        </div>
+
+        <div id="tableWrap">
+            <div class="spinner-wrap">
+                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                Cargando tickets...
+            </div>
+        </div>
+
+        <div id="paginationWrap" style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; flex-wrap:wrap; gap:8px;">
+            <span id="paginationInfo" style="font-size:12px; color:var(--text-muted)"></span>
+            <div id="paginationBtns" style="display:flex; gap:6px;"></div>
+        </div>
+    </div>
+
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     MODAL: CREAR INCIDENCIA (sin cambios)
+══════════════════════════════════════════════════ -->
+<div class="modal fade" id="modalCreate" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header-custom">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <i class="bi bi-plus-circle-fill" style="font-size:20px;"></i>
+            <div>
+                <div style="font-weight:700; font-size:16px;">Nueva Incidencia</div>
+                <div style="font-size:11px; opacity:0.8;">Portal: Registro de Incidencias · Jira Service Management</div>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:24px;">
+        <div class="quick-form">
+            <div style="grid-column: 1/-1;">
+                <div class="form-label-custom">Resumen *</div>
+                <input type="text" id="f_summary" class="form-control-custom" placeholder="Describe brevemente el problema...">
+            </div>
+            <div>
+                <div class="form-label-custom">Generar en nombre de *</div>
+                <input type="email" id="f_reporter" class="form-control-custom" placeholder="usuario@integratel.com.pe" value="@integratel.com.pe">
+                <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Correo del usuario afectado en Jira</div>
+            </div>
+            <div>
+                <div class="form-label-custom">Teléfono de contacto 📞 *</div>
+                <input type="text" id="f_phone" class="form-control-custom" placeholder="Ej: 987654321">
+            </div>
+            <div>
+                <div class="form-label-custom">Tipo de Componente *</div>
+                <select id="f_component" class="form-select-custom">
+                    <option value="">Selecciona...</option>
+                    <option value="ae0390c7-daf0-4efd-8181-99c3b55f1d1c:11277" selected>Workplace</option>
+                    <option value="ae0390c7-daf0-4efd-8181-99c3b55f1d1c:11278">Red</option>
+                    <option value="ae0390c7-daf0-4efd-8181-99c3b55f1d1c:11279">Software</option>
+                </select>
+            </div>
+            <div>
+                <div class="form-label-custom">Ítem afectado (APLICACION) *</div>
+                <select id="f_app" class="form-select-custom">
+                    <option value="">Selecciona...</option>
+                    <option value="ae0390c7-daf0-4efd-8181-99c3b55f1d1c:11280" selected>Equipo Corporativo</option>
+                    <option value="ae0390c7-daf0-4efd-8181-99c3b55f1d1c:11281">Sistema ERP</option>
+                    <option value="ae0390c7-daf0-4efd-8181-99c3b55f1d1c:11282">Correo Corporativo</option>
+                    <option value="ae0390c7-daf0-4efd-8181-99c3b55f1d1c:11283">VPN</option>
+                    <option value="ae0390c7-daf0-4efd-8181-99c3b55f1d1c:11284">Impresora</option>
+                </select>
+            </div>
+            <div>
+                <div class="form-label-custom">Tipología del problema *</div>
+                <select id="f_tipologia" class="form-select-custom">
+                    <option value="">Selecciona...</option>
+                    <option value="ae0390c7-daf0-4efd-8181-99c3b55f1d1c:11378">Almacenamiento - Disco D lleno</option>
+                    <option value="ae0390c7-daf0-4efd-8181-99c3b55f1d1c:11379">Sin acceso al sistema</option>
+                    <option value="ae0390c7-daf0-4efd-8181-99c3b55f1d1c:11380">Pantalla azul / crash</option>
+                    <option value="ae0390c7-daf0-4efd-8181-99c3b55f1d1c:11381">Sin conexión a internet</option>
+                    <option value="ae0390c7-daf0-4efd-8181-99c3b55f1d1c:11382">Problema de impresión</option>
+                    <option value="ae0390c7-daf0-4efd-8181-99c3b55f1d1c:11383">Equipo lento</option>
+                </select>
+            </div>
+            <div>
+                <div class="form-label-custom">Impacto *</div>
+                <select id="f_impact" class="form-select-custom">
+                    <option value="618437">🟢 De 1 a 5 usuarios afectados</option>
+                    <option value="618438">🟡 De 6 a 19 usuarios afectados</option>
+                    <option value="618439">🔴 De 20 a más usuarios afectados</option>
+                </select>
+            </div>
+            <div>
+                <div class="form-label-custom">Urgencia *</div>
+                <select id="f_urgency" class="form-select-custom">
+                    <option value="618440">🟢 Inconvenientes con formato de aplicación</option>
+                    <option value="618441">🟡 El error no me impide trabajar</option>
+                    <option value="618442">🔴 No puedo trabajar por este error</option>
+                </select>
+            </div>
+            <div style="grid-column: 1/-1;">
+                <div class="form-label-custom">Descripción detallada *</div>
+                <textarea id="f_description" class="form-control-custom" rows="3" placeholder="Describe con detalle el problema, pasos para reproducirlo, hora en que ocurrió..."></textarea>
+            </div>
+            <div style="grid-column: 1/-1;">
+                <div class="form-label-custom">Adjunto de evidencia *</div>
+                <div class="upload-zone" id="uploadZone">
+                    <input type="file" id="f_attachment" accept="image/*,.pdf,.png,.jpg,.jpeg" onchange="handleFileSelect(this)">
+                    <i class="bi bi-cloud-upload" style="font-size:24px; display:block; margin-bottom:6px;"></i>
+                    Arrastra una imagen o haz clic para buscar
+                    <div style="font-size:11px; margin-top:4px; opacity:0.7">PNG, JPG, PDF hasta 10MB</div>
+                </div>
+                <div class="upload-preview" id="uploadPreview" style="display:none;">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span id="uploadFileName"></span>
+                    <button type="button" onclick="clearFile()" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:12px;">✕ quitar</button>
+                </div>
+            </div>
+        </div>
+        <div id="createResult" style="display:none; margin-top:16px; padding:14px; border-radius:8px; background:var(--result-box-bg); border:1.5px solid var(--result-box-border);">
+            <div style="font-size:12px; color:var(--result-box-color); font-weight:600; margin-bottom:4px;">✅ Ticket creado exitosamente</div>
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <span class="ticket-key" id="createdKey" style="font-size:16px;"></span>
+                <a id="createdUrl" href="#" target="_blank" class="btn-outline-sm"><i class="bi bi-box-arrow-up-right"></i> Ver en Jira</a>
+                <button class="btn-outline-sm" onclick="copyTicketKey()"><i class="bi bi-clipboard"></i> Copiar número</button>
+            </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top:1px solid var(--border-soft); padding:14px 20px;">
+        <button type="button" class="btn-outline-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn-create" id="btnSubmit" onclick="submitTicket()">
+            <i class="bi bi-send-fill"></i> Crear Incidencia
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     MODAL: CERRAR TICKET (sin cambios)
+══════════════════════════════════════════════════ -->
+<div class="modal fade" id="modalClose" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" style="border-bottom:1px solid var(--border-soft);">
+        <h6 class="modal-title fw-bold" style="color:var(--text-main);">
+            <i class="bi bi-x-circle text-danger me-2"></i>
+            Cerrar Ticket <span id="closeKeyLabel" class="ticket-key"></span>
+        </h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:20px;">
+        <div style="background:var(--step1-bg); border:1.5px solid var(--step1-border); border-radius:8px; padding:14px; margin-bottom:16px;">
+            <div style="font-size:12px; font-weight:700; color:var(--step1-color); margin-bottom:8px;"><i class="bi bi-1-circle-fill me-1"></i> Paso 1 — Cierra en Jira</div>
+            <div style="font-size:12px; color:var(--step1-text); margin-bottom:10px;">Haz click para abrir el ticket y marcarlo como RESUELTO en Jira.</div>
+            <a id="jiraDirectLink" href="#" style="background:var(--jira-blue); color:white; border:none; border-radius:8px; padding:8px 16px; font-size:12px; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+                <i class="bi bi-box-arrow-up-right"></i> Abrir en Jira y resolver
+            </a>
+        </div>
+        <div style="background:var(--step2-bg); border:1.5px solid var(--step2-border); border-radius:8px; padding:14px;">
+            <div style="font-size:12px; font-weight:700; color:var(--step2-color); margin-bottom:8px;"><i class="bi bi-2-circle-fill me-1"></i> Paso 2 — Confirma en el sistema local</div>
+            <div class="form-label-custom" style="margin-top:8px;">Comentario de cierre</div>
+            <textarea id="closeComment" class="form-control-custom" rows="2" placeholder="Describe cómo se resolvió..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top:1px solid var(--border-soft); padding:12px 20px;">
+        <button type="button" class="btn-outline-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn-create" id="btnCloseSubmit" style="background:#dc2626;" onclick="submitClose()">
+            <i class="bi bi-check2-circle"></i> Confirmar cierre local
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     MODAL: CONSULTAR / COLA — NUEVO CON TABS
+══════════════════════════════════════════════════ -->
+<div class="modal fade" id="modalSearch" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header-custom">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <i class="bi bi-layout-three-columns" style="font-size:18px;"></i>
+            <div>
+                <div style="font-weight:700; font-size:16px;">Consultar & Cola de Trabajo</div>
+                <div style="font-size:11px; opacity:0.8;">Busca tickets · Ve tu cola · Asigna incidencias</div>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:20px 24px;">
+
+        <!-- TABS -->
+        <div class="search-modal-tabs">
+            <button class="search-tab-btn active" onclick="switchTab('tabSearch',this)">
+                <i class="bi bi-search"></i> Buscar ticket
+            </button>
+            <button class="search-tab-btn" onclick="switchTab('tabAssigned',this)">
+                <i class="bi bi-person-check"></i> Mis asignados
+                <span class="tab-badge" id="badgeAssigned">—</span>
+            </button>
+            <button class="search-tab-btn" onclick="switchTab('tabUnassigned',this)">
+                <i class="bi bi-inbox"></i> Sin asignar
+                <span class="tab-badge orange" id="badgeUnassigned">—</span>
+            </button>
+        </div>
+
+        <!-- TAB 1: BUSCAR TICKET -->
+        <div class="tab-panel active" id="tabSearch">
+            <div style="display:flex; gap:10px; margin-bottom:16px;">
+                <input type="text" id="searchTicketKey" class="form-control-custom" style="flex:1; text-transform:uppercase;" placeholder="Ej: INC-88901 — pulsa Enter para buscar" onkeydown="if(event.key==='Enter') searchTicket()">
+                <button class="btn-create" id="btnSearch" onclick="searchTicket()" style="white-space:nowrap; padding:10px 16px;">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
+            </div>
+            <div id="searchResult" style="display:none;"></div>
+            <div id="searchEmpty" style="display:none;" class="empty-state"><i class="bi bi-ticket-detailed"></i><p>No se encontró ningún ticket con esa clave.</p></div>
+            <div id="searchLoading" style="display:none;" class="spinner-wrap"><div class="spinner-border spinner-border-sm text-primary"></div> Consultando...</div>
+
+            <!-- Estado vacío inicial -->
+            <div id="searchIdle" class="queue-empty">
+                <i class="bi bi-search"></i>
+                <p>Ingresa el número de ticket y presiona Enter</p>
+            </div>
+        </div>
+
+        <!-- TAB 2: MIS TICKETS ASIGNADOS -->
+        <div class="tab-panel" id="tabAssigned">
+            <div class="email-filter-wrap" style="position:relative;">
+                <div style="position:relative; flex:1;">
+                    <input type="email" id="assignedEmail" class="form-control-custom"
+                        placeholder="tu.correo@stefanini.com"
+                        value="rabasurco@stefanini.com"
+                        onkeydown="if(event.key==='Enter') loadAssignedTickets()">
+                </div>
+                <button class="btn-create" onclick="loadAssignedTickets()" style="padding:9px 16px; white-space:nowrap;">
+                    <i class="bi bi-funnel"></i> Filtrar
+                </button>
+            </div>
+            <div id="assignedLoading" style="display:none;" class="spinner-wrap">
+                <div class="spinner-border spinner-border-sm text-primary"></div> Cargando...
+            </div>
+            <div id="assignedList">
+                <div class="queue-empty">
+                    <i class="bi bi-person-check"></i>
+                    <p>Ingresa tu correo y presiona <strong>Filtrar</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: SIN ASIGNAR -->
+        <div class="tab-panel" id="tabUnassigned">
+            <div class="queue-header-info">
+                <span class="queue-count-badge" id="unassignedCountLabel">Cola de tickets sin asignar — proyecto INC</span>
+                <button class="btn-outline-sm" onclick="loadUnassignedTickets()" style="border-color:var(--warning); color:var(--warning);">
+                    <i class="bi bi-arrow-clockwise"></i> Actualizar
+                </button>
+            </div>
+            <div id="unassignedLoading" style="display:none;" class="spinner-wrap">
+                <div class="spinner-border spinner-border-sm text-primary"></div> Cargando cola...
+            </div>
+            <div id="unassignedList">
+                <div class="queue-empty">
+                    <i class="bi bi-inbox"></i>
+                    <p>Presiona <strong>Actualizar</strong> para cargar los tickets sin asignar</p>
+                </div>
+            </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ASIGNAR A AGENTE (dropdown flotante) -->
+<!-- Se renderiza dinámicamente en JS -->
+
+<div class="toast-container-custom" id="toastContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/sidebar.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════
+// Estado global
+// ═══════════════════════════════════════════════════════════
+let allTickets=[], filteredData=[], currentPage=1;
+const PAGE_SIZE=20;
+let activePill='all', closeTicketKey=null, closeTicketUrl=null;
+let agentsCache = null;  // Cache de agentes para no recargar cada vez
+let activeDropdown = null;  // Para cerrar dropdown abierto al hacer click afuera
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadTickets();
+    setupDragDrop();
+    // Cerrar dropdowns al hacer click fuera
+    document.addEventListener('click', (e) => {
+        if (activeDropdown && !activeDropdown.contains(e.target)) {
+            activeDropdown.remove();
+            activeDropdown = null;
+        }
+    });
+});
+
+// ═══════════════════════════════════════════════════════════
+// Carga principal de tickets (MySQL local)
+// ═══════════════════════════════════════════════════════════
+async function loadTickets(){
+    document.getElementById('tableWrap').innerHTML=`<div class="spinner-wrap"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> Cargando tickets...</div>`;
+    try{
+        const res=await fetch('/api/jira/tickets');
+        const json=await res.json();
+        if(!json.success)throw new Error(json.message);
+        allTickets=json.data||[];
+        updateKPIs(); applyFilters();
+    }catch(err){
+        document.getElementById('tableWrap').innerHTML=`<div class="empty-state"><i class="bi bi-exclamation-triangle"></i><p>No se pudieron cargar los tickets.<br><small>${err.message}</small></p><button class="btn-outline-sm mt-3" onclick="loadTickets()"><i class="bi bi-arrow-clockwise"></i> Reintentar</button></div>`;
+    }
+}
+
+function updateKPIs(){
+    const now=new Date(), month=now.getMonth(), year=now.getFullYear();
+    const open=allTickets.filter(t=>isOpen(t.status)).length;
+    const progress=allTickets.filter(t=>isProgress(t.status)).length;
+    const closed=allTickets.filter(t=>isClosed(t.status)).length;
+    const critical=allTickets.filter(t=>t.urgency_level===3).length;
+    const thisMonth=allTickets.filter(t=>{const d=new Date(t.created);return d.getMonth()===month&&d.getFullYear()===year;}).length;
+    document.getElementById('kpiTotal').textContent=allTickets.length;
+    document.getElementById('kpiOpen').textContent=open;
+    document.getElementById('kpiProgress').textContent=progress;
+    document.getElementById('kpiClosed').textContent=closed;
+    document.getElementById('kpiCritical').textContent=critical;
+    document.getElementById('kpiMonth').textContent=thisMonth;
+}
+
+function isOpen(s)     { return ['open','abierto','waiting for support','por hacer','to do'].includes((s||'').toLowerCase()); }
+function isProgress(s) { return ['in progress','en curso','en progreso','working'].includes((s||'').toLowerCase()); }
+function isClosed(s)   { return ['done','closed','cerrado','resolved','resuelto','completado'].includes((s||'').toLowerCase()); }
+
+function setPill(el,val){ document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active')); el.classList.add('active'); activePill=val; currentPage=1; applyFilters(); }
+function filterTickets(){ currentPage=1; applyFilters(); }
+
+function applyFilters(){
+    const q=(document.getElementById('searchInput').value||'').toLowerCase().trim();
+    filteredData=allTickets.filter(t=>{
+        if(activePill==='open'&&!isOpen(t.status))return false;
+        if(activePill==='progress'&&!isProgress(t.status))return false;
+        if(activePill==='closed'&&!isClosed(t.status))return false;
+        if(activePill==='high'&&t.urgency_level<3)return false;
+        if(q){const h=[t.key,t.summary,t.reporter,t.status,t.tipologia].join(' ').toLowerCase();if(!h.includes(q))return false;}
+        return true;
+    });
+    renderTable(); renderPagination();
+}
+
+function renderTable(){
+    if(!filteredData.length){
+        document.getElementById('tableWrap').innerHTML=`<div class="empty-state"><i class="bi bi-inbox"></i><p>No se encontraron tickets con los filtros aplicados.</p></div>`;
+        document.getElementById('paginationWrap').style.display='none'; return;
+    }
+    document.getElementById('paginationWrap').style.display='flex';
+    const start=(currentPage-1)*PAGE_SIZE;
+    const page=filteredData.slice(start,start+PAGE_SIZE);
+    const rows=page.map(t=>{
+        const statusBadge=isClosed(t.status)?`<span class="badge-status badge-closed"><i class="bi bi-check-circle"></i>${t.status}</span>`:isProgress(t.status)?`<span class="badge-status badge-progress"><i class="bi bi-gear"></i>${t.status}</span>`:`<span class="badge-status badge-open"><i class="bi bi-circle"></i>${t.status}</span>`;
+        const urgDot=t.urgency_level===3?`<span class="prio-dot prio-high"></span>Alta`:t.urgency_level===2?`<span class="prio-dot prio-medium"></span>Media`:`<span class="prio-dot prio-low"></span>Baja`;
+        const closeBtn=!isClosed(t.status)?`<button class="btn-outline-sm btn-close-ticket" onclick="openCloseModal('${t.key}','${t.url}')"><i class="bi bi-x-circle"></i> Cerrar</button>`:`<span style="color:var(--text-muted);font-size:11px;">Cerrado</span>`;
+        const created=t.created?new Date(t.created).toLocaleDateString('es-PE',{day:'2-digit',month:'short',year:'numeric'}):'—';
+        return`<tr><td><span class="ticket-key"><a href="${t.url}" target="_blank">${t.key}</a></span></td><td style="max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${t.summary}">${t.summary}</td><td>${statusBadge}</td><td style="font-size:12px;">${urgDot}</td><td style="font-size:12px;color:var(--text-muted);">${t.reporter||'—'}</td><td style="font-size:12px;color:var(--text-muted);">${created}</td><td>${closeBtn}</td></tr>`;
+    }).join('');
+    document.getElementById('tableWrap').innerHTML=`<div style="overflow-x:auto;"><table class="table-tickets w-100"><thead><tr><th>Clave</th><th>Resumen</th><th>Estado</th><th>Urgencia</th><th>Reporter</th><th>Creado</th><th>Acción</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function renderPagination(){
+    const total=filteredData.length, pages=Math.ceil(total/PAGE_SIZE);
+    const start=(currentPage-1)*PAGE_SIZE+1, end=Math.min(currentPage*PAGE_SIZE,total);
+    document.getElementById('paginationInfo').textContent=total?`Mostrando ${start}–${end} de ${total} tickets`:'';
+    const btns=document.getElementById('paginationBtns');
+    if(pages<=1){btns.innerHTML='';return;}
+    let html=`<button class="btn-outline-sm" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}><i class="bi bi-chevron-left"></i></button>`;
+    for(let i=1;i<=pages;i++){
+        if(i===1||i===pages||(i>=currentPage-1&&i<=currentPage+1)){html+=`<button class="btn-outline-sm ${i===currentPage?'active':''}" style="${i===currentPage?'background:var(--jira-blue);color:white;border-color:var(--jira-blue);':''}" onclick="goPage(${i})">${i}</button>`;}
+        else if(i===currentPage-2||i===currentPage+2){html+=`<span style="padding:4px 6px;font-size:12px;color:var(--text-muted);">…</span>`;}
+    }
+    html+=`<button class="btn-outline-sm" onclick="goPage(${currentPage+1})" ${currentPage===pages?'disabled':''}><i class="bi bi-chevron-right"></i></button>`;
+    btns.innerHTML=html;
+}
+
+function goPage(p){const pages=Math.ceil(filteredData.length/PAGE_SIZE);if(p<1||p>pages)return;currentPage=p;renderTable();renderPagination();}
+
+// ═══════════════════════════════════════════════════════════
+// Crear ticket
+// ═══════════════════════════════════════════════════════════
+function openCreateModal(){
+    document.getElementById('createResult').style.display='none';
+    document.getElementById('f_summary').value='';
+    document.getElementById('f_reporter').value='@integratel.com.pe';
+    document.getElementById('f_phone').value='';
+    document.getElementById('f_description').value='';
+    document.getElementById('f_component').value='ae0390c7-daf0-4efd-8181-99c3b55f1d1c:11277';
+    document.getElementById('f_app').value='ae0390c7-daf0-4efd-8181-99c3b55f1d1c:11280';
+    document.getElementById('f_tipologia').value='';
+    document.getElementById('f_impact').value='618437';
+    document.getElementById('f_urgency').value='618440';
+    clearFile();
+    new bootstrap.Modal(document.getElementById('modalCreate')).show();
+}
+
+function handleFileSelect(input){if(input.files&&input.files[0]){const f=input.files[0];document.getElementById('uploadFileName').textContent=f.name+` (${(f.size/1024).toFixed(1)} KB)`;document.getElementById('uploadPreview').style.display='flex';document.getElementById('uploadZone').style.borderColor='var(--success)';}}
+function clearFile(){document.getElementById('f_attachment').value='';document.getElementById('uploadPreview').style.display='none';document.getElementById('uploadZone').style.borderColor='var(--border-soft)';}
+
+function setupDragDrop(){
+    const zone=document.getElementById('uploadZone');if(!zone)return;
+    zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('dragover');});
+    zone.addEventListener('dragleave',()=>zone.classList.remove('dragover'));
+    zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('dragover');const dt=e.dataTransfer;if(dt.files.length){document.getElementById('f_attachment').files=dt.files;handleFileSelect(document.getElementById('f_attachment'));}});
+}
+
+async function submitTicket(){
+    const summary=document.getElementById('f_summary').value.trim();
+    const reporter=document.getElementById('f_reporter').value.trim();
+    const phone=document.getElementById('f_phone').value.trim();
+    const description=document.getElementById('f_description').value.trim();
+    const component=document.getElementById('f_component').value;
+    const app=document.getElementById('f_app').value;
+    const tipologia=document.getElementById('f_tipologia').value;
+    const impact=document.getElementById('f_impact').value;
+    const urgency=document.getElementById('f_urgency').value;
+    const fileInput=document.getElementById('f_attachment');
+    if(!summary){showToast('El resumen es obligatorio','error');return;}
+    if(!reporter){showToast('El correo del reporter es obligatorio','error');return;}
+    if(!phone){showToast('El teléfono es obligatorio','error');return;}
+    if(!component){showToast('Selecciona el tipo de componente','error');return;}
+    if(!app){showToast('Selecciona el ítem afectado','error');return;}
+    if(!tipologia){showToast('Selecciona la tipología del problema','error');return;}
+    if(!description){showToast('La descripción es obligatoria','error');return;}
+    if(!fileInput.files.length){showToast('Adjunta una evidencia (imagen o PDF)','error');return;}
+    const btn=document.getElementById('btnSubmit');
+    btn.disabled=true; btn.innerHTML='<span class="spinner-border spinner-border-sm me-2"></span>Creando...';
+    try{
+        const attachmentId=await uploadAttachment(fileInput.files[0]);
+        const res=await fetch('/api/jira/ticket',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({summary,reporter,phone,description,component,app,tipologia,impact,urgency,attachmentId})});
+        const json=await res.json();
+        if(!json.success)throw new Error(json.message||json.details);
+        document.getElementById('createdKey').textContent=json.data.key;
+        document.getElementById('createdUrl').href=json.data.url;
+        document.getElementById('createResult').style.display='block';
+        document.getElementById('createResult').classList.add('flash-new');
+        showToast(`✅ Ticket ${json.data.key} creado exitosamente`,'success');
+        loadTickets();
+    }catch(err){showToast('Error: '+err.message,'error');}
+    finally{btn.disabled=false;btn.innerHTML='<i class="bi bi-send-fill"></i> Crear Incidencia';}
+}
+
+async function uploadAttachment(file){const fd=new FormData();fd.append('file',file);const res=await fetch('/api/jira/attachment',{method:'POST',body:fd});const json=await res.json();if(!json.success)throw new Error('Error subiendo adjunto: '+json.message);return json.attachmentId;}
+
+// ═══════════════════════════════════════════════════════════
+// Cerrar ticket
+// ═══════════════════════════════════════════════════════════
+function openCloseModal(key,url){
+    closeTicketKey=key; closeTicketUrl=url||`https://integratelperu.atlassian.net/browse/${key}`;
+    document.getElementById('closeKeyLabel').textContent=key;
+    document.getElementById('closeComment').value='';
+    document.getElementById('jiraDirectLink').href=closeTicketUrl;
+    document.getElementById('jiraDirectLink').onclick=(e)=>{e.preventDefault();e.stopPropagation();window.open(closeTicketUrl,'_blank');};
+    new bootstrap.Modal(document.getElementById('modalClose')).show();
+}
+
+async function submitClose(){
+    const comment=document.getElementById('closeComment').value.trim();
+    const btn=document.getElementById('btnCloseSubmit');
+    btn.disabled=true; btn.innerHTML='<span class="spinner-border spinner-border-sm me-2"></span>Cerrando...';
+    try{
+        const res=await fetch(`/api/jira/ticket/${closeTicketKey}/close`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({comment})});
+        const json=await res.json();
+        if(!json.success)throw new Error(json.message);
+        bootstrap.Modal.getInstance(document.getElementById('modalClose')).hide();
+        showToast(json.message,json.jiraClosed?'success':'info');
+        loadTickets();
+    }catch(err){showToast('Error: '+err.message,'error');}
+    finally{btn.disabled=false;btn.innerHTML='<i class="bi bi-check2-circle"></i> Confirmar cierre local';}
+}
+
+// ═══════════════════════════════════════════════════════════
+// Modal de Búsqueda / Cola — NUEVO
+// ═══════════════════════════════════════════════════════════
+function openSearchModal(){
+    // Reset
+    document.getElementById('searchTicketKey').value='';
+    document.getElementById('searchResult').style.display='none';
+    document.getElementById('searchEmpty').style.display='none';
+    document.getElementById('searchLoading').style.display='none';
+    document.getElementById('searchIdle').style.display='block';
+    // Mostrar tab inicial
+    switchTab('tabSearch', document.querySelector('.search-tab-btn'));
+    new bootstrap.Modal(document.getElementById('modalSearch')).show();
+    setTimeout(()=>document.getElementById('searchTicketKey').focus(),300);
+}
+
+function switchTab(tabId, btn) {
+    // Desactivar todos los tabs
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.search-tab-btn').forEach(b => b.classList.remove('active'));
+    // Activar el seleccionado
+    document.getElementById(tabId).classList.add('active');
+    btn.classList.add('active');
+    // Auto-cargar si es necesario
+    if (tabId === 'tabUnassigned') {
+        const list = document.getElementById('unassignedList');
+        // Si aún tiene el placeholder inicial, cargar
+        if (list.querySelector('.queue-empty')) loadUnassignedTickets();
+    }
+}
+
+// ── Tab 1: Buscar ticket por clave ──────────────────────────
+async function searchTicket(){
+    const key=document.getElementById('searchTicketKey').value.trim().toUpperCase().replace(/\s+/g,'');
+    if(!key){showToast('Ingresa un número de ticket','error');return;}
+    document.getElementById('searchResult').style.display='none';
+    document.getElementById('searchEmpty').style.display='none';
+    document.getElementById('searchIdle').style.display='none';
+    document.getElementById('searchLoading').style.display='flex';
+    const btn=document.getElementById('btnSearch'); btn.disabled=true;
+    try{
+        // Primero buscar en DB local
+        const localRes=await fetch(`/api/jira/ticket/${key}`);
+        const localJson=await localRes.json();
+
+        // También obtener detalle de Jira (assignee en vivo)
+        let jiraDetail = null;
+        try {
+            const jiraRes = await fetch(`/api/jira/ticket/${key}/jira-detail`);
+            const jiraJson = await jiraRes.json();
+            if (jiraJson.success) jiraDetail = jiraJson.data;
+        } catch(_) {}
+
+        document.getElementById('searchLoading').style.display='none';
+
+        if(!localJson.success||!localJson.data){
+            // No está en DB local — mostrar con opción de ver en Jira
+            document.getElementById('searchResult').innerHTML=`
+                <div style="text-align:center;padding:24px;">
+                    <i class="bi bi-ticket-detailed" style="font-size:36px;color:var(--text-muted);opacity:0.4;display:block;margin-bottom:12px;"></i>
+                    <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">
+                        <strong>${key}</strong> no está en el sistema local.<br>
+                        ${jiraDetail ? `<span style="color:var(--success);">✓ Encontrado en Jira: ${jiraDetail.summary}</span>` : 'Puede que haya sido creado manualmente en Jira.'}
+                    </div>
+                    <button class="btn-create" onclick="window.open('https://integratelperu.atlassian.net/browse/${key}','_blank')" style="margin:0 auto;">
+                        <i class="bi bi-box-arrow-up-right"></i> Abrir ${key} en Jira
+                    </button>
+                </div>`;
+            document.getElementById('searchResult').style.display='block'; return;
+        }
+
+        const t=localJson.data;
+        const assignee = jiraDetail?.assignee || null;  // Assignee en tiempo real de Jira
+        const created=t.created_at?new Date(t.created_at).toLocaleString('es-PE',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+        const closedAt=t.closed_at?new Date(t.closed_at).toLocaleString('es-PE',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):null;
+        const statusColor=isClosed(t.status)?'var(--success)':isProgress(t.status)?'var(--warning)':'var(--primary)';
+        const statusBg=isClosed(t.status)?'rgba(52,211,153,.15)':isProgress(t.status)?'rgba(251,191,36,.15)':'rgba(96,165,250,.15)';
+        const urgIcon=t.urgency_level===3?'🔴':t.urgency_level===2?'🟡':'🟢';
+
+        // Sección de assignee
+        const assigneeHtml = assignee
+            ? `<div class="assignee-chip"><div class="avatar">${assignee.displayName.charAt(0).toUpperCase()}</div>${assignee.displayName}</div>
+               <button class="btn-outline-sm" onclick="showAssignDropdown(event,'${t.ticket_key}',this)" title="Reasignar">
+                   <i class="bi bi-arrow-repeat"></i> Reasignar
+               </button>`
+            : `<span style="font-size:12px;color:var(--text-muted);font-style:italic;">Sin asignar</span>
+               <button class="btn-assign-me" onclick="assignSelf('${t.ticket_key}',this)">
+                   <i class="bi bi-person-plus"></i> Asignarme
+               </button>
+               <button class="btn-outline-sm" onclick="showAssignDropdown(event,'${t.ticket_key}',this)" style="border-color:var(--warning);color:var(--warning);">
+                   <i class="bi bi-person-gear"></i> Asignar a…
+               </button>`;
+
+        document.getElementById('searchResult').innerHTML=`
+            <div style="border:1.5px solid var(--border-soft);border-radius:10px;overflow:hidden;">
+                <div style="background:var(--bg-header);padding:14px 16px;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span class="ticket-key" style="font-size:15px;"><a href="${t.jira_url}" target="_blank">${t.ticket_key}</a></span>
+                        <span style="background:${statusBg};color:${statusColor};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;">${t.status}</span>
+                    </div>
+                    <a href="${t.jira_url}" target="_blank" class="btn-outline-sm" style="border-color:var(--jira-blue);color:var(--jira-blue);"><i class="bi bi-box-arrow-up-right"></i> Ver en Jira</a>
+                </div>
+                <div style="padding:14px 16px;border-bottom:1px solid var(--border-soft);">
+                    <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;">Resumen</div>
+                    <div style="font-size:14px;font-weight:600;color:var(--text-main);">${t.summary}</div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+                    ${detailRow('Reporter',t.reporter,'bi-person')}
+                    ${detailRow('Creado',created,'bi-calendar3')}
+                    ${detailRow('Componente',t.component,'bi-cpu')}
+                    ${detailRow('Ítem afectado',t.app_item,'bi-laptop')}
+                    ${detailRow('Tipología',t.tipologia,'bi-tag')}
+                    ${detailRow('Teléfono',t.phone,'bi-telephone')}
+                    ${detailRow('Impacto',t.impact,'bi-people')}
+                    ${detailRow('Urgencia',urgIcon+' '+(t.urgency||'—'),'bi-exclamation-circle')}
+                    ${closedAt?detailRow('Cerrado',closedAt,'bi-check2-circle'):''}
+                    ${t.closed_by?detailRow('Cerrado por',t.closed_by,'bi-person-check'):''}
+                </div>
+                <!-- SECCIÓN ASIGNACIÓN -->
+                <div class="ticket-detail-assignee-section" id="assigneeSection_${t.ticket_key}">
+                    <div>
+                        <div class="ticket-detail-assignee-label"><i class="bi bi-person-badge me-1"></i> Asignado a (Jira en tiempo real)</div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;" id="assigneeContent_${t.ticket_key}">
+                            ${assigneeHtml}
+                        </div>
+                    </div>
+                </div>
+                ${t.description?`<div style="padding:14px 16px;border-top:1px solid var(--border-soft);"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Descripción</div><div style="font-size:13px;line-height:1.6;background:var(--bg-header);padding:10px;border-radius:6px;color:var(--text-main);">${t.description}</div></div>`:''}
+                ${t.close_comment?`<div style="padding:14px 16px;border-top:1px solid var(--border-soft);"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Comentario de cierre</div><div style="font-size:13px;line-height:1.6;background:var(--step2-bg);padding:10px;border-radius:6px;border-left:3px solid var(--success);color:var(--text-main);">${t.close_comment}</div></div>`:''}
+            </div>`;
+        document.getElementById('searchResult').style.display='block';
+
+    }catch(err){
+        document.getElementById('searchLoading').style.display='none';
+        document.getElementById('searchEmpty').style.display='block';
+    }finally{
+        btn.disabled=false;
+    }
+}
+
+function detailRow(label,value,icon){
+    return`<div style="padding:10px 16px;border-bottom:1px solid var(--border-soft);border-right:1px solid var(--border-soft);background:var(--bg-card);"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-muted);margin-bottom:3px;"><i class="bi ${icon} me-1"></i>${label}</div><div style="font-size:12px;font-weight:600;color:var(--text-main);">${value||'—'}</div></div>`;
+}
+
+// ── Tab 2: Mis tickets asignados ────────────────────────────
+async function loadAssignedTickets(){
+    const email = document.getElementById('assignedEmail').value.trim();
+    if(!email){showToast('Ingresa un correo','error');return;}
+
+    document.getElementById('assignedLoading').style.display='flex';
+    document.getElementById('assignedList').innerHTML='';
+
+    try{
+        const res = await fetch(`/api/jira/queue/assigned?email=${encodeURIComponent(email)}`);
+        const json = await res.json();
+        document.getElementById('assignedLoading').style.display='none';
+
+        if(!json.success) throw new Error(json.message);
+
+        const tickets = json.data || [];
+        // Actualizar badge
+        document.getElementById('badgeAssigned').textContent = tickets.length || '0';
+
+        if(!tickets.length){
+            document.getElementById('assignedList').innerHTML=`
+                <div class="queue-empty">
+                    <i class="bi bi-person-check"></i>
+                    <p>No hay tickets activos asignados a <strong>${email}</strong></p>
+                </div>`;
+            return;
+        }
+
+        const html = `
+            <div class="queue-header-info">
+                <span class="queue-count-badge"><strong>${tickets.length}</strong> tickets asignados a ${email}</span>
+            </div>
+            <div class="queue-list-scroll">
+                ${tickets.map(t => renderQueueRow(t, false)).join('')}
+            </div>`;
+        document.getElementById('assignedList').innerHTML = html;
+
+    }catch(err){
+        document.getElementById('assignedLoading').style.display='none';
+        document.getElementById('assignedList').innerHTML=`<div class="queue-empty"><i class="bi bi-exclamation-triangle"></i><p>Error: ${err.message}</p></div>`;
+    }
+}
+
+// ── Tab 3: Sin asignar ──────────────────────────────────────
+async function loadUnassignedTickets(){
+    document.getElementById('unassignedLoading').style.display='flex';
+    document.getElementById('unassignedList').innerHTML='';
+
+    try{
+        const res = await fetch('/api/jira/queue/unassigned');
+        const json = await res.json();
+        document.getElementById('unassignedLoading').style.display='none';
+
+        if(!json.success) throw new Error(json.message);
+
+        const tickets = json.data || [];
+        const total = json.total || tickets.length;
+        // Actualizar badge
+        document.getElementById('badgeUnassigned').textContent = total || '0';
+
+        if(!tickets.length){
+            document.getElementById('unassignedList').innerHTML=`
+                <div class="queue-empty">
+                    <i class="bi bi-inbox-fill" style="color:var(--success);opacity:1;"></i>
+                    <p style="color:var(--success);font-weight:600;">¡Sin tickets pendientes! Todo asignado ✓</p>
+                </div>`;
+            document.getElementById('unassignedCountLabel').textContent = 'Sin tickets pendientes de asignación';
+            return;
+        }
+
+        document.getElementById('unassignedCountLabel').innerHTML = `<strong>${total}</strong> tickets sin asignar en proyecto INC`;
+
+        const html = `
+            <div class="queue-list-scroll">
+                ${tickets.map(t => renderQueueRow(t, true)).join('')}
+            </div>`;
+        document.getElementById('unassignedList').innerHTML = html;
+
+    }catch(err){
+        document.getElementById('unassignedLoading').style.display='none';
+        document.getElementById('unassignedList').innerHTML=`<div class="queue-empty"><i class="bi bi-exclamation-triangle"></i><p>Error: ${err.message}</p></div>`;
+    }
+}
+
+// ── Renderizar fila de ticket en cola ────────────────────────
+function renderQueueRow(t, showAssignButtons) {
+    const created = t.created ? new Date(t.created).toLocaleDateString('es-PE',{day:'2-digit',month:'short'}) : '—';
+    const statusBadge = isProgress(t.status)
+        ? `<span class="badge-status badge-progress" style="font-size:10px;padding:2px 7px;">${t.status||'—'}</span>`
+        : `<span class="badge-status badge-open" style="font-size:10px;padding:2px 7px;">${t.status||'—'}</span>`;
+
+    const assigneeInfo = t.assignee
+        ? `<div class="assignee-chip" style="font-size:10px;">
+               <div class="avatar" style="width:16px;height:16px;font-size:8px;">${t.assignee.charAt(0)}</div>
+               ${t.assignee}
+           </div>`
+        : '';
+
+    const actionBtns = showAssignButtons
+        ? `<button class="btn-assign-me" onclick="assignSelf('${t.key}',this)" title="Asignarme este ticket">
+               <i class="bi bi-person-plus"></i> Asignarme
+           </button>
+           <button class="btn-assign-other" onclick="showAssignDropdown(event,'${t.key}',this)" title="Asignar a alguien">
+               <i class="bi bi-person-gear"></i>
+           </button>`
+        : `<a href="${t.url}" target="_blank" class="btn-outline-sm" style="font-size:10px;padding:3px 8px;">
+               <i class="bi bi-box-arrow-up-right"></i> Jira
+           </a>`;
+
+    return `
+        <div class="queue-ticket-row" id="qrow_${t.key}">
+            <div class="queue-ticket-key"><a href="${t.url}" target="_blank">${t.key}</a></div>
+            <div class="queue-ticket-summary" title="${t.summary}">${t.summary}</div>
+            ${assigneeInfo}
+            ${statusBadge}
+            <div class="queue-ticket-meta">${created}</div>
+            <div class="queue-ticket-actions">${actionBtns}</div>
+        </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// Asignación de tickets
+// ═══════════════════════════════════════════════════════════
+
+// Asignarme a mí mismo (usa el token del servidor)
+async function assignSelf(ticketKey, btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+    try {
+        const res = await fetch(`/api/jira/ticket/${ticketKey}/assign`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ selfAssign: true })
+        });
+        const json = await res.json();
+        if(!json.success) throw new Error(json.message);
+        showToast(json.message, 'success');
+        // Actualizar fila visualmente
+        refreshQueueRow(ticketKey);
+        // Si estamos en la vista de búsqueda de ticket, recargar
+        if(document.getElementById('tabSearch').classList.contains('active')){
+            searchTicket();
+        }
+    } catch(err){
+        showToast('Error: '+err.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-person-plus"></i> Asignarme';
+    }
+}
+
+// Dropdown para asignar a cualquier agente
+async function showAssignDropdown(event, ticketKey, anchorBtn) {
+    event.stopPropagation();
+    // Cerrar el anterior si existe
+    if(activeDropdown) { activeDropdown.remove(); activeDropdown = null; }
+
+    // Crear dropdown
+    const dropdown = document.createElement('div');
+    dropdown.className = 'assign-dropdown-menu';
+    dropdown.innerHTML = `
+        <div class="assign-dropdown-header"><i class="bi bi-person-gear me-1"></i> Asignar a agente</div>
+        <div class="assign-dropdown-search">
+            <input type="text" placeholder="Buscar agente..." id="agentSearchInput" oninput="filterAgents(this.value)">
+        </div>
+        <div class="assign-agent-list" id="agentListContainer">
+            <div style="padding:12px;text-align:center;font-size:12px;color:var(--text-muted);">
+                <div class="spinner-border spinner-border-sm text-primary"></div> Cargando...
+            </div>
+        </div>`;
+
+    // Posicionar
+    dropdown.style.cssText = `position:fixed; z-index:9999;`;
+    document.body.appendChild(dropdown);
+    activeDropdown = dropdown;
+
+    // Calcular posición respecto al botón
+    const rect = anchorBtn.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    if(spaceBelow > 250) {
+        dropdown.style.top = (rect.bottom + 4) + 'px';
+    } else {
+        dropdown.style.top = (rect.top - 250) + 'px';
+    }
+    dropdown.style.left = Math.min(rect.left, window.innerWidth - 240) + 'px';
+
+    // Cargar agentes (con cache)
+    await loadAgentsIntoDropdown(ticketKey);
+
+    // Focus en búsqueda
+    setTimeout(() => { const inp = document.getElementById('agentSearchInput'); if(inp) inp.focus(); }, 100);
+}
+
+let agentDropdownTicketKey = null;
+async function loadAgentsIntoDropdown(ticketKey) {
+    agentDropdownTicketKey = ticketKey;
+    try {
+        if(!agentsCache) {
+            const res = await fetch('/api/jira/agents');
+            const json = await res.json();
+            if(!json.success) throw new Error(json.message);
+            agentsCache = json.data || [];
+        }
+        renderAgentList(agentsCache);
+    } catch(err) {
+        const container = document.getElementById('agentListContainer');
+        if(container) container.innerHTML = `<div style="padding:10px 12px;font-size:12px;color:var(--danger);">Error cargando agentes</div>`;
+    }
+}
+
+function renderAgentList(agents) {
+    const container = document.getElementById('agentListContainer');
+    if(!container) return;
+    if(!agents.length) {
+        container.innerHTML = '<div style="padding:10px 12px;font-size:12px;color:var(--text-muted);">No se encontraron agentes</div>';
+        return;
+    }
+    container.innerHTML = agents.map(a => `
+        <div class="assign-agent-item" onclick="assignToAgent('${agentDropdownTicketKey}','${a.accountId}','${a.displayName}')">
+            <div class="assign-agent-avatar">${(a.displayName||'?').charAt(0).toUpperCase()}</div>
+            <div>
+                <div style="font-weight:600;">${a.displayName}</div>
+                <div class="assign-agent-email">${a.email||''}</div>
+            </div>
+        </div>`).join('');
+}
+
+function filterAgents(query) {
+    if(!agentsCache) return;
+    const q = query.toLowerCase();
+    const filtered = agentsCache.filter(a =>
+        (a.displayName||'').toLowerCase().includes(q) ||
+        (a.email||'').toLowerCase().includes(q)
+    );
+    renderAgentList(filtered);
+}
+
+async function assignToAgent(ticketKey, accountId, displayName) {
+    // Cerrar dropdown
+    if(activeDropdown) { activeDropdown.remove(); activeDropdown = null; }
+
+    try {
+        const res = await fetch(`/api/jira/ticket/${ticketKey}/assign`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ accountId })
+        });
+        const json = await res.json();
+        if(!json.success) throw new Error(json.message);
+        showToast(`✅ ${ticketKey} asignado a ${displayName}`, 'success');
+        refreshQueueRow(ticketKey);
+        // Recargar detalle si estamos buscando ese ticket
+        if(document.getElementById('tabSearch').classList.contains('active')) {
+            const currentSearch = document.getElementById('searchTicketKey').value.trim().toUpperCase();
+            if(currentSearch === ticketKey) searchTicket();
+        }
+    } catch(err) {
+        showToast('Error: '+err.message, 'error');
+    }
+}
+
+// Quitar fila de la lista de sin asignar después de asignar
+function refreshQueueRow(ticketKey) {
+    const row = document.getElementById(`qrow_${ticketKey}`);
+    if(row) {
+        row.style.opacity = '0.4';
+        row.style.pointerEvents = 'none';
+        setTimeout(() => {
+            row.style.transition = 'all 0.3s';
+            row.style.maxHeight = '0';
+            row.style.overflow = 'hidden';
+            row.style.marginBottom = '0';
+            row.style.padding = '0';
+            setTimeout(() => row.remove(), 300);
+        }, 800);
+    }
+    // Actualizar contador badge
+    const unassignedList = document.getElementById('unassignedList');
+    const remaining = unassignedList ? unassignedList.querySelectorAll('.queue-ticket-row').length - 1 : 0;
+    if(remaining >= 0) document.getElementById('badgeUnassigned').textContent = remaining;
+}
+
+// ═══════════════════════════════════════════════════════════
+// Utilidades
+// ═══════════════════════════════════════════════════════════
+function copyTicketKey(){const key=document.getElementById('createdKey').textContent;navigator.clipboard.writeText(key).then(()=>showToast('Copiado: '+key));}
+
+function showToast(msg,type='info'){
+    const container=document.getElementById('toastContainer');
+    const el=document.createElement('div');
+    el.className=`toast-msg ${type}`;
+    el.innerHTML=`<i class="bi bi-${type==='success'?'check-circle-fill':type==='error'?'x-circle-fill':'info-circle-fill'}"></i> ${msg}`;
+    container.appendChild(el);
+    setTimeout(()=>el.remove(),4000);
+}
+</script>
+</body>
+</html>

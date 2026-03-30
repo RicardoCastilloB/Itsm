@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cola de Impresión</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+:root,[data-theme="light"]{
+  --bg:#f0f4f8;--card:#ffffff;--header:#f8fafc;
+  --border:#e2e8f0;--text:#1e293b;--muted:#64748b;
+  --primary:#3b82f6;--success:#10b981;--warning:#f59e0b;
+  --danger:#ef4444;--info:#06b6d4;--purple:#8b5cf6;--orange:#f97316;
+  --gold:#f59e0b;--gold-bg:rgba(245,158,11,.08);
+  --row-hover:#f1f5f9;--shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.10);--input-bg:#f8fafc;
+}
+[data-theme="dark"]{
+  --bg:#0f172a;--card:#1e293b;--header:#162032;--border:#2d3f55;--text:#e2e8f0;--muted:#94a3b8;
+  --primary:#60a5fa;--success:#34d399;--warning:#fbbf24;--danger:#f87171;--info:#22d3ee;
+  --purple:#a78bfa;--orange:#fb923c;--gold:#fbbf24;--gold-bg:rgba(251,191,36,.08);
+  --row-hover:#243348;--shadow:0 1px 3px rgba(0,0,0,.3);--shadow-md:0 4px 16px rgba(0,0,0,.4);--input-bg:#162032;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:"DM Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;transition:background .3s,color .3s;font-size:13.5px;}
+.pg{margin-top:60px;padding:20px 24px;display:flex;flex-direction:column;gap:20px;}
+.ph{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.ph-title{font-size:21px;font-weight:800;display:flex;align-items:center;gap:10px;letter-spacing:-.3px;}
+.ph-title i{color:var(--primary);}
+.ph-sub{font-size:12px;color:var(--muted);margin-top:3px;}
+.ph-actions{display:flex;gap:8px;align-items:center;}
+
+/* Buttons */
+.btn-primary{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all .2s;white-space:nowrap;}
+.btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.btn-ghost{background:transparent;color:var(--primary);border:1.5px solid var(--primary);border-radius:10px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all .2s;}
+.btn-ghost:hover{background:var(--primary);color:#fff;}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s;}
+.btn-outline:hover{border-color:var(--primary);color:var(--primary);}
+.btn-sm{padding:5px 9px;font-size:11.5px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .15s;white-space:nowrap;}
+.btn-sm:hover{border-color:var(--primary);color:var(--primary);}
+.btn-sm.danger:hover{border-color:var(--danger);color:var(--danger);}
+.btn-sm.success-h:hover{border-color:var(--success);color:var(--success);}
+.btn-sm.warn-h:hover{border-color:var(--warning);color:var(--warning);}
+@keyframes spin{to{transform:rotate(360deg);}}
+.spin-anim{animation:spin .7s linear infinite;}
+
+/* Strip */
+.queue-strip{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 20px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;box-shadow:var(--shadow);}
+.si-label{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700;margin-bottom:3px;}
+.si-val{font-size:13.5px;font-weight:700;color:var(--text);}
+.si-val.dim{color:var(--muted);font-weight:500;}
+
+/* KPIs */
+.kpi-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:12px;}
+@media(max-width:1400px){.kpi-grid{grid-template-columns:repeat(4,1fr);}}
+@media(max-width:800px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);transition:transform .2s;cursor:default;position:relative;overflow:hidden;}
+.kpi:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+.kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700;margin-bottom:6px;}
+.kpi-val{font-size:28px;font-weight:900;line-height:1;letter-spacing:-1px;}
+.kpi-sub{font-size:10px;color:var(--muted);margin-top:4px;}
+.kpi-icon{font-size:28px;opacity:.13;position:absolute;right:14px;top:50%;transform:translateY(-50%);}
+.c-primary{color:var(--primary);}.c-success{color:var(--success);}.c-warning{color:var(--warning);}
+.c-danger{color:var(--danger);}.c-info{color:var(--info);}.c-muted{color:var(--muted);}.c-gold{color:var(--gold);}
+
+/* Progress bars */
+.queue-progress{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 22px;box-shadow:var(--shadow);}
+.qp-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:7px;}
+.qp-bars{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+@media(max-width:900px){.qp-bars{grid-template-columns:1fr 1fr;}}
+.qp-bar-item{display:flex;flex-direction:column;gap:5px;}
+.qp-bar-label{font-size:10.5px;font-weight:600;color:var(--muted);display:flex;justify-content:space-between;}
+.qp-bar-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.qp-bar-fill{height:100%;border-radius:3px;transition:width .7s ease;}
+
+/* Analytics row */
+.analytics-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+@media(max-width:1100px){.analytics-row{grid-template-columns:1fr 1fr;}}
+@media(max-width:700px){.analytics-row{grid-template-columns:1fr;}}
+.an-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);}
+.an-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:7px;}
+.rank-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.rank-row:last-child{margin-bottom:0;}
+.rank-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;}
+.r1{background:rgba(245,158,11,.2);color:var(--gold);}
+.r2{background:rgba(100,116,139,.15);color:var(--muted);}
+.r3{background:rgba(249,115,22,.15);color:var(--orange);}
+.rn{background:var(--input-bg);color:var(--muted);}
+.rank-bar-track{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+.rank-bar-fill{height:100%;border-radius:3px;transition:width .6s ease;}
+
+/* Tabs */
+.tab-strip{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:0;}
+.tab-btn{padding:10px 22px;font-size:13px;font-weight:700;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s;display:inline-flex;align-items:center;gap:8px;border-radius:0;}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{color:var(--primary);border-bottom-color:var(--primary);}
+.tab-btn.vip-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;border-radius:10px;font-size:10px;font-weight:800;padding:0 5px;background:var(--border);color:var(--muted);}
+.tab-btn.active .tab-badge{background:rgba(59,130,246,.15);color:var(--primary);}
+.tab-btn.vip-tab.active .tab-badge{background:rgba(245,158,11,.15);color:var(--gold);}
+.tab-btn.vip-tab .tab-badge{background:rgba(245,158,11,.1);color:var(--gold);}
+
+/* Main panel */
+.main-panel{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);display:flex;}
+.tbl-side{flex:1;min-width:0;display:flex;flex-direction:column;}
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.search-wrap{position:relative;}
+.search-wrap i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none;}
+.search-input{background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:7px 12px 7px 32px;font-size:12.5px;width:190px;outline:none;transition:border-color .2s;}
+.search-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(59,130,246,.12);}
+.search-input::placeholder{color:var(--muted);}
+.filter-select{background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:7px 10px;font-size:12px;outline:none;cursor:pointer;}
+.filter-select:focus{border-color:var(--primary);}
+.tbl-scroll{overflow-x:auto;overflow-y:auto;max-height:520px;flex:1;}
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px;}
+.tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700;padding:10px 11px;background:var(--header);border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:5;cursor:pointer;user-select:none;}
+.tbl thead th:hover{color:var(--text);}
+.tbl thead th.sorted{color:var(--primary);}
+.tbl tbody td{padding:9px 11px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
+.tbl tbody tr:last-child td{border-bottom:none;}
+.tbl tbody tr{cursor:pointer;transition:background .1s;}
+.tbl tbody tr:hover td{background:var(--row-hover);}
+.tbl tbody tr.row-active td{background:rgba(59,130,246,.08);border-left:3px solid var(--primary);}
+.tr-vip td{background:var(--gold-bg)!important;}
+.tr-vip:hover td{background:rgba(245,158,11,.14)!important;}
+.tr-vip.row-active td{background:rgba(245,158,11,.18)!important;border-left:3px solid var(--gold)!important;}
+.tr-vip td:first-child::before{content:'⭐ ';font-size:11px;}
+@keyframes urgentPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4);}50%{box-shadow:0 0 0 4px rgba(239,68,68,0);}}
+.tr-urgente:not(.tr-vip) td:first-child{border-left:3px solid var(--danger)!important;}
+.tbl-foot{padding:10px 18px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.tbl-info{font-size:11.5px;color:var(--muted);}
+.pagination{display:flex;gap:4px;}
+.pg-btn{background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:4px 10px;font-size:12px;cursor:pointer;transition:.15s;}
+.pg-btn:hover,.pg-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.pg-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* Botón imprimir con código */
+.btn-print{display:inline-flex;align-items:center;gap:4px;border-radius:7px;padding:4px 8px;font-size:11px;font-weight:700;background:rgba(59,130,246,.1);color:var(--primary);border:1px solid rgba(59,130,246,.25);cursor:pointer;transition:all .2s;white-space:nowrap;}
+.btn-print:hover{background:var(--primary);color:#fff;}
+.btn-print:disabled{opacity:.5;cursor:not-allowed;}
+/* Botón eliminar buzón */
+.btn-mailbox{display:inline-flex;align-items:center;gap:4px;border-radius:7px;padding:4px 8px;font-size:11px;font-weight:700;border:none;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.btn-mailbox.pendiente{background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.25);}
+.btn-mailbox.pendiente:hover{background:var(--danger);color:#fff;}
+.btn-mailbox.eliminado{background:rgba(16,185,129,.1);color:var(--success);border:1px solid rgba(16,185,129,.25);cursor:default;}
+/* Modal código */
+.code-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+.code-modal-bg.open{display:flex;}
+.code-modal-box{background:var(--card);border:1px solid var(--border);border-radius:18px;width:100%;max-width:380px;box-shadow:0 24px 64px rgba(0,0,0,.3);animation:mIn .2s ease;overflow:hidden;}
+.code-modal-head{padding:18px 22px;background:var(--header);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-weight:800;font-size:15px;}
+.code-modal-body{padding:22px;}
+.code-input{width:100%;text-align:center;font-size:32px;font-weight:900;letter-spacing:10px;padding:14px;border:2px solid var(--border);border-radius:12px;background:var(--input-bg);color:var(--text);outline:none;transition:border-color .2s;}
+.code-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(59,130,246,.12);}
+.code-input.shake{animation:shk .4s ease;border-color:var(--danger);}
+.code-hint{font-size:12px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.5;}
+.code-actions{display:flex;gap:8px;margin-top:18px;}
+.btn-code-cancel{flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:9px;font-size:13px;cursor:pointer;}
+.btn-code-cancel:hover{border-color:var(--text);color:var(--text);}
+.btn-code-ok{flex:2;background:var(--primary);color:#fff;border:none;border-radius:9px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;}
+.btn-code-ok:hover{filter:brightness(1.1);}
+.btn-code-ok:disabled{opacity:.55;cursor:not-allowed;}
+
+/* Drawer */
+.drawer{width:0;overflow:hidden;border-left:1px solid transparent;transition:width .3s cubic-bezier(.4,0,.2,1),border-color .3s;flex-shrink:0;display:flex;flex-direction:column;}
+.drawer.open{width:340px;border-left-color:var(--border);}
+.drawer-header{padding:14px 16px;background:var(--header);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.drawer-header h6{font-size:12px;font-weight:800;color:var(--text);margin:0;font-family:monospace;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.drawer-body{flex:1;overflow-y:auto;padding:0;}
+.drawer-section{padding:14px 16px;border-bottom:1px solid var(--border);}
+.drawer-section:last-child{border-bottom:none;}
+.ds-title{font-size:9.5px;text-transform:uppercase;letter-spacing:.7px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.ds-title.hw{color:#10b981;}.ds-title.sec{color:var(--primary);}.ds-title.gen{color:var(--muted);}
+.ds-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.ds-item{background:var(--input-bg);border-radius:8px;padding:8px 10px;}
+.ds-item.full{grid-column:1/-1;}
+.ds-key{font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700;margin-bottom:3px;}
+.ds-val{font-size:12px;font-weight:600;color:var(--text);word-break:break-all;line-height:1.4;}
+.ds-val.mono{font-family:monospace;font-size:11px;}
+.ds-val.dim{color:var(--muted);font-weight:400;}
+.drawer-close{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;border-radius:6px;display:flex;align-items:center;transition:.15s;}
+.drawer-close:hover{background:var(--row-hover);color:var(--text);}
+.drawer-actions{display:flex;flex-direction:column;gap:6px;padding:14px 16px;border-bottom:1px solid var(--border);}
+.drawer-actions .d-row{display:flex;gap:6px;}
+
+/* Pills */
+.pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;line-height:1.6;}
+.p-blue{background:rgba(59,130,246,.13);color:var(--primary);}
+.p-green{background:rgba(16,185,129,.13);color:var(--success);}
+.p-yellow{background:rgba(245,158,11,.13);color:var(--warning);}
+.p-red{background:rgba(239,68,68,.13);color:var(--danger);}
+.p-gray{background:rgba(100,116,139,.1);color:var(--muted);}
+.p-orange{background:rgba(249,115,22,.13);color:var(--orange);}
+.p-gold{background:rgba(245,158,11,.15);color:var(--gold);}
+.copies-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(59,130,246,.1);color:var(--primary);border-radius:20px;padding:2px 9px;font-size:11px;font-weight:700;}
+.pages-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(16,185,129,.1);color:var(--success);border-radius:20px;padding:2px 9px;font-size:11px;font-weight:700;}
+.copies-editor{display:inline-flex;align-items:center;gap:4px;}
+.copies-editor input{width:44px;text-align:center;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:3px 5px;font-size:12px;font-weight:700;}
+.copies-editor button{background:none;border:1px solid var(--border);color:var(--muted);border-radius:5px;width:22px;height:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:.15s;}
+.copies-editor button:hover{border-color:var(--primary);color:var(--primary);}
+.ft-icon{font-size:18px;}
+.ft-pdf{color:#ef4444;}.ft-word{color:#3b82f6;}.ft-excel{color:#10b981;}
+.ft-ppt{color:#f97316;}.ft-image{color:#8b5cf6;}.ft-text,.ft-other{color:var(--muted);}
+
+/* Toast */
+.toast-wrap{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast-item{background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:12px;padding:12px 18px;font-size:13px;font-weight:500;box-shadow:var(--shadow-md);display:flex;align-items:center;gap:10px;min-width:280px;animation:toastIn .25s ease;}
+.toast-item.ok{border-left:4px solid var(--success);}
+.toast-item.err{border-left:4px solid var(--danger);}
+.toast-item.inf{border-left:4px solid var(--info);}
+@keyframes toastIn{from{opacity:0;transform:translateX(24px);}to{opacity:1;transform:translateX(0);}}
+
+/* Modales */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1050;align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal-box{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:28px;width:100%;max-width:480px;box-shadow:0 24px 64px rgba(0,0,0,.25);animation:mIn .2s ease;}
+.modal-box.wide{max-width:620px;}
+@keyframes mIn{from{opacity:0;transform:scale(.95);}to{opacity:1;transform:scale(1);}}
+.modal-box h5{font-size:16px;font-weight:800;color:var(--text);margin-bottom:18px;display:flex;align-items:center;gap:9px;}
+.modal-box p{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;}
+.m-actions{margin-top:20px;display:flex;gap:10px;justify-content:flex-end;}
+.btn-mcancel{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:8px 18px;font-size:13px;cursor:pointer;}
+.btn-mcancel:hover{border-color:var(--text);color:var(--text);}
+.btn-mconfirm{background:var(--danger);color:#fff;border:none;border-radius:9px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;}
+.btn-mconfirm:hover{filter:brightness(1.1);}
+.vip-list{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;margin-bottom:16px;}
+.vip-row{display:flex;align-items:center;gap:10px;background:var(--input-bg);border:1px solid var(--border);border-radius:10px;padding:10px 14px;}
+.vip-row-info{flex:1;}
+.vip-row-name{font-size:13px;font-weight:700;color:var(--text);}
+.vip-row-email{font-size:11.5px;color:var(--muted);font-family:monospace;}
+.vip-add-form{display:flex;gap:8px;flex-wrap:wrap;}
+.vip-input{background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:8px 12px;font-size:12.5px;flex:1;min-width:160px;outline:none;}
+.vip-input:focus{border-color:var(--gold);}
+#printFrame{display:none;}
+*::-webkit-scrollbar{width:5px;height:5px;}
+*::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+@keyframes shk{0%,100%{transform:translateX(0);}20%,60%{transform:translateX(-6px);}40%,80%{transform:translateX(6px);}}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-state i{font-size:36px;display:block;margin-bottom:12px;opacity:.35;}
+.empty-state p{font-size:13px;}
+</style>
+</head>
+<body>
+<%- include("partials/sidebar_top") %>
+<div class="pg">
+
+  <!-- ── Header ── -->
+  <div class="ph">
+    <div>
+      <div class="ph-title"><i class="bi bi-printer"></i> Cola de Impresión</div>
+      <div class="ph-sub">Documentos desde correos "Impresión" · VIP con prioridad automática · hojas por remitente</div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn-outline" onclick="openVipManager()">
+        <i class="bi bi-star-fill" style="color:var(--gold)"></i> VIP
+        <span id="vipCountBadge" style="font-size:11px;color:var(--gold);font-weight:800;"></span>
+      </button>
+      <button class="btn-ghost" id="btnRefresh" onclick="loadAll()">
+        <i class="bi bi-arrow-clockwise" id="refreshIcon"></i> Actualizar
+      </button>
+      <button class="btn-primary" id="btnFetch" onclick="fetchEmails()">
+        <i class="bi bi-envelope-arrow-down" id="fetchIcon"></i>
+        <span id="fetchLabel">Buscar correos</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Strip ── -->
+  <div class="queue-strip">
+    <div><div class="si-label">Última búsqueda</div><div class="si-val" id="stripLastFetch">—</div></div>
+    <div><div class="si-label">En cola ahora</div><div class="si-val c-warning" id="stripEnCola">—</div></div>
+    <div><div class="si-label">Cola VIP pendiente</div><div class="si-val c-gold" id="stripVipPend">—</div></div>
+    <div><div class="si-label">Urgentes</div><div class="si-val c-danger" id="stripUrgentes">—</div></div>
+    <div><div class="si-label">Correos eliminados</div><div class="si-val c-success" id="stripSP">—</div></div>
+    <div><div class="si-label">Hojas este mes</div><div class="si-val c-info" id="stripPagesMonth">—</div></div>
+    <div style="margin-left:auto;"><div class="si-label">Total copias solicitadas</div><div class="si-val c-primary" id="stripCopias">—</div></div>
+  </div>
+
+  <!-- ── KPIs (8) ── -->
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Total Documentos</div><div class="kpi-val c-primary" id="kpiTotal">—</div><i class="bi bi-files kpi-icon c-primary"></i></div>
+    <div class="kpi"><div class="kpi-label">Pendientes</div><div class="kpi-val c-warning" id="kpiPendientes">—</div><i class="bi bi-hourglass-split kpi-icon c-warning"></i></div>
+    <div class="kpi"><div class="kpi-label">Imprimiendo</div><div class="kpi-val c-info" id="kpiImprimiendo">—</div><i class="bi bi-printer kpi-icon c-info"></i></div>
+    <div class="kpi"><div class="kpi-label">Completados</div><div class="kpi-val c-success" id="kpiCompletados">—</div><i class="bi bi-check2-circle kpi-icon c-success"></i></div>
+    <div class="kpi"><div class="kpi-label">Usuarios VIP</div><div class="kpi-val c-gold" id="kpiVip">—</div><i class="bi bi-star-fill kpi-icon c-gold"></i></div>
+    <div class="kpi"><div class="kpi-label">Errores</div><div class="kpi-val c-danger" id="kpiErrores">—</div><i class="bi bi-exclamation-circle kpi-icon c-danger"></i></div>
+    <div class="kpi"><div class="kpi-label">Total hojas históricas</div><div class="kpi-val c-info" id="kpiTotalPages">—</div><div class="kpi-sub" id="kpiTotalPagesSub"></div><i class="bi bi-file-earmark-text kpi-icon c-info"></i></div>
+    <div class="kpi"><div class="kpi-label">Hojas este mes</div><div class="kpi-val c-success" id="kpiMonthPages">—</div><div class="kpi-sub" id="kpiMonthPagesSub"></div><i class="bi bi-calendar-month kpi-icon c-success"></i></div>
+  </div>
+
+  <!-- ── Barras de estado ── -->
+  <div class="queue-progress">
+    <div class="qp-title"><i class="bi bi-bar-chart-steps"></i> Estado de la cola</div>
+    <div class="qp-bars">
+      <div class="qp-bar-item"><div class="qp-bar-label"><span>Pendiente</span><span id="barPctPendiente">0%</span></div><div class="qp-bar-track"><div class="qp-bar-fill" id="barPendiente" style="background:var(--warning);width:0%"></div></div></div>
+      <div class="qp-bar-item"><div class="qp-bar-label"><span>Imprimiendo</span><span id="barPctImprimiendo">0%</span></div><div class="qp-bar-track"><div class="qp-bar-fill" id="barImprimiendo" style="background:var(--info);width:0%"></div></div></div>
+      <div class="qp-bar-item"><div class="qp-bar-label"><span>Completado</span><span id="barPctCompletado">0%</span></div><div class="qp-bar-track"><div class="qp-bar-fill" id="barCompletado" style="background:var(--success);width:0%"></div></div></div>
+      <div class="qp-bar-item"><div class="qp-bar-label"><span>Cancelado</span><span id="barPctCancelado">0%</span></div><div class="qp-bar-track"><div class="qp-bar-fill" id="barCancelado" style="background:var(--muted);width:0%"></div></div></div>
+      <div class="qp-bar-item"><div class="qp-bar-label"><span>Error</span><span id="barPctError">0%</span></div><div class="qp-bar-track"><div class="qp-bar-fill" id="barError" style="background:var(--danger);width:0%"></div></div></div>
+    </div>
+  </div>
+
+  <!-- ── Analytics: top senders + gráfico mensual + tabla meses ── -->
+  <div class="analytics-row">
+
+    <!-- Top 5 impresores del mes -->
+    <div class="an-card">
+      <div class="an-title"><i class="bi bi-trophy" style="color:var(--gold)"></i> Top impresores · este mes</div>
+      <div id="topSendersPanel"><div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;"><i class="bi bi-hourglass-split spin-anim"></i></div></div>
+    </div>
+
+    <!-- Gráfico mensual -->
+    <div class="an-card">
+      <div class="an-title"><i class="bi bi-bar-chart-line" style="color:var(--primary)"></i> Hojas impresas por mes</div>
+      <div style="position:relative;height:180px;"><canvas id="chartMonthly"></canvas></div>
+    </div>
+
+    <!-- Tabla resumen meses -->
+    <div class="an-card" style="padding:0;overflow:hidden;">
+      <div style="padding:14px 18px;background:var(--header);border-bottom:1px solid var(--border);">
+        <div class="an-title" style="margin-bottom:0;"><i class="bi bi-table" style="color:var(--info)"></i> Resumen mensual</div>
+      </div>
+      <div style="overflow-y:auto;max-height:228px;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead><tr>
+            <th style="padding:8px 14px;background:var(--header);border-bottom:1px solid var(--border);color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;position:sticky;top:0;">Mes</th>
+            <th style="padding:8px 14px;background:var(--header);border-bottom:1px solid var(--border);color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;position:sticky;top:0;">Hojas</th>
+            <th style="padding:8px 14px;background:var(--header);border-bottom:1px solid var(--border);color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;position:sticky;top:0;">Docs</th>
+            <th style="padding:8px 14px;background:var(--header);border-bottom:1px solid var(--border);color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;position:sticky;top:0;">Remit.</th>
+          </tr></thead>
+          <tbody id="monthTableBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:var(--muted);"><i class="bi bi-hourglass-split spin-anim"></i></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tabla principal con pestañas ── -->
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;">
+
+    <!-- Tab strip + toolbar -->
+    <div style="padding:0 18px;background:var(--header);border-bottom:2px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div class="tab-strip">
+        <button class="tab-btn active" id="tabAll" onclick="switchTab('all')">
+          <i class="bi bi-list-ul"></i> Todos <span class="tab-badge" id="badgeAll">0</span>
+        </button>
+        <button class="tab-btn vip-tab" id="tabVip" onclick="switchTab('vip')">
+          <i class="bi bi-star-fill" style="color:var(--gold)"></i> VIP <span class="tab-badge" id="badgeVip">0</span>
+        </button>
+        <button class="tab-btn" id="tabStd" onclick="switchTab('standard')">
+          <i class="bi bi-people"></i> Estándar <span class="tab-badge" id="badgeStd">0</span>
+        </button>
+      </div>
+      <div class="toolbar" style="padding:8px 0;">
+        <select class="filter-select" id="filterStatus" onchange="loadData(1)">
+          <option value="">Todos los estados</option>
+          <option value="pendiente">⏳ Pendiente</option>
+          <option value="imprimiendo">🖨️ Imprimiendo</option>
+          <option value="completado">✅ Completado</option>
+          <option value="cancelado">⛔ Cancelado</option>
+          <option value="error">❌ Error</option>
+        </select>
+        <select class="filter-select" id="filterPriority" onchange="loadData(1)">
+          <option value="">Todas las prioridades</option>
+          <option value="urgente">🔴 Urgente</option>
+          <option value="alta">🟠 Alta</option>
+          <option value="normal">🟡 Normal</option>
+          <option value="baja">⚪ Baja</option>
+        </select>
+        <select class="filter-select" id="filterType" onchange="loadData(1)">
+          <option value="">Todos los tipos</option>
+          <option value="pdf">PDF</option>
+          <option value="word">Word</option>
+          <option value="excel">Excel</option>
+          <option value="image">Imagen</option>
+        </select>
+        <div class="search-wrap">
+          <i class="bi bi-search"></i>
+          <input type="text" class="search-input" id="searchInput" placeholder="Remitente, archivo..." oninput="debounce()">
+        </div>
+        <button class="btn-outline" onclick="exportCsv()"><i class="bi bi-download"></i> CSV</button>
+      </div>
+    </div>
+
+    <!-- Table + Drawer -->
+    <div class="main-panel" style="border:none;border-radius:0;box-shadow:none;">
+      <div class="tbl-side">
+        <div class="tbl-scroll">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th onclick="sortBy('id')" style="width:40px;"># <span class="sort-icon">⇅</span></th>
+                <th onclick="sortBy('email_from_name')">REMITENTE <span class="sort-icon">⇅</span></th>
+                <th onclick="sortBy('file_original')">ARCHIVO <span class="sort-icon">⇅</span></th>
+                <th>TIPO</th>
+                <th onclick="sortBy('num_pages')" style="width:70px;">HOJAS <span class="sort-icon">⇅</span></th>
+                <th onclick="sortBy('copies')" style="width:60px;">COPIAS <span class="sort-icon">⇅</span></th>
+                <th onclick="sortBy('priority')">PRIORIDAD <span class="sort-icon">⇅</span></th>
+                <th onclick="sortBy('status')">ESTADO <span class="sort-icon">⇅</span></th>
+                <th>BUZÓN</th>
+                <th style="width:150px;">ACCIONES</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr><td colspan="10" class="empty-state"><i class="bi bi-arrow-repeat spin-anim"></i><p>Cargando cola...</p></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="tbl-foot">
+          <span class="tbl-info" id="tableInfo">—</span>
+          <div class="pagination" id="pagination"></div>
+        </div>
+      </div>
+
+      <!-- Drawer -->
+      <div class="drawer" id="drawer">
+        <div class="drawer-header">
+          <h6 id="drawerFileName">—</h6>
+          <button class="drawer-close" onclick="closeDrawer()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="drawer-body" id="drawerBody"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.pg -->
+
+<!-- Modal eliminar -->
+<div class="modal-bg" id="confirmModal">
+  <div class="modal-box">
+    <h5><i class="bi bi-trash" style="color:var(--danger)"></i> Eliminar documento</h5>
+    <p id="confirmMsg">¿Estás seguro?</p>
+    <div class="m-actions">
+      <button class="btn-mcancel" onclick="closeConfirm()">Cancelar</button>
+      <button class="btn-mconfirm" onclick="doConfirm()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal VIP -->
+<div class="modal-bg" id="vipModal">
+  <div class="modal-box wide">
+    <h5><i class="bi bi-star-fill" style="color:var(--gold)"></i> Gestión de Usuarios VIP</h5>
+    <div class="vip-list" id="vipList"><div style="text-align:center;padding:20px;color:var(--muted);">Cargando...</div></div>
+    <div class="vip-add-form">
+      <input type="email" class="vip-input" id="vipEmail" placeholder="correo@empresa.com" autocomplete="off">
+      <input type="text"  class="vip-input" id="vipName"  placeholder="Nombre (opcional)">
+      <button class="btn-primary" onclick="addVip()" style="padding:8px 16px;"><i class="bi bi-star"></i> Agregar VIP</button>
+    </div>
+    <div class="m-actions"><button class="btn-mcancel" onclick="closeVipModal()">Cerrar</button></div>
+  </div>
+</div>
+
+<!-- Modal código de seguridad -->
+<div class="code-modal-bg" id="codeModal">
+  <div class="code-modal-box">
+    <div class="code-modal-head">
+      <span style="display:flex;align-items:center;gap:9px;">
+        <i class="bi bi-shield-lock-fill" style="color:var(--primary);font-size:17px;"></i>
+        Código de impresión
+      </span>
+      <button class="btn-mclose" onclick="closeCodeModal()"><i class="bi bi-x"></i></button>
+    </div>
+    <div class="code-modal-body">
+      <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:16px;">
+        Ingresa el código que recibiste en tu correo electrónico
+      </div>
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;text-align:center;margin-bottom:6px;" id="codeModalInfo"></div>
+      <input type="text" class="code-input" id="codeInput"
+             maxlength="6" placeholder="_ _ _ _"
+             oninput="this.value=this.value.replace(/\D/g,'')">
+      <div class="code-hint">
+        El código fue enviado automáticamente al correo del remitente.<br>
+        <strong>De un solo uso</strong> — el archivo se elimina 8h después de imprimir.
+      </div>
+      <div class="code-actions">
+        <button class="btn-code-cancel" onclick="closeCodeModal()">Cancelar</button>
+        <button class="btn-code-ok" id="btnCodeOk" onclick="submitCode()">
+          <i class="bi bi-printer-fill"></i> 🖨️ Imprimir
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<iframe id="printFrame" style="display:none;"></iframe>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/sidebar.js"></script>
+<script>
+// ── State ──────────────────────────────────────────────────
+let currentPage=1, currentTab='all', searchTimer=null;
+let sortField='queued_at', sortDir='desc';
+let activeRowId=null, confirmCb=null, chartMonthly=null;
+const COLORS=['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316'];
+
+// ── Utils ──────────────────────────────────────────────────
+function toast(msg,type='inf',dur=4500){
+  const icons={ok:'bi-check-circle-fill',err:'bi-x-circle-fill',inf:'bi-info-circle-fill'};
+  const clrs ={ok:'var(--success)',err:'var(--danger)',inf:'var(--info)'};
+  const el=document.createElement('div');
+  el.className=`toast-item ${type}`;
+  el.innerHTML=`<i class="bi ${icons[type]}" style="color:${clrs[type]};font-size:18px;flex-shrink:0;"></i><span>${msg}</span>`;
+  document.getElementById('toastWrap').appendChild(el);
+  setTimeout(()=>{el.style.cssText='opacity:0;transform:translateX(20px);transition:.3s;';setTimeout(()=>el.remove(),300);},dur);
+}
+const fmtDate=d=>{if(!d)return'—';const dt=new Date(d);return isNaN(dt)?d:dt.toLocaleString('es-PE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});};
+const fmtDateS=d=>{if(!d)return'—';const dt=new Date(d);return isNaN(dt)?d:dt.toLocaleDateString('es-PE',{day:'2-digit',month:'2-digit',year:'numeric'});};
+const fmtSize=b=>{if(!b)return'—';if(b<1024)return b+'B';if(b<1048576)return(b/1024).toFixed(1)+'KB';return(b/1048576).toFixed(1)+'MB';};
+const n=v=>(+v||0).toLocaleString('es-PE');
+const esc=s=>(s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const val=s=>s?esc(s):'<span style="color:var(--muted);font-weight:400">—</span>';
+const fmtMonth=m=>{if(!m)return'—';const[y,mo]=m.split('-');const nm=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];return`${nm[+mo-1]} ${y}`;};
+
+const STATUS_MAP={pendiente:{cls:'p-yellow',lbl:'⏳ Pendiente'},imprimiendo:{cls:'p-blue',lbl:'🖨️ Imprimiendo'},completado:{cls:'p-green',lbl:'✅ Completado'},cancelado:{cls:'p-gray',lbl:'⛔ Cancelado'},error:{cls:'p-red',lbl:'❌ Error'}};
+const PRIO_MAP={urgente:{cls:'p-red',lbl:'🔴 Urgente'},alta:{cls:'p-orange',lbl:'🟠 Alta'},normal:{cls:'p-yellow',lbl:'🟡 Normal'},baja:{cls:'p-gray',lbl:'⚪ Baja'}};
+const FT_MAP={pdf:{icon:'bi-file-earmark-pdf',cls:'ft-pdf',lbl:'PDF'},word:{icon:'bi-file-earmark-word',cls:'ft-word',lbl:'Word'},excel:{icon:'bi-file-earmark-excel',cls:'ft-excel',lbl:'Excel'},powerpoint:{icon:'bi-file-earmark-ppt',cls:'ft-ppt',lbl:'PPT'},image:{icon:'bi-file-image',cls:'ft-image',lbl:'Imagen'},text:{icon:'bi-file-text',cls:'ft-text',lbl:'Texto'},other:{icon:'bi-file-earmark',cls:'ft-other',lbl:'Otro'}};
+const statusBadge=s=>{const m=STATUS_MAP[s]||{cls:'p-gray',lbl:s||'—'};return`<span class="pill ${m.cls}">${m.lbl}</span>`;};
+const prioBadge=p=>{const m=PRIO_MAP[p]||{cls:'p-gray',lbl:p||'—'};return`<span class="pill ${m.cls}">${m.lbl}</span>`;};
+const ftIcon=t=>{const m=FT_MAP[t]||FT_MAP.other;return`<i class="bi ${m.icon} ft-icon ${m.cls}"></i>`;};
+const ftBadge=t=>{const m=FT_MAP[t]||FT_MAP.other;return`<span class="pill p-gray" style="font-size:10px;">${m.lbl}</span>`;};
+
+// ── Botón buzón ───────────────────────────────────────────
+function mailboxButton(r){
+  if(+r.email_deleted===1)
+    return`<button class="btn-mailbox eliminado" disabled title="Correo ya eliminado del buzón"><i class="bi bi-check-circle-fill"></i> Eliminado</button>`;
+  return`<button class="btn-mailbox pendiente" onclick="event.stopPropagation();deleteMailbox(${r.id})" id="mbBtn_${r.id}" title="Eliminar del buzón de Outlook"><i class="bi bi-envelope-x-fill"></i> Del buzón</button>`;
+}
+
+// ── Stats/KPIs ────────────────────────────────────────────
+async function loadStats(){
+  try{
+    const j=await fetch('/api/print-queue/stats').then(r=>r.json());
+    if(!j.success)return;
+    const k=j.kpis;
+    document.getElementById('kpiTotal').textContent      =n(k.total);
+    document.getElementById('kpiPendientes').textContent  =n(k.pendientes);
+    document.getElementById('kpiImprimiendo').textContent =n(k.imprimiendo);
+    document.getElementById('kpiCompletados').textContent =n(k.completados);
+    document.getElementById('kpiVip').textContent         =n(j.vip_users_count);
+    document.getElementById('kpiErrores').textContent     =n(k.errores);
+    document.getElementById('kpiTotalPages').textContent  =n(k.total_pages_to_print);
+    document.getElementById('kpiMonthPages').textContent  =n(k.pages_this_month);
+    document.getElementById('kpiTotalPagesSub').textContent=`${n(k.total_copias)} copias total`;
+    document.getElementById('kpiMonthPagesSub').textContent=`${n(k.docs_this_month||0)} docs este mes`;
+    // Strip
+    document.getElementById('stripEnCola').textContent    =n(k.en_cola);
+    document.getElementById('stripVipPend').textContent   =n(k.vip_pendientes);
+    document.getElementById('stripUrgentes').textContent  =n(k.urgentes);
+    document.getElementById('stripSP').textContent        =n(k.emails_eliminados);
+    document.getElementById('stripPagesMonth').textContent=n(k.pages_this_month);
+    document.getElementById('stripCopias').textContent    =n(k.total_copias);
+    document.getElementById('vipCountBadge').textContent  =j.vip_users_count?`(${j.vip_users_count})`:'';
+    if(k.ultima_encola) document.getElementById('stripLastFetch').textContent=fmtDate(k.ultima_encola);
+    // Tab badges
+    document.getElementById('badgeAll').textContent=n(k.total);
+    document.getElementById('badgeVip').textContent=n(k.vip_total);
+    document.getElementById('badgeStd').textContent=n((+k.total||0)-(+k.vip_total||0));
+    const vipBadge=document.querySelector('#tabVip .tab-badge');
+    if(vipBadge&&+k.vip_pendientes>0){vipBadge.style.background='rgba(239,68,68,.15)';vipBadge.style.color='var(--danger)';}
+    // Barras
+    const tot=+k.total||1;
+    [['Pendiente',+k.pendientes],['Imprimiendo',+k.imprimiendo],['Completado',+k.completados],['Cancelado',+k.cancelados],['Error',+k.errores]]
+      .forEach(([id,v])=>{
+        const pct=Math.round((v/tot)*100);
+        const el=document.getElementById('bar'+id),ep=document.getElementById('barPct'+id);
+        if(el)el.style.width=pct+'%'; if(ep)ep.textContent=pct+'%';
+      });
+  }catch(e){console.error(e);}
+}
+
+// ── Analytics panel ───────────────────────────────────────
+async function loadAnalytics(){
+  try{
+    const j=await fetch('/api/print-queue/analytics/top-senders?months=6').then(r=>r.json());
+    if(!j.success)return;
+    renderTopSenders(j.monthly, j.top);
+    renderMonthChart(j.monthly_global);
+    renderMonthTable(j.monthly_global);
+  }catch(e){console.error('analytics:',e);}
+}
+
+function renderTopSenders(monthly, top){
+  const curMonth=new Date().toISOString().slice(0,7);
+  const thisM=[...(monthly||[])].filter(m=>m.month===curMonth).sort((a,b)=>(+b.pages||0)-(+a.pages||0)).slice(0,5);
+  const nameMap={};(top||[]).forEach(r=>{nameMap[r.email_from_addr]={name:r.email_from_name,vip:+r.is_vip};});
+  const panel=document.getElementById('topSendersPanel');
+  if(!thisM.length){
+    panel.innerHTML=`<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;"><i class="bi bi-inbox" style="display:block;font-size:24px;margin-bottom:6px;opacity:.3;"></i>Sin actividad este mes</div>`;
+    return;
+  }
+  const maxP=+thisM[0].pages||1;
+  panel.innerHTML=thisM.map((r,i)=>{
+    const pct=Math.round(((+r.pages||0)/maxP)*100);
+    const info=nameMap[r.email_from_addr]||{};
+    const sname=esc((info.name||r.email_from_addr||'').split(' ').slice(0,2).join(' '));
+    const vip=info.vip?`<span class="pill p-gold" style="font-size:9px;padding:1px 5px;margin-left:3px;">⭐</span>`:'';
+    const rnk=['r1','r2','r3','rn','rn'][i]||'rn';
+    return`<div class="rank-row">
+      <div class="rank-num ${rnk}">${i+1}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+          <span style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${sname}${vip}</span>
+          <span style="font-size:12px;font-weight:800;color:${COLORS[i]};margin-left:8px;white-space:nowrap;">${n(r.pages)} hjs</span>
+        </div>
+        <div class="rank-bar-track"><div class="rank-bar-fill" style="width:${pct}%;background:${COLORS[i]};"></div></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">${n(r.docs)} docs · ${n(r.copies)} copias</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderMonthChart(monthly_global){
+  if(!monthly_global||!monthly_global.length)return;
+  const isDark=()=>document.documentElement.getAttribute('data-theme')==='dark';
+  const sorted=[...monthly_global].sort((a,b)=>a.month.localeCompare(b.month));
+  const labels=sorted.map(m=>fmtMonth(m.month));
+  const pages=sorted.map(m=>+m.pages||0);
+  const ctx=document.getElementById('chartMonthly').getContext('2d');
+  if(chartMonthly)chartMonthly.destroy();
+  chartMonthly=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{label:'Hojas',data:pages,backgroundColor:'rgba(59,130,246,.7)',borderRadius:5,borderSkipped:false}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{backgroundColor:isDark()?'#1e293b':'#fff',borderColor:isDark()?'#2d3f55':'#e2e8f0',borderWidth:1,titleColor:isDark()?'#e2e8f0':'#1e293b',bodyColor:isDark()?'#94a3b8':'#64748b',callbacks:{label:c=>`${n(c.raw)} hojas`}}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:isDark()?'#94a3b8':'#64748b',font:{size:10}}},
+        y:{grid:{color:isDark()?'rgba(255,255,255,.04)':'rgba(0,0,0,.04)'},ticks:{color:isDark()?'#94a3b8':'#64748b',font:{size:10}}}
+      }
+    }
+  });
+}
+
+function renderMonthTable(monthly_global){
+  const tbody=document.getElementById('monthTableBody');
+  if(!monthly_global||!monthly_global.length){
+    tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--muted);">Sin datos</td></tr>`;
+    return;
+  }
+  tbody.innerHTML=monthly_global.map(m=>`
+    <tr style="cursor:default;">
+      <td style="padding:8px 14px;border-bottom:1px solid var(--border);font-weight:700;">${fmtMonth(m.month)}</td>
+      <td style="padding:8px 14px;border-bottom:1px solid var(--border);font-weight:700;color:var(--primary);">${n(m.pages)}</td>
+      <td style="padding:8px 14px;border-bottom:1px solid var(--border);color:var(--muted);">${n(m.docs)}</td>
+      <td style="padding:8px 14px;border-bottom:1px solid var(--border);color:var(--muted);">${n(m.senders)}</td>
+    </tr>`).join('');
+}
+
+// ── Tabla principal ───────────────────────────────────────
+async function loadData(page=1){
+  currentPage=page;
+  const search=document.getElementById('searchInput').value.trim();
+  const status=document.getElementById('filterStatus').value;
+  const prio  =document.getElementById('filterPriority').value;
+  const ftype =document.getElementById('filterType').value;
+  let url=`/api/print-queue/data?page=${page}&limit=50&sort=${sortField}&dir=${sortDir}&tab=${currentTab}`;
+  if(search)url+=`&search=${encodeURIComponent(search)}`;
+  if(status)url+=`&status=${encodeURIComponent(status)}`;
+  if(prio)  url+=`&priority=${encodeURIComponent(prio)}`;
+  if(ftype) url+=`&file_type=${encodeURIComponent(ftype)}`;
+  try{
+    const j=await fetch(url).then(r=>r.json());
+    if(!j.success){toast('Error cargando datos','err');return;}
+    renderTable(j.data);
+    renderPagination(j.pagination);
+    const{page:p,limit:l,total}=j.pagination;
+    const from=(p-1)*l+1,to=Math.min(p*l,total);
+    document.getElementById('tableInfo').textContent=total?`${n(from)}–${n(to)} de ${n(total)} documentos`:'Sin resultados';
+  }catch(e){console.error(e);}
+}
+
+function renderTable(rows){
+  const tbody=document.getElementById('tableBody');
+  if(!rows.length){
+    tbody.innerHTML=`<tr><td colspan="10" class="empty-state"><i class="bi bi-inbox"></i><p>Sin documentos${currentTab==='vip'?' VIP':''} con los filtros aplicados</p></td></tr>`;
+    return;
+  }
+  tbody.innerHTML=rows.map(r=>{
+    const isVip=+r.is_vip===1;
+    const isUrgent=r.priority==='urgente'&&r.status==='pendiente';
+    const isActive=r.id===activeRowId;
+    const fname=r.file_original||r.file_name||'—';
+    const fnameShort=fname.length>28?fname.substring(0,26)+'…':fname;
+    const sender=r.email_from_name||r.email_from_addr||'—';
+    const senderShort=sender.length>24?sender.substring(0,22)+'…':sender;
+    const pagesCell=r.num_pages
+      ?`<span class="pages-badge"><i class="bi bi-file-earmark-text"></i> ${n(r.num_pages)}</span><span style="font-size:10px;color:var(--muted);margin-left:3px;">×${r.copies||1}=${n(r.total_print_pages)}</span>`
+      :`<span style="color:var(--muted);font-size:11px;">—</span>`;
+    let actions='';
+    if(r.status==='pendiente'){
+      actions+=`<button class="btn-sm success-h" onclick="event.stopPropagation();changeStatus(${r.id},'imprimiendo')" title="Iniciar impresión"><i class="bi bi-play-fill"></i></button>`;
+      actions+=`<button class="btn-sm warn-h" onclick="event.stopPropagation();changeStatus(${r.id},'cancelado')" title="Cancelar"><i class="bi bi-x-circle"></i></button>`;
+    } else if(r.status==='imprimiendo'){
+      actions+=`<button class="btn-sm success-h" onclick="event.stopPropagation();changeStatus(${r.id},'completado')" title="Marcar completado"><i class="bi bi-check-lg"></i></button>`;
+      actions+=`<button class="btn-sm danger" onclick="event.stopPropagation();changeStatus(${r.id},'error')" title="Marcar error"><i class="bi bi-exclamation-triangle"></i></button>`;
+    } else if(r.status==='error'||r.status==='cancelado'){
+      actions+=`<button class="btn-sm" onclick="event.stopPropagation();changeStatus(${r.id},'pendiente')" title="Reabrir como pendiente"><i class="bi bi-arrow-counterclockwise"></i></button>`;
+    }
+    actions+=`<button class="btn-print" onclick="event.stopPropagation();openCodeModal(${r.id},'${esc(r.file_type)}')" title="Imprimir — requiere código"><i class="bi bi-printer-fill"></i> Imprimir</button>`;
+    actions+=`<button class="btn-sm" onclick="event.stopPropagation();downloadFile(${r.id})" title="Descargar"><i class="bi bi-download"></i></button>`;
+    if(r.status!=='completado')
+      actions+=`<button class="btn-sm danger" onclick="event.stopPropagation();confirmDelete(${r.id},'${esc(fname)}')" title="Eliminar"><i class="bi bi-trash"></i></button>`;
+    const trCls=`${isVip?'tr-vip':''} ${isUrgent&&!isVip?'tr-urgente':''} ${isActive?'row-active':''}`.trim();
+    return`<tr class="${trCls}" onclick="openDrawer(${JSON.stringify(r).replace(/'/g,'&#39;')})">
+      <td style="font-family:monospace;font-size:11px;color:var(--muted);">${r.id}</td>
+      <td>
+        <div style="font-size:12.5px;font-weight:700;">${esc(senderShort)}${isVip?` <span class="pill p-gold" style="font-size:10px;padding:1px 6px;">⭐ VIP</span>`:''}</div>
+        <div style="font-size:11px;color:var(--muted);">${esc(r.email_from_addr||'')}</div>
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:7px;">
+          ${ftIcon(r.file_type)}
+          <div>
+            <div style="font-size:12px;font-weight:600;" title="${esc(fname)}">${esc(fnameShort)}</div>
+            <div style="font-size:11px;color:var(--muted);">${fmtSize(r.file_size)}</div>
+          </div>
+        </div>
+      </td>
+      <td>${ftBadge(r.file_type)}</td>
+      <td>${pagesCell}</td>
+      <td><span class="copies-badge"><i class="bi bi-copy"></i> ${r.copies||1}</span></td>
+      <td>${prioBadge(r.priority)}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td>${mailboxButton(r)}</td>
+      <td><div style="display:flex;gap:3px;flex-wrap:wrap;">${actions}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderPagination({page,pages}){
+  const pg=document.getElementById('pagination');
+  if(pages<=1){pg.innerHTML='';return;}
+  let h=`<button class="pg-btn" onclick="loadData(${page-1})" ${page<=1?'disabled':''}>‹</button>`;
+  const s=Math.max(1,page-2),e=Math.min(pages,page+2);
+  if(s>1)h+=`<button class="pg-btn" onclick="loadData(1)">1</button>${s>2?'<span style="padding:0 4px;color:var(--muted);">…</span>':''}`;
+  for(let i=s;i<=e;i++)h+=`<button class="pg-btn ${i===page?'active':''}" onclick="loadData(${i})">${i}</button>`;
+  if(e<pages)h+=`${e<pages-1?'<span style="padding:0 4px;color:var(--muted);">…</span>':''}<button class="pg-btn" onclick="loadData(${pages})">${pages}</button>`;
+  h+=`<button class="pg-btn" onclick="loadData(${page+1})" ${page>=pages?'disabled':''}>›</button>`;
+  pg.innerHTML=h;
+}
+
+// ── Sort ──────────────────────────────────────────────────
+function sortBy(field){
+  sortDir=sortField===field?(sortDir==='asc'?'desc':'asc'):'desc'; sortField=field;
+  document.querySelectorAll('.tbl thead th').forEach(th=>{th.classList.remove('sorted');const ic=th.querySelector('.sort-icon');if(ic)ic.textContent='⇅';});
+  document.querySelectorAll('.tbl thead th[onclick]').forEach(th=>{
+    if(th.getAttribute('onclick').includes(`'${field}'`)){th.classList.add('sorted');const ic=th.querySelector('.sort-icon');if(ic)ic.textContent=sortDir==='asc'?'↑':'↓';}
+  });
+  loadData(1);
+}
+
+// ── Tabs ──────────────────────────────────────────────────
+function switchTab(tab){
+  currentTab=tab; currentPage=1;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>{if(b.getAttribute('onclick')===`switchTab('${tab}')`)b.classList.add('active');});
+  loadData(1);
+}
+
+// ── Drawer ────────────────────────────────────────────────
+function openDrawer(r){
+  activeRowId=r.id;
+  document.querySelectorAll('.tbl tbody tr').forEach(t=>t.classList.remove('row-active'));
+  event?.currentTarget?.classList.add('row-active');
+  document.getElementById('drawerFileName').textContent=r.file_original||r.file_name||'—';
+  document.getElementById('drawerBody').innerHTML=buildDrawer(r);
+  document.getElementById('drawer').classList.add('open');
+}
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('open');
+  activeRowId=null;
+  document.querySelectorAll('.tbl tbody tr').forEach(t=>t.classList.remove('row-active'));
+}
+
+function buildDrawer(r){
+  const fname=r.file_original||r.file_name||'—';
+  const isVip=+r.is_vip===1;
+  let actionBtns='';
+  if(r.status==='pendiente')
+    actionBtns+=`<button class="btn-primary" style="flex:1;justify-content:center;" onclick="changeStatus(${r.id},'imprimiendo')"><i class="bi bi-play-fill"></i> Iniciar impresión</button>
+    <button class="btn-outline" onclick="changeStatus(${r.id},'cancelado')"><i class="bi bi-x-circle"></i></button>`;
+  else if(r.status==='imprimiendo')
+    actionBtns+=`<button class="btn-primary" style="flex:1;justify-content:center;background:var(--success);" onclick="changeStatus(${r.id},'completado')"><i class="bi bi-check-lg"></i> Completado</button>
+    <button class="btn-outline" onclick="changeStatus(${r.id},'error')" style="color:var(--danger);border-color:var(--danger)"><i class="bi bi-exclamation-triangle"></i></button>`;
+  const printBtn=`<button class="btn-print" style="flex:1;justify-content:center;padding:8px;" onclick="openCodeModal(${r.id},'${esc(r.file_type)}')"><i class="bi bi-printer-fill"></i> Imprimir (requiere código)</button>`;
+  const mbDrawer=+r.email_deleted===1
+    ?`<button class="btn-mailbox eliminado" style="flex:1;justify-content:center;padding:8px;" disabled><i class="bi bi-check-circle-fill"></i> Correo eliminado del buzón</button>`
+    :`<button class="btn-mailbox pendiente" style="flex:1;justify-content:center;padding:8px;" onclick="deleteMailbox(${r.id})" id="mbBtnD_${r.id}"><i class="bi bi-envelope-x-fill"></i> Eliminar del buzón</button>`;
+  const copiesEditor=`<div class="copies-editor">
+    <button onclick="addCopies(${r.id},-1)">−</button>
+    <input type="number" id="copiesInput_${r.id}" value="${r.copies||1}" min="1" max="999" onchange="saveCopies(${r.id})">
+    <button onclick="addCopies(${r.id},1)">+</button>
+  </div>`;
+  const pagesInfo=r.num_pages
+    ?`<span class="pages-badge"><i class="bi bi-file-earmark-text"></i> ${n(r.num_pages)} páginas</span><div style="font-size:10.5px;color:var(--muted);margin-top:4px;">× ${r.copies||1} copias = <strong>${n(r.total_print_pages)}</strong> hojas totales</div>`
+    :`<span style="color:var(--muted);font-size:12px;">No disponible para este tipo</span>`;
+
+  return`
+  ${isVip?`<div style="background:var(--gold-bg);border-bottom:1px solid rgba(245,158,11,.2);padding:10px 16px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--gold);"><i class="bi bi-star-fill"></i> Usuario VIP — prioridad garantizada</div>`:''}
+  <div class="drawer-actions">
+    <div class="d-row">${actionBtns}</div>
+    <div class="d-row">${printBtn}</div>
+    <div class="d-row">${mbDrawer}</div>
+    <div class="d-row"><button class="btn-outline" style="flex:1;justify-content:center;" onclick="downloadFile(${r.id})"><i class="bi bi-download"></i> Descargar</button></div>
+  </div>
+  <div class="drawer-section">
+    <div class="ds-title gen"><i class="bi bi-envelope"></i> Correo origen</div>
+    <div class="ds-grid">
+      <div class="ds-item full"><div class="ds-key">Asunto</div><div class="ds-val">${val(r.email_subject)}</div></div>
+      <div class="ds-item full"><div class="ds-key">Remitente</div><div class="ds-val">${val(r.email_from_name)}</div></div>
+      <div class="ds-item full"><div class="ds-key">Email</div><div class="ds-val mono">${val(r.email_from_addr)}</div></div>
+      <div class="ds-item"><div class="ds-key">Recibido</div><div class="ds-val dim">${fmtDate(r.received_at)}</div></div>
+      <div class="ds-item"><div class="ds-key">Correo buzón</div><div class="ds-val">${+r.email_deleted===1?'<span class="pill p-green">✅ Eliminado</span>':'<span class="pill p-yellow">📬 En buzón</span>'}</div></div>
+    </div>
+  </div>
+  <div class="drawer-section">
+    <div class="ds-title hw"><i class="bi bi-file-earmark"></i> Archivo</div>
+    <div class="ds-grid">
+      <div class="ds-item full"><div class="ds-key">Nombre</div><div class="ds-val">${val(fname)}</div></div>
+      <div class="ds-item"><div class="ds-key">Tipo</div><div class="ds-val">${ftBadge(r.file_type)}</div></div>
+      <div class="ds-item"><div class="ds-key">Tamaño</div><div class="ds-val">${fmtSize(r.file_size)}</div></div>
+      <div class="ds-item full"><div class="ds-key">Páginas del documento</div><div class="ds-val">${pagesInfo}</div></div>
+      <div class="ds-item"><div class="ds-key">Copias</div><div class="ds-val">${copiesEditor}</div></div>
+      <div class="ds-item"><div class="ds-key">Prioridad</div><div class="ds-val">${prioBadge(r.priority)}</div></div>
+    </div>
+  </div>
+  <div class="drawer-section">
+    <div class="ds-title gen"><i class="bi bi-printer"></i> Estado impresión</div>
+    <div class="ds-grid">
+      <div class="ds-item full"><div class="ds-key">Estado</div><div class="ds-val">${statusBadge(r.status)}</div></div>
+      <div class="ds-item"><div class="ds-key">Encolado</div><div class="ds-val dim">${fmtDate(r.queued_at)}</div></div>
+      <div class="ds-item"><div class="ds-key">Impreso</div><div class="ds-val dim">${fmtDate(r.printed_at)}</div></div>
+      ${r.printed_by?`<div class="ds-item full"><div class="ds-key">Impreso por</div><div class="ds-val dim">${val(r.printed_by)}</div></div>`:''}
+      ${r.notes?`<div class="ds-item full"><div class="ds-key">Notas</div><div class="ds-val dim">${val(r.notes)}</div></div>`:''}
+    </div>
+  </div>`;
+}
+
+// ── Acciones ──────────────────────────────────────────────
+async function changeStatus(id,status){
+  try{
+    const j=await fetch(`/api/print-queue/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})}).then(r=>r.json());
+    if(!j.success)throw new Error(j.error);
+    toast(`Documento #${id} → ${STATUS_MAP[status]?.lbl||status}`,'ok');
+    await loadAll();
+    if(activeRowId===id)closeDrawer();
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+
+async function addCopies(id,delta){
+  const inp=document.getElementById(`copiesInput_${id}`);
+  if(!inp)return;
+  inp.value=Math.max(1,Math.min(999,(parseInt(inp.value)||1)+delta));
+  await saveCopies(id);
+}
+async function saveCopies(id){
+  const inp=document.getElementById(`copiesInput_${id}`);
+  if(!inp)return;
+  const copies=Math.max(1,parseInt(inp.value)||1);
+  try{
+    const j=await fetch(`/api/print-queue/${id}/copies`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({copies})}).then(r=>r.json());
+    if(!j.success)throw new Error(j.error);
+    toast(`Copias: ${copies}`,'ok',2000);
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+
+function confirmDelete(id,fname){
+  document.getElementById('confirmMsg').textContent=`¿Eliminar "${fname}" de la cola? Esta acción no se puede deshacer.`;
+  confirmCb=async()=>{
+    try{
+      const j=await fetch(`/api/print-queue/${id}`,{method:'DELETE'}).then(r=>r.json());
+      if(!j.success)throw new Error(j.error);
+      toast('Documento eliminado','ok');
+      await loadAll();
+      if(activeRowId===id)closeDrawer();
+    }catch(e){toast('Error: '+e.message,'err');}
+  };
+  document.getElementById('confirmModal').classList.add('open');
+}
+const doConfirm=()=>{closeConfirm();if(confirmCb)confirmCb();};
+const closeConfirm=()=>{document.getElementById('confirmModal').classList.remove('open');confirmCb=null;};
+const downloadFile=id=>{window.location.href=`/api/print-queue/download/${id}`;};
+
+// ── Modal de código de seguridad ──────────────────────────
+let codeModalDocId = null, codeModalFileType = null;
+
+function openCodeModal(id, fileType){
+  codeModalDocId   = id;
+  codeModalFileType = fileType;
+  document.getElementById('codeInput').value = '';
+  document.getElementById('codeInput').classList.remove('shake');
+  document.getElementById('codeModalInfo').textContent = `Doc #${id}`;
+  document.getElementById('codeModal').classList.add('open');
+  setTimeout(()=>document.getElementById('codeInput').focus(), 150);
+}
+function closeCodeModal(){
+  document.getElementById('codeModal').classList.remove('open');
+  codeModalDocId = null; codeModalFileType = null;
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('codeInput')?.addEventListener('keydown', e => {
+    if(e.key === 'Enter') submitCode();
+  });
+  document.getElementById('codeModal')?.addEventListener('click', e => {
+    if(e.target === document.getElementById('codeModal')) closeCodeModal();
+  });
+});
+
+async function submitCode(){
+  const code = document.getElementById('codeInput').value.trim();
+  if(!code){ shakeCode(); return; }
+
+  // Guardar ANTES de cualquier async
+  const docId    = codeModalDocId;
+  const fileType = codeModalFileType;
+
+  const btn = document.getElementById('btnCodeOk');
+  btn.disabled = true;
+  btn.innerHTML = '<span style="display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;"></span> Verificando…';
+
+  try{
+    const j = await fetch(`/api/print-queue/${docId}/validate-code`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ code })
+    }).then(r=>r.json());
+
+    if(!j.success){
+      shakeCode();
+      toast(j.error || 'Código incorrecto — intenta de nuevo','err', 4000);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-printer-fill"></i> 🖨️ Imprimir';
+      return;
+    }
+
+    // Código correcto → cerrar modal y lanzar impresión
+    toast('✅ Código correcto — abriendo impresión…','ok', 3000);
+    closeCodeModal();
+    launchPrint(docId, fileType, code);
+
+  }catch(e){
+    toast('Error de conexión: '+e.message,'err');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-printer-fill"></i> 🖨️ Imprimir';
+  }
+}
+
+function shakeCode(){
+  const inp = document.getElementById('codeInput');
+  inp.classList.remove('shake');
+  void inp.offsetWidth;
+  inp.classList.add('shake');
+  setTimeout(()=>inp.classList.remove('shake'), 500);
+}
+
+function launchPrint(id, fileType, code){
+  const url = `/api/print-queue/download/${id}`;
+
+  // ── Registrar en BD como impreso (NO borra el archivo) ───
+  const markPrinted = () => {
+    fetch(`/api/print-queue/${id}/confirm-printed`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ code })
+    })
+    .then(() => loadAll())
+    .catch(e => console.warn('confirm-printed:', e.message));
+  };
+
+  if(['pdf','image'].includes(fileType)){
+    // ── Fetch blob → pestaña nueva → diálogo impresora Windows ──
+    // Cargamos el archivo completo en memoria antes de abrir la ventana.
+    // Así el asistente de impresión de Windows se abre correctamente.
+    toast('Cargando archivo para imprimir…','inf',3000);
+
+    fetch(url)
+      .then(r => {
+        if(!r.ok) throw new Error('Archivo no disponible (cod ' + r.status + ')');
+        return r.blob();
+      })
+      .then(blob => {
+        const blobUrl = URL.createObjectURL(blob);
+        const win = window.open(blobUrl, '_blank');
+
+        if(!win){
+          // Popup bloqueado por el navegador → descarga directa como fallback
+          toast('⚠️ Ventana emergente bloqueada. Permite pop-ups para este sitio o usa el botón Descargar e imprime manualmente.','inf',8000);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = '';
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+          markPrinted();
+          return;
+        }
+
+        // Disparar window.print() cuando la pestaña termine de cargar
+        win.addEventListener('load', () => {
+          try { win.focus(); win.print(); } catch(e) { console.warn('win.print():', e); }
+        });
+
+        // Liberar blob de memoria después de 10 minutos
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 10 * 60 * 1000);
+
+        toast('✅ PDF abierto — elige la impresora en la ventana que se abrió','ok', 5000);
+        markPrinted();
+      })
+      .catch(err => {
+        toast('❌ ' + err.message,'err', 6000);
+      });
+
+  } else {
+    // ── Word / Excel / PPT → descarga directa para imprimir desde app nativa ──
+    window.open(url, '_blank');
+    toast('Archivo abierto — imprime desde la aplicación nativa (Ctrl+P)','inf', 5000);
+    markPrinted();
+  }
+}
+
+// ── Eliminar correo del buzón manualmente ─────────────────
+async function deleteMailbox(id){
+  const btn = document.getElementById('mbBtn_'+id) || document.getElementById('mbBtnD_'+id);
+  if(btn){ btn.disabled=true; btn.innerHTML='<i class="bi bi-arrow-repeat spin-anim"></i> Eliminando…'; }
+  try{
+    const j = await fetch(`/api/print-queue/${id}/mailbox`,{method:'DELETE'}).then(r=>r.json());
+    if(!j.success) throw new Error(j.error);
+    toast('✅ Correo eliminado del buzón','ok');
+    await loadAll();
+    if(activeRowId===id){
+      const rows = await fetch(`/api/print-queue/data?page=1&limit=200`).then(r=>r.json());
+      const updated = (rows.data||[]).find(r=>r.id===id);
+      if(updated) document.getElementById('drawerBody').innerHTML = buildDrawer(updated);
+    }
+  }catch(e){
+    toast('Error: '+e.message,'err');
+    if(btn){ btn.disabled=false; btn.innerHTML='<i class="bi bi-envelope-x-fill"></i> Del buzón'; }
+  }
+}
+
+async function fetchEmails(){
+  const btn=document.getElementById('btnFetch'),icon=document.getElementById('fetchIcon'),lbl=document.getElementById('fetchLabel');
+  btn.disabled=true;icon.classList.add('spin-anim');lbl.textContent='Buscando...';
+  toast('Conectando con Outlook…','inf',10000);
+  try{
+    const j=await fetch('/api/print-queue/fetch',{method:'POST'}).then(r=>r.json());
+    if(!j.success)throw new Error(j.error||'Error desconocido');
+    const vips=(j.log||[]).filter(l=>l.vip&&l.status==='encolado').length;
+    const pages=(j.log||[]).filter(l=>l.pages).reduce((s,l)=>s+(l.pages||0),0);
+    toast(`✅ ${j.emails_found} correos · ${j.encolados} nuevos${vips?` · ⭐ ${vips} VIP`:''}${pages?` · ${n(pages)} hojas`:''} · ${j.duplicados} dup.`,'ok',7000);
+    document.getElementById('stripLastFetch').textContent=fmtDate(new Date());
+    await loadAll();
+  }catch(e){toast('❌ '+e.message,'err',8000);}
+  finally{btn.disabled=false;icon.classList.remove('spin-anim');lbl.textContent='Buscar correos';}
+}
+
+async function loadAll(){
+  const icon=document.getElementById('refreshIcon');
+  icon.classList.add('spin-anim');
+  await Promise.all([loadStats(), loadData(currentPage), loadAnalytics()]);
+  icon.classList.remove('spin-anim');
+}
+
+async function exportCsv(){
+  toast('Preparando exportación…','inf',2500);
+  const j=await fetch(`/api/print-queue/data?page=1&limit=5000&tab=${currentTab}`).then(r=>r.json());
+  if(!j.success||!j.data.length){toast('Sin datos','inf');return;}
+  const cols=['id','is_vip','email_from_name','email_from_addr','email_subject','file_original','file_type','file_size','num_pages','copies','total_print_pages','priority','status','email_deleted','queued_at','printed_at','printed_by'];
+  const rows=[cols.join(','),...j.data.map(r=>cols.map(c=>`"${(r[c]??'').toString().replace(/"/g,'""')}"`).join(','))];
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8;'})),download:`cola_${currentTab}_${new Date().toISOString().split('T')[0]}.csv`});
+  a.click(); toast(`Exportado: ${j.data.length} documentos`,'ok');
+}
+
+// ── Auto-sincronización ────────────────────────────────────
+const AUTO_FETCH_INTERVAL = 3; // minutos
+let autoFetchTimer = null;
+let autoCountdownTimer = null;
+let autoFetchRunning = false;
+
+function startAutoFetch() {
+  stopAutoFetch();
+  updateCountdownLabel(AUTO_FETCH_INTERVAL * 60);
+  autoFetchTimer = setInterval(async () => {
+    if (autoFetchRunning) return; // evitar solapamientos
+    autoFetchRunning = true;
+    try { await fetchEmails(true); } // true = modo silencioso
+    catch(e) { console.warn('Auto-fetch error:', e.message); }
+    finally { autoFetchRunning = false; }
+  }, AUTO_FETCH_INTERVAL * 60 * 1000);
+}
+
+function stopAutoFetch() {
+  clearInterval(autoFetchTimer);
+  clearInterval(autoCountdownTimer);
+  autoFetchTimer = null;
+  autoCountdownTimer = null;
+}
+
+function updateCountdownLabel(secondsLeft) {
+  clearInterval(autoCountdownTimer);
+  let secs = secondsLeft;
+  const update = () => {
+    const el = document.getElementById('autoFetchCountdown');
+    if (!el) return;
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    el.textContent = `Sync en ${m}:${String(s).padStart(2,'0')}`;
+    if (secs <= 0) { el.textContent = 'Sincronizando…'; return; }
+    secs--;
+  };
+  update();
+  autoCountdownTimer = setInterval(update, 1000);
+}
+
+async function fetchEmails(silent = false){
+  const btn  = document.getElementById('btnFetch');
+  const icon = document.getElementById('fetchIcon');
+  const lbl  = document.getElementById('fetchLabel');
+  btn.disabled = true; icon.classList.add('spin-anim'); lbl.textContent = 'Buscando...';
+  if (!silent) toast('Conectando con Outlook…','inf',10000);
+  try{
+    const j = await fetch('/api/print-queue/fetch',{method:'POST'}).then(r=>r.json());
+    if (!j.success) throw new Error(j.error||'Error desconocido');
+    const vips  = (j.log||[]).filter(l=>l.vip&&l.status==='encolado').length;
+    const pages = (j.log||[]).filter(l=>l.pages).reduce((s,l)=>s+(l.pages||0),0);
+    // Solo mostrar toast si hay correos nuevos o es llamada manual
+    if (!silent || j.encolados > 0) {
+      toast(`✅ ${j.emails_found} correos · ${j.encolados} nuevos${vips?` · ⭐ ${vips} VIP`:''}${pages?` · ${n(pages)} hojas`:''} · ${j.duplicados} dup.`,'ok',7000);
+    }
+    document.getElementById('stripLastFetch').textContent = fmtDate(new Date());
+    await loadAll();
+  }catch(e){
+    if (!silent) toast('❌ '+e.message,'err',8000);
+    else console.warn('Auto-fetch:', e.message);
+  }finally{
+    btn.disabled = false; icon.classList.remove('spin-anim'); lbl.textContent = 'Buscar correos';
+    // Reiniciar cuenta atrás
+    updateCountdownLabel(AUTO_FETCH_INTERVAL * 60);
+  }
+}
+
+async function loadAll(){
+  const icon=document.getElementById('refreshIcon');
+  icon.classList.add('spin-anim');
+  await Promise.all([loadStats(), loadData(currentPage), loadAnalytics()]);
+  icon.classList.remove('spin-anim');
+}
+
+async function exportCsv(){
+  toast('Preparando exportación…','inf',2500);
+  const j=await fetch(`/api/print-queue/data?page=1&limit=5000&tab=${currentTab}`).then(r=>r.json());
+  if(!j.success||!j.data.length){toast('Sin datos','inf');return;}
+  const cols=['id','is_vip','email_from_name','email_from_addr','email_subject','file_original','file_type','file_size','num_pages','copies','total_print_pages','priority','status','email_deleted','queued_at','printed_at','printed_by'];
+  const rows=[cols.join(','),...j.data.map(r=>cols.map(c=>`"${(r[c]??'').toString().replace(/"/g,'""')}"`).join(','))];
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8;'})),download:`cola_${currentTab}_${new Date().toISOString().split('T')[0]}.csv`});
+  a.click(); toast(`Exportado: ${j.data.length} documentos`,'ok');
+}
+// ── VIP Manager ───────────────────────────────────────────
+const openVipManager=async()=>{document.getElementById('vipModal').classList.add('open');await refreshVipList();};
+const closeVipModal=()=>document.getElementById('vipModal').classList.remove('open');
+
+async function refreshVipList(){
+  const list=document.getElementById('vipList');
+  try{
+    const j=await fetch('/api/print-queue/vip-users').then(r=>r.json());
+    if(!j.success||!j.data.length){
+      list.innerHTML=`<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;"><i class="bi bi-star" style="font-size:28px;display:block;margin-bottom:8px;opacity:.3;"></i>Sin usuarios VIP aún</div>`;
+      return;
+    }
+    list.innerHTML=j.data.map(u=>`
+      <div class="vip-row">
+        <div style="width:36px;height:36px;background:var(--gold-bg);border:1.5px solid rgba(245,158,11,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-star-fill" style="color:var(--gold);font-size:14px;"></i></div>
+        <div class="vip-row-info"><div class="vip-row-name">${esc(u.name||'Sin nombre')}</div><div class="vip-row-email">${esc(u.email)}</div></div>
+        <button class="btn-sm danger" onclick="removeVip(${u.id})"><i class="bi bi-star"></i> Quitar</button>
+      </div>`).join('');
+  }catch(e){list.innerHTML=`<div style="color:var(--danger);padding:12px;font-size:13px;">Error: ${e.message}</div>`;}
+}
+
+async function addVip(){
+  const email=(document.getElementById('vipEmail').value||'').trim();
+  const name =(document.getElementById('vipName').value||'').trim();
+  if(!email){toast('Introduce un email','inf');return;}
+  try{
+    const j=await fetch('/api/print-queue/vip-users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,name})}).then(r=>r.json());
+    if(!j.success)throw new Error(j.error);
+    document.getElementById('vipEmail').value='';
+    document.getElementById('vipName').value='';
+    const docsMsg=j.docs_marked>0?` · ${j.docs_marked} doc(s) marcados`:' · sin documentos en cola aún';
+    toast(`⭐ ${email} ahora es VIP${docsMsg}`,'ok',6000);
+    await Promise.all([refreshVipList(),loadStats()]);
+    await loadData(currentPage);
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+
+async function removeVip(id){
+  try{
+    const j=await fetch(`/api/print-queue/vip-users/${id}`,{method:'DELETE'}).then(r=>r.json());
+    if(!j.success)throw new Error(j.error);
+    toast('Usuario quitado de VIP','ok');
+    await Promise.all([refreshVipList(),loadStats()]);
+    await loadData(currentPage);
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+
+function debounce(){clearTimeout(searchTimer);searchTimer=setTimeout(()=>loadData(1),400);}
+
+document.getElementById('confirmModal').addEventListener('click',function(e){if(e.target===this)closeConfirm();});
+document.getElementById('vipModal').addEventListener('click',function(e){if(e.target===this)closeVipModal();});
+document.getElementById('vipEmail')?.addEventListener('keydown',e=>{if(e.key==='Enter')addVip();});
+window.addEventListener('themeChanged',()=>setTimeout(loadAnalytics,80));
+
+(async()=>{ await loadAll(); 
+
+  startAutoFetch(); // iniciar auto-sincronización cada 3 minutos
+})();
+</script>
+</body>
+</html>

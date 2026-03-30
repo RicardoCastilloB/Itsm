@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Enterprise - Stefanini</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+/* ══════════════════════════════════════════════════
+   VARIABLES — LIGHT & DARK
+══════════════════════════════════════════════════ */
+:root,
+[data-theme="light"] {
+    --bg-main: #f5f7fa;
+    --bg-card: #ffffff;
+    --bg-header: #fafbfc;
+    --border-soft: #e2e8f0;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --primary: #3b82f6;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --info: #06b6d4;
+    --danger: #ef4444;
+    --hover-row: #f8fafc;
+    --sk-base: #e2e8f0;
+    --sk-shine: #f1f5f9;
+    --scrollbar-thumb: #cbd5e1;
+    --scrollbar-thumb-hover: #94a3b8;
+    --scrollbar-track: #f1f5f9;
+    --input-bg: #ffffff;
+    --shadow-card: 0 1px 3px rgba(0,0,0,.05);
+    --shadow-hover: 0 4px 12px rgba(0,0,0,.08);
+    --shadow-chart: 0 6px 16px rgba(0,0,0,.06);
+    --alert-warn-bg: #fef3c7;
+    --alert-warn-color: #92400e;
+    --toggle-bg: #e2e8f0;
+    --toggle-knob: #ffffff;
+    --toggle-icon-color: #64748b;
+}
+
+[data-theme="dark"] {
+    --bg-main: #0f172a;
+    --bg-card: #1e293b;
+    --bg-header: #162032;
+    --border-soft: #2d3f55;
+    --text-main: #e2e8f0;
+    --text-muted: #94a3b8;
+    --primary: #60a5fa;
+    --success: #34d399;
+    --warning: #fbbf24;
+    --info: #22d3ee;
+    --danger: #f87171;
+    --hover-row: #243348;
+    --sk-base: #2d3f55;
+    --sk-shine: #354a63;
+    --scrollbar-thumb: #334155;
+    --scrollbar-thumb-hover: #475569;
+    --scrollbar-track: #1e293b;
+    --input-bg: #1e293b;
+    --shadow-card: 0 1px 3px rgba(0,0,0,.3);
+    --shadow-hover: 0 4px 12px rgba(0,0,0,.4);
+    --shadow-chart: 0 6px 16px rgba(0,0,0,.3);
+    --alert-warn-bg: #2d2000;
+    --alert-warn-color: #fbbf24;
+    --toggle-bg: #3b82f6;
+    --toggle-knob: #ffffff;
+    --toggle-icon-color: #ffffff;
+}
+
+/* ══════════════════════════════════════════════════
+   TOGGLE BUTTON
+══════════════════════════════════════════════════ */
+.theme-toggle {
+    position: fixed;
+    top: 14px;
+    right: 16px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-soft);
+    border-radius: 30px;
+    padding: 6px 14px 6px 10px;
+    box-shadow: var(--shadow-hover);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    user-select: none;
+}
+.theme-toggle:hover { box-shadow: 0 6px 20px rgba(0,0,0,.15); }
+
+.toggle-track {
+    width: 40px;
+    height: 22px;
+    background: var(--toggle-bg);
+    border-radius: 11px;
+    position: relative;
+    transition: background 0.3s ease;
+    flex-shrink: 0;
+}
+.toggle-knob {
+    width: 16px;
+    height: 16px;
+    background: var(--toggle-knob);
+    border-radius: 50%;
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+    box-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+[data-theme="dark"] .toggle-knob { transform: translateX(18px); }
+
+.toggle-icon {
+    font-size: 14px;
+    color: var(--toggle-icon-color);
+    transition: color 0.3s;
+    line-height: 1;
+}
+.toggle-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: color 0.3s;
+    white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════════
+   BASE
+══════════════════════════════════════════════════ */
+body {
+    margin: 0;
+    background: var(--bg-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--text-main);
+    overflow-x: hidden;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+.dashboard-wrapper { width: 100%; padding: 10px; margin-top: 60px; }
+.dashboard-content { width: 100%; max-width: 1680px; margin: 0 auto; }
+
+/* ══════════════════════════════════════════════════
+   KPI CARDS
+══════════════════════════════════════════════════ */
+.cards-8 {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+@media (max-width: 1400px) { .cards-8 { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 992px)  { .cards-8 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 576px)  { .cards-8 { grid-template-columns: 1fr; } }
+
+.kpi-card {
+    background: var(--bg-card);
+    border-radius: 12px;
+    height: 100px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid var(--border-soft);
+    box-shadow: var(--shadow-card);
+    transition: all 0.2s, background 0.3s, border-color 0.3s;
+}
+.kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+.kpi-title  { font-size: 10px; letter-spacing:.5px; text-transform:uppercase; color:var(--text-muted); font-weight:600; margin-bottom:6px; transition: color 0.3s; }
+.kpi-value  { font-size: 28px; font-weight: 700; line-height: 1; }
+.kpi-icon   { font-size: 32px; opacity: .25; }
+.primary { color: var(--primary); }
+.success { color: var(--success); }
+.warning { color: var(--warning); }
+.info    { color: var(--info); }
+.danger  { color: var(--danger); }
+
+/* ══════════════════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════════════════ */
+.row-dashboard {
+    display: grid;
+    grid-template-columns: 1.8fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+@media (max-width: 1200px) { .row-dashboard { grid-template-columns: 1fr; } }
+
+/* ══════════════════════════════════════════════════
+   CARD BI
+══════════════════════════════════════════════════ */
+.card-bi {
+    background: var(--bg-card);
+    border-radius: 12px;
+    border: 1px solid var(--border-soft);
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: background 0.3s, border-color 0.3s;
+}
+.card-bi-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-soft);
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-header);
+    flex-shrink: 0;
+    color: var(--text-main);
+    transition: background 0.3s, border-color 0.3s, color 0.3s;
+}
+.card-bi-body { padding: 0; flex: 1; overflow: auto; min-height: 0; }
+.card-distribucion { height: 360px; }
+.card-top-modelos  { height: 360px; }
+.card-top-modelos .card-bi-body { max-height: 306px; }
+
+/* ══════════════════════════════════════════════════
+   TABLE
+══════════════════════════════════════════════════ */
+.table {
+    width: 100%;
+    margin-bottom: 0;
+    font-size: 13px;
+    color: var(--text-main);
+}
+.table thead th {
+    font-size: 10px; text-transform: uppercase; color: var(--text-muted);
+    background: var(--bg-header);
+    border-bottom: 1px solid var(--border-soft);
+    padding: 12px 16px; font-weight: 600; text-align: center;
+    position: sticky; top: 0; z-index: 10;
+    transition: background 0.3s, color 0.3s, border-color 0.3s;
+}
+.table tbody td {
+    padding: 14px 16px; font-size: 13px;
+    vertical-align: middle; text-align: center;
+    border-bottom: 1px solid var(--border-soft);
+    color: var(--text-main);
+    background: transparent;
+    transition: background 0.15s, border-color 0.3s, color 0.3s;
+}
+.table tbody td:first-child { text-align: left; font-weight: 600; }
+.table-hover tbody tr:hover td { background-color: var(--hover-row) !important; }
+
+/* Bootstrap table override for dark mode */
+[data-theme="dark"] .table { --bs-table-bg: transparent; --bs-table-border-color: var(--border-soft); }
+[data-theme="dark"] .table-hover > tbody > tr:hover > * { --bs-table-accent-bg: var(--hover-row); }
+
+/* ══════════════════════════════════════════════════
+   BADGE
+══════════════════════════════════════════════════ */
+.badge { font-size: 11px; padding: 5px 10px; border-radius: 6px; font-weight: 600; }
+
+/* ══════════════════════════════════════════════════
+   PROGRESS
+══════════════════════════════════════════════════ */
+.progress { height: 6px; border-radius: 4px; background-color: var(--border-soft); margin-bottom: 4px; transition: background 0.3s; }
+.progress-bar { border-radius: 4px; }
+
+/* ══════════════════════════════════════════════════
+   TOP MODELOS
+══════════════════════════════════════════════════ */
+#topMarcas .list-group-item {
+    border: none;
+    border-bottom: 1px solid var(--border-soft);
+    padding: 16px 20px;
+    transition: background-color .15s, border-color 0.3s;
+    background: transparent;
+    color: var(--text-main);
+}
+#topMarcas .list-group-item:hover { background-color: var(--hover-row); }
+#topMarcas .list-group-item:last-child { border-bottom: none; }
+#topMarcas .progress { height: 4px; margin: 8px 0; }
+
+/* ══════════════════════════════════════════════════
+   UBICACIONES TABLE
+══════════════════════════════════════════════════ */
+.card-ubicaciones .card-bi-body { max-height: 450px; }
+.table-ubicaciones thead th { background: var(--bg-header); position: sticky; top: 0; z-index: 10; }
+
+/* ══════════════════════════════════════════════════
+   TABS
+══════════════════════════════════════════════════ */
+.nav-tabs { border-bottom: 2px solid var(--border-soft); margin-bottom: 20px; }
+.nav-tabs .nav-link {
+    border: none; border-bottom: 3px solid transparent;
+    color: var(--text-muted); font-weight: 600; padding: 12px 20px;
+    transition: all .2s; font-size: 13px;
+    background: transparent;
+}
+.nav-tabs .nav-link:hover { color: var(--primary); border-bottom-color: var(--border-soft); }
+.nav-tabs .nav-link.active { color: var(--primary); border-bottom-color: var(--primary); background: transparent; }
+.nav-tabs .nav-link i { margin-right: 6px; }
+
+/* ══════════════════════════════════════════════════
+   CHART CARD
+══════════════════════════════════════════════════ */
+.chart-card {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--shadow-chart);
+    border: 1px solid var(--border-soft);
+    transition: background 0.3s, border-color 0.3s;
+    color: var(--text-main);
+}
+.chart-card h5 { color: var(--text-main); transition: color 0.3s; }
+.chart-container { height: 300px; position: relative; flex-shrink: 0; }
+
+/* ══════════════════════════════════════════════════
+   INPUTS
+══════════════════════════════════════════════════ */
+.input-group-text {
+    background-color: var(--input-bg);
+    border-right: none;
+    color: var(--text-muted);
+    font-size: 13px;
+    border-color: var(--border-soft);
+    transition: background 0.3s, border-color 0.3s, color 0.3s;
+}
+.form-control {
+    border-left: none;
+    font-size: 13px;
+    background-color: var(--input-bg);
+    color: var(--text-main);
+    border-color: var(--border-soft);
+    transition: background 0.3s, border-color 0.3s, color 0.3s;
+}
+.form-control:focus {
+    border-color: var(--border-soft);
+    box-shadow: none;
+    background-color: var(--input-bg);
+    color: var(--text-main);
+}
+.form-control::placeholder { color: var(--text-muted); }
+.form-select {
+    background-color: var(--input-bg);
+    color: var(--text-main);
+    border-color: var(--border-soft);
+    transition: background 0.3s, border-color 0.3s, color 0.3s;
+}
+.form-select:focus { box-shadow: none; border-color: var(--primary); }
+
+/* ══════════════════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════════════════ */
+.btn-sm { padding: 6px 14px; font-size: 12px; font-weight: 600; }
+.btn-outline-primary { border-color: var(--primary); color: var(--primary); background: transparent; }
+.btn-outline-primary:hover { background-color: var(--primary); border-color: var(--primary); color: white; }
+.btn-outline-secondary { border-color: var(--border-soft); color: var(--text-muted); background: transparent; }
+.btn-outline-secondary:hover { background-color: var(--border-soft); color: var(--text-main); }
+
+/* ══════════════════════════════════════════════════
+   SPINNER
+══════════════════════════════════════════════════ */
+.spinner-border { width: 20px; height: 20px; border-width: 2px; }
+
+/* ══════════════════════════════════════════════════
+   SCROLLBAR
+══════════════════════════════════════════════════ */
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+*::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+*::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+
+/* ══════════════════════════════════════════════════
+   ALERTS
+══════════════════════════════════════════════════ */
+.alert-warning-custom {
+    background-color: var(--alert-warn-bg);
+    border-left: 4px solid var(--warning);
+    color: var(--alert-warn-color);
+    border-radius: 8px;
+    transition: background 0.3s, color 0.3s;
+}
+
+/* ══════════════════════════════════════════════════
+   TEXT UTILITIES OVERRIDE
+══════════════════════════════════════════════════ */
+.text-muted { color: var(--text-muted) !important; transition: color 0.3s; }
+
+/* Small text inside chart cards */
+.chart-card .small, .chart-card small { color: var(--text-muted); }
+
+/* fw-bold stats */
+.fw-bold { color: var(--text-main); }
+
+/* Border top */
+.border-top { border-color: var(--border-soft) !important; }
+
+/* ══════════════════════════════════════════════════
+   SKELETON LOADERS
+══════════════════════════════════════════════════ */
+.chart-skeleton {
+    position: absolute; inset: 0;
+    display: flex; align-items: flex-end; justify-content: center;
+    padding: 12px; gap: 16px;
+    background: var(--bg-card);
+    border-radius: 8px;
+    z-index: 2;
+    transition: background 0.3s;
+}
+.chart-skeleton.hidden { display: none; }
+
+@keyframes skPulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: .4; }
+}
+
+.sk-bars { display: flex; align-items: flex-end; gap: 16px; width: 100%; height: 100%; }
+.sk-bar {
+    flex: 1; border-radius: 6px 6px 0 0;
+    background: linear-gradient(135deg, var(--sk-base) 25%, var(--sk-shine) 50%, var(--sk-base) 75%);
+    background-size: 200% 100%;
+    animation: skShimmer 1.4s ease infinite, skPulse 1.4s ease infinite;
+}
+.sk-bar:nth-child(1) { animation-delay: 0s; }
+.sk-bar:nth-child(2) { animation-delay: .15s; }
+.sk-bar:nth-child(3) { animation-delay: .30s; }
+
+.sk-donut {
+    width: 140px; height: 140px; border-radius: 50%;
+    border: 22px solid var(--sk-base);
+    border-top-color: var(--sk-shine);
+    margin: auto;
+    animation: skPulse 1.4s ease infinite;
+}
+
+.sk-line-wrap { display:flex; flex-direction:column; justify-content:flex-end; gap:8px; width:100%; height:100%; padding:0 8px; }
+.sk-line {
+    height: 3px; border-radius: 3px;
+    background: linear-gradient(90deg, var(--sk-base) 25%, var(--sk-shine) 50%, var(--sk-base) 75%);
+    background-size: 200% 100%;
+    animation: skShimmer 1.4s ease infinite;
+}
+
+@keyframes skShimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.kpi-sk {
+    display: inline-block; width: 60px; height: 28px;
+    background: linear-gradient(90deg, var(--sk-base) 25%, var(--sk-shine) 50%, var(--sk-base) 75%);
+    background-size: 200% 100%;
+    border-radius: 6px;
+    animation: skShimmer 1.4s ease infinite;
+    vertical-align: middle;
+}
+
+/* ══════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .dashboard-wrapper { padding: 12px; }
+    .row-dashboard { grid-template-columns: 1fr; }
+    .theme-toggle { top: 10px; right: 10px; padding: 5px 10px 5px 8px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     DARK MODE TOGGLE
+══════════════════════════════════════════════════════════ -->
+
+
+<%- include("partials/sidebar_top") %>
+
+<div class="dashboard-wrapper">
+<div class="dashboard-content">
+
+<!-- ══════════════════════════════════════════════════════════
+     KPI CARDS — 8 tarjetas
+══════════════════════════════════════════════════════════ -->
+<div class="cards-8">
+    <div class="kpi-card">
+        <div><div class="kpi-title">Usuarios Planilla</div><div class="kpi-value primary" id="usuarios_planilla">-</div></div>
+        <i class="bi bi-people kpi-icon primary"></i>
+    </div>
+    <div class="kpi-card">
+        <div><div class="kpi-title">Desktop</div><div class="kpi-value success" id="equipos_desktop">-</div></div>
+        <i class="bi bi-pc-display kpi-icon success"></i>
+    </div>
+    <div class="kpi-card">
+        <div><div class="kpi-title">Laptops</div><div class="kpi-value info" id="equipos_laptop">-</div></div>
+        <i class="bi bi-laptop kpi-icon info"></i>
+    </div>
+    <div class="kpi-card">
+        <div><div class="kpi-title">Ultraligeras</div><div class="kpi-value warning" id="equipos_ultra">-</div></div>
+        <i class="bi bi-lightning kpi-icon warning"></i>
+    </div>
+    <div class="kpi-card">
+        <div><div class="kpi-title">Total Equipos</div><div class="kpi-value primary" id="kpiTotalEquipos">-</div></div>
+        <i class="bi bi-hdd-stack kpi-icon primary"></i>
+    </div>
+    <div class="kpi-card">
+        <div><div class="kpi-title">Asignados</div><div class="kpi-value success" id="equiposAsignados">-</div></div>
+        <i class="bi bi-check-circle kpi-icon success"></i>
+    </div>
+    <div class="kpi-card">
+        <div><div class="kpi-title">Disponibles</div><div class="kpi-value info" id="equiposDisponibles">-</div></div>
+        <i class="bi bi-box-seam kpi-icon info"></i>
+    </div>
+    <div class="kpi-card">
+        <div><div class="kpi-title">En Garantía</div><div class="kpi-value warning" id="equiposGarantia">-</div></div>
+        <i class="bi bi-shield-check kpi-icon warning"></i>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     FILA: DISTRIBUCIÓN + TOP MODELOS
+══════════════════════════════════════════════════════════ -->
+<div class="row-dashboard">
+    <div class="card-bi card-distribucion">
+        <div class="card-bi-header">
+            <i class="bi bi-pie-chart-fill"></i> Distribución de Equipos por Tipo
+        </div>
+        <div class="card-bi-body">
+            <table class="table table-hover" id="equiposPorTipo">
+                <thead>
+                    <tr>
+                        <th style="text-align:left;">TIPO</th>
+                        <th>TOTAL</th><th>ASIGNADOS</th><th>DISPONIBLES</th><th>%</th><th>ESTADO</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="6" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card-bi card-top-modelos">
+        <div class="card-bi-header">
+            <i class="bi bi-trophy-fill text-warning"></i> Top Modelos Asignados
+        </div>
+        <div class="card-bi-body" id="topMarcas">
+            <div class="d-flex justify-content-center align-items-center h-100">
+                <div class="spinner-border text-primary"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     TABLA UBICACIONES
+══════════════════════════════════════════════════════════ -->
+<div class="card-bi card-ubicaciones" style="margin-bottom:20px;">
+    <div class="card-bi-header" style="justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:8px;">
+            <i class="bi bi-geo-alt-fill"></i> Equipos por Ubicación y Tipo
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+            <div class="input-group input-group-sm" style="width:220px;">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" id="searchUbicacion"
+                       placeholder="Buscar..." onkeyup="filtrarTablaUbicacion()">
+                <button class="btn btn-outline-secondary" onclick="limpiarBusquedaUbicacion()">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+            <button class="btn btn-sm btn-outline-primary" onclick="cargarEquiposPorUbicacion()">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+        </div>
+    </div>
+    <div class="card-bi-body">
+        <table class="table table-hover table-ubicaciones mb-0" id="equiposPorUbicacion">
+            <thead>
+                <tr>
+                    <th style="text-align:left;">UBICACIÓN</th>
+                    <th>CIUDAD</th><th>TOTAL</th><th>LAPTOPS</th>
+                    <th>DESKTOPS</th><th>MONITORES</th><th>TABLETS</th><th>OTROS</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="8" class="text-center py-5">
+                    <div class="spinner-border text-primary"></div>
+                    <p class="text-muted mt-2 mb-0" style="font-size:12px;">Cargando datos...</p>
+                </td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     TABS
+══════════════════════════════════════════════════════════ -->
+<ul class="nav nav-tabs mb-4" id="analyticsTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">
+            <i class="bi bi-graph-up"></i> Resumen General
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#distribution" type="button">
+            <i class="bi bi-pie-chart"></i> Distribución
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#locations" type="button">
+            <i class="bi bi-geo-alt"></i> Ubicaciones
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#warranty" type="button">
+            <i class="bi bi-shield"></i> Garantías
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="analyticsTabsContent">
+
+    <!-- ══ TAB 1: RESUMEN GENERAL ══ -->
+    <div class="tab-pane fade show active" id="overview" role="tabpanel">
+        <div class="row g-3">
+
+            <div class="col-lg-4 col-12 d-flex">
+                <div class="chart-card d-flex flex-column w-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="mb-0"><i class="bi bi-pc-display"></i> Disponibles en Almacén</h5>
+                        <button class="btn btn-sm btn-outline-primary" onclick="exportChart('chartEquiposAsignados','equipos-almacen')">
+                            <i class="bi bi-download"></i>
+                        </button>
+                    </div>
+                    <div class="chart-container" style="position:relative;">
+                        <div class="chart-skeleton" id="sk_almacen">
+                            <div class="sk-bars">
+                                <div class="sk-bar" style="height:55%"></div>
+                                <div class="sk-bar" style="height:80%"></div>
+                                <div class="sk-bar" style="height:35%"></div>
+                            </div>
+                        </div>
+                        <canvas id="chartEquiposAsignados" style="display:none;"></canvas>
+                    </div>
+                    <div class="mt-auto pt-3 border-top text-center text-muted small">
+                        👆 Haz clic en una barra para ver el detalle de equipos
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-12 d-flex">
+                <div class="chart-card d-flex flex-column w-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="mb-0"><i class="bi bi-pie-chart-fill text-primary"></i> Propios vs Alquilados</h5>
+                        <button class="btn btn-sm btn-outline-primary" onclick="exportChart('chartPropiosAlquilados','propios-alquilados')">
+                            <i class="bi bi-download"></i>
+                        </button>
+                    </div>
+                    <div class="chart-container" style="height:220px;position:relative;">
+                        <div class="chart-skeleton" id="sk_propios">
+                            <div class="sk-donut"></div>
+                        </div>
+                        <canvas id="chartPropiosAlquilados" style="display:none;"></canvas>
+                    </div>
+                    <div class="mt-auto pt-3 border-top">
+                        <div class="row text-center g-2">
+                            <div class="col-4">
+                                <div class="small text-muted">Propios</div>
+                                <div class="fw-bold text-primary" id="statPropios">–</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="small text-muted">Alquilados</div>
+                                <div class="fw-bold text-warning" id="statAlquilados">–</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="small text-muted">Otros</div>
+                                <div class="fw-bold text-secondary" id="statOtros">–</div>
+                            </div>
+                        </div>
+                        <div class="text-center text-muted small mt-2">
+                            👆 Haz clic en un segmento para ver equipos
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-12 d-flex">
+                <div class="chart-card d-flex flex-column w-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="mb-0"><i class="bi bi-graph-up"></i> Histórico de Asignaciones</h5>
+                        <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm" id="periodoSelector"
+                                    onchange="cambiarPeriodoHistorico(this.value)" style="width:auto">
+                                <option value="6">6 meses</option>
+                                <option value="12" selected>12 meses</option>
+                                <option value="24">24 meses</option>
+                            </select>
+                            <button class="btn btn-sm btn-outline-primary" onclick="exportChart('myBarChart','historico-asignaciones')">
+                                <i class="bi bi-download"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-container" style="position:relative;">
+                        <div class="chart-skeleton" id="sk_historico">
+                            <div class="sk-bars">
+                                <div class="sk-bar" style="height:40%"></div>
+                                <div class="sk-bar" style="height:65%"></div>
+                                <div class="sk-bar" style="height:50%"></div>
+                                <div class="sk-bar" style="height:90%"></div>
+                                <div class="sk-bar" style="height:70%"></div>
+                                <div class="sk-bar" style="height:55%"></div>
+                            </div>
+                        </div>
+                        <canvas id="myBarChart" style="display:none;"></canvas>
+                    </div>
+                    <div class="mt-auto pt-3 border-top">
+                        <div class="row text-center g-2">
+                            <div class="col-4">
+                                <div class="small text-muted">Total</div>
+                                <div class="fw-bold" id="totalAsignaciones">–</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="small text-muted">Prom/Mes</div>
+                                <div class="fw-bold" id="promedioMensual">–</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="small text-muted">Mes Pico</div>
+                                <div class="fw-bold" id="mesPico" style="font-size:.75rem">–</div>
+                            </div>
+                        </div>
+                        <div class="text-center text-muted small mt-2">
+                            👆 Haz clic en una barra para ver ese mes
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ══ TAB 2: DISTRIBUCIÓN ══ -->
+    <div class="tab-pane fade" id="distribution" role="tabpanel">
+        <div class="row">
+            <div class="col-md-8 mb-4">
+                <div class="chart-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Equipos por Tipo</h5>
+                        <button class="btn btn-sm btn-outline-primary" onclick="exportChart('typeChart','equipos-por-tipo')">
+                            <i class="bi bi-download"></i>
+                        </button>
+                    </div>
+                    <div class="chart-container"><canvas id="typeChart"></canvas></div>
+                    <div class="text-center text-muted small mt-2">
+                        👆 Haz clic en una barra para ver todos los equipos de ese tipo
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="chart-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="bi bi-clock-history"></i> Antigüedad Promedio</h5>
+                        <button class="btn btn-sm btn-outline-primary" onclick="exportChart('ageChart','antiguedad')">
+                            <i class="bi bi-download"></i>
+                        </button>
+                    </div>
+                    <div class="chart-container"><canvas id="ageChart"></canvas></div>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="card-bi">
+                    <div class="card-bi-header"><i class="bi bi-list-check"></i> Detalle por Tipo</div>
+                    <div class="card-bi-body">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:left;">Tipo</th>
+                                    <th>Total</th><th>Asignados</th><th>Disponibles</th><th>% Asignados</th>
+                                </tr>
+                            </thead>
+                            <tbody id="typeDetailTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ TAB 3: UBICACIONES ══ -->
+    <div class="tab-pane fade" id="locations" role="tabpanel">
+        <div class="row">
+            <div class="col-12 mb-4">
+                <div class="chart-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="bi bi-geo"></i> Equipos por Ubicación</h5>
+                        <button class="btn btn-sm btn-outline-primary" onclick="exportChart('locationChart','equipos-ubicacion')">
+                            <i class="bi bi-download"></i>
+                        </button>
+                    </div>
+                    <div class="chart-container" style="height:400px;"><canvas id="locationChart"></canvas></div>
+                    <div class="text-center text-muted small mt-2">
+                        👆 Haz clic en una barra para ver los equipos de esa sede
+                    </div>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="card-bi">
+                    <div class="card-bi-header"><i class="bi bi-table"></i> Distribución por Ubicación</div>
+                    <div class="card-bi-body">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:left;">Ubicación</th>
+                                    <th>Ciudad</th><th>Total</th>
+                                    <th>Laptops</th><th>Desktops</th><th>Monitores</th><th>Tablets</th>
+                                </tr>
+                            </thead>
+                            <tbody id="locationTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ TAB 4: GARANTÍAS ══ -->
+    <div class="tab-pane fade" id="warranty" role="tabpanel">
+        <div class="row">
+            <div class="col-12 mb-3">
+                <div class="alert alert-warning-custom" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong id="warrantyAlertCount">0</strong> equipos vencen en los próximos 30 días
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="card-bi">
+                    <div class="card-bi-header"><i class="bi bi-shield-check"></i> Equipos en Garantía</div>
+                    <div class="card-bi-body">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:left;">Código</th>
+                                    <th>Tipo</th><th>Marca</th><th>Modelo</th>
+                                    <th>Vence</th><th>Días Restantes</th><th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="warrantyTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /.tab-content -->
+</div><!-- /.dashboard-content -->
+</div><!-- /.dashboard-wrapper -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════════════════════════ -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/js/sidebar.js"></script>
+<script src="/js/planilla.js"></script>
+<script src="/js/desktop.js"></script>
+<script src="/js/laptop.js"></script>
+<script src="/js/ultra.js"></script>
+<script src="/js/analytics-dashboard.js"></script>
+
+<script>
+/* ══════════════════════════════════════════════════
+   DARK MODE LOGIC
+══════════════════════════════════════════════════ */
+(function () {
+    // Apply saved theme immediately to avoid flash
+    const saved = localStorage.getItem('dashboardTheme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+})();
+
+function toggleTheme() {
+    const html    = document.documentElement;
+    const current = html.getAttribute('data-theme');
+    const next    = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('dashboardTheme', next);
+    updateToggleUI(next);
+
+    // Update Chart.js charts if they exist
+    if (typeof updateChartsTheme === 'function') updateChartsTheme(next);
+}
+
+function updateToggleUI(theme) {
+    const icon  = document.getElementById('toggleIcon');
+    const label = document.getElementById('toggleLabel');
+    if (theme === 'dark') {
+        icon.className  = 'bi bi-sun-fill toggle-icon';
+        label.textContent = 'Claro';
+    } else {
+        icon.className  = 'bi bi-moon-stars-fill toggle-icon';
+        label.textContent = 'Oscuro';
+    }
+}
+
+// Run on DOMContentLoaded to sync UI with saved preference
+document.addEventListener('DOMContentLoaded', function () {
+    const saved = localStorage.getItem('dashboardTheme') || 'light';
+    updateToggleUI(saved);
+});
+
+/* ══════════════════════════════════════════════════
+   DASHBOARD FUNCTIONS
+══════════════════════════════════════════════════ */
+async function cargarEquiposPorTipo() {
+    try {
+        const res  = await fetch('/api/dashboard/equipos-por-tipo');
+        const data = await res.json();
+        if (!data.success || !data.data.length) return;
+        const tbody = $('#equiposPorTipo tbody');
+        tbody.empty();
+        data.data.forEach(item => {
+            const pct = parseFloat(item.porcentaje_asignados) || 0;
+            let cls = 'bg-success', txt = 'Normal';
+            if (pct > 80) { cls = 'bg-danger';  txt = 'Alto Uso'; }
+            else if (pct > 60) { cls = 'bg-warning'; txt = 'Medio'; }
+            tbody.append(`<tr>
+                <td><strong>${item.tipo}</strong></td>
+                <td><span class="badge bg-secondary">${item.total}</span></td>
+                <td><span class="badge bg-success">${item.asignados}</span></td>
+                <td><span class="badge bg-info">${item.disponibles}</span></td>
+                <td>
+                    <div class="progress mb-1">
+                        <div class="progress-bar ${cls}" style="width:${pct}%"></div>
+                    </div>
+                    <small class="text-muted">${pct.toFixed(1)}%</small>
+                </td>
+                <td><span class="badge ${cls}">${txt}</span></td>
+            </tr>`);
+        });
+    } catch (e) { console.error(e); }
+}
+
+async function cargarEquiposPorUbicacion() {
+    try {
+        const res  = await fetch('/api/dashboard/equipos-por-ubicacion');
+        const data = await res.json();
+        if (!data.success || !data.data.length) return;
+        const tbody = $('#equiposPorUbicacion tbody');
+        tbody.empty();
+        data.data.forEach(item => {
+            tbody.append(`<tr>
+                <td><strong>${item.ubicacion}</strong></td>
+                <td>${item.ciudad||'-'}</td>
+                <td><span class="badge bg-primary">${item.total_equipos}</span></td>
+                <td>${item.laptops||0}</td>
+                <td>${item.desktops||0}</td>
+                <td>${item.monitores||0}</td>
+                <td>${item.tablets||0}</td>
+                <td>${item.otros||0}</td>
+            </tr>`);
+        });
+    } catch (e) { console.error(e); }
+}
+
+async function cargarEstadisticasGenerales() {
+    try {
+        const res  = await fetch('/api/dashboard/stats-completo');
+        const data = await res.json();
+        if (!data.success) return;
+        $('#kpiTotalEquipos').text(data.data.totalEquipos    || 0);
+        $('#equiposAsignados').text(data.data.equiposAsignados || 0);
+        $('#equiposDisponibles').text(data.data.equiposDisponibles || 0);
+        $('#equiposGarantia').text(data.data.equiposGarantia  || 0);
+    } catch (e) { console.error(e); }
+}
+
+async function cargarTopModelosAsignados() {
+    const contenedor = document.getElementById('topMarcas');
+    try {
+        const res    = await fetch('/api/dashboard/top-modelos-asignados?limite=10');
+        const result = await res.json();
+        if (!result.success || !result.data?.length) {
+            contenedor.innerHTML = '<div class="p-4 text-center text-muted">No hay modelos asignados</div>';
+            return;
+        }
+        const modelos = result.data;
+        let html = '<div class="list-group list-group-flush">';
+        modelos.forEach((m, i) => {
+            const pos   = i + 1;
+            const badge = pos === 1 ? 'bg-warning text-dark' : pos === 2 ? 'bg-secondary' : pos === 3 ? 'bg-danger' : 'bg-secondary';
+            const iconos = { 'Laptop':'bi-laptop','Desktop':'bi-pc-display','Monitor':'bi-display','Tablet':'bi-tablet' };
+            const icono  = `bi ${iconos[m.tipo_equipo] || 'bi-box'}`;
+            html += `
+            <div class="list-group-item px-3 py-3 border-0 border-bottom">
+                <div class="d-flex align-items-start">
+                    <div class="me-3">
+                        <span class="badge ${badge} rounded-pill" style="min-width:28px;font-size:.8rem;">${pos}</span>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <div>
+                                <h6 class="mb-0 fw-bold" style="font-size:13px;">
+                                    <i class="${icono} text-muted me-1"></i>${m.marca} ${m.modelo}
+                                </h6>
+                                <small class="text-muted">${m.tipo_equipo}</small>
+                            </div>
+                            <span class="badge bg-primary rounded-pill">${m.cantidad_asignada}</span>
+                        </div>
+                        <div class="progress mb-1" style="height:4px;">
+                            <div class="progress-bar bg-primary" style="width:${m.porcentaje_total}%"></div>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <small class="text-muted">${m.porcentaje_total}% del total</small>
+                            <small class="text-muted"><i class="bi bi-clock-history"></i> ${m.antiguedad_promedio_anos} años</small>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        });
+        html += '</div>';
+        contenedor.innerHTML = html;
+    } catch (e) {
+        contenedor.innerHTML = '<div class="p-4 text-center text-danger"><i class="bi bi-exclamation-triangle"></i> Error al cargar</div>';
+    }
+}
+
+function filtrarTablaUbicacion() {
+    const filter = document.getElementById('searchUbicacion').value.toLowerCase().trim();
+    const rows   = document.querySelectorAll('#equiposPorUbicacion tbody tr');
+    rows.forEach(row => {
+        if (row.cells.length === 1) return;
+        const ubic = (row.cells[0]?.textContent || '').toLowerCase();
+        const ciud = (row.cells[1]?.textContent || '').toLowerCase();
+        row.style.display = ubic.includes(filter) || ciud.includes(filter) ? '' : 'none';
+    });
+}
+
+function limpiarBusquedaUbicacion() {
+    document.getElementById('searchUbicacion').value = '';
+    filtrarTablaUbicacion();
+}
+
+$(document).ready(function () {
+    cargarEstadisticasGenerales();
+    cargarEquiposPorTipo();
+    cargarEquiposPorUbicacion();
+    cargarTopModelosAsignados();
+
+    setInterval(() => {
+        cargarEstadisticasGenerales();
+        cargarEquiposPorTipo();
+        cargarEquiposPorUbicacion();
+    }, 300000);
+});
+</script>
+
+</body>
+</html>

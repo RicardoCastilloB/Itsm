@@ -1,0 +1,2348 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><%= title || 'Dashboard RR.HH. & Asignaciones' %></title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<%# CSS global del proyecto — contiene sidebar, dark mode bridge, variables, etc. %>
+<link rel="stylesheet" href="/css/style.css">
+
+<%# Anti-flash: aplica el tema guardado antes de pintar %>
+<script>
+(function(){
+  var t = localStorage.getItem('dashboardTheme') || 'light';
+  document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
+
+<style>
+/* ══════════════════════════════════════════════════════════════
+   VARIABLES LOCALES
+   Heredan del bridge en style.css. Solo definimos lo que
+   este módulo necesita y que no existe globalmente.
+══════════════════════════════════════════════════════════════ */
+:root, [data-theme="light"] {
+  --pg-bg:      var(--bg-primary,  #f0f4f8);
+  --card-bg:    var(--bg-card,     #ffffff);
+  --hdr-bg:     var(--bg-primary,  #f8fafc);
+  --bdr:        var(--border-color,#e2e8f0);
+  --txt:        var(--text-primary,#1e293b);
+  --mut:        var(--text-secondary,#64748b);
+  --inp:        var(--input-bg,    #f8fafc);
+  --hov:        var(--dt-row-hover,#f1f5f9);
+  --sh:         0 1px 3px rgba(0,0,0,.07);
+  --sh-md:      0 4px 16px rgba(0,0,0,.10);
+  --clr-ok:     var(--accent-green,  #10b981);
+  --clr-red:    var(--accent-red,    #ef4444);
+  --clr-blue:   var(--accent-blue,   #3b82f6);
+  --clr-warn:   var(--accent-yellow, #f59e0b);
+  --clr-info:   #06b6d4;
+  --clr-purple: #8b5cf6;
+  --st-act-bg:  #dcfce7; --st-act-txt: #16a34a;
+  --st-baj-bg:  #fee2e2; --st-baj-txt: #dc2626;
+  --baj-row-bg: #fff5f5; --baj-row-txt:#9ca3af;
+  --ac-bg:      #ffffff; --ac-hov:     #f8fafc;
+  --eq-lap-bg:#dbeafe;  --eq-lap-c:#2563eb;
+  --eq-dsk-bg:#d1fae5;  --eq-dsk-c:#059669;
+  --eq-mon-bg:#fef3c7;  --eq-mon-c:#d97706;
+  --eq-tab-bg:#ede9fe;  --eq-tab-c:#7c3aed;
+  --row-rec-bg:#f0fdf4; --row-rec-bdr:#10b981;
+  --mark-bg:#fef9c3;    --mark-c:#92400e;
+}
+[data-theme="dark"] {
+  --pg-bg:      #0f172a;
+  --card-bg:    #1e293b;
+  --hdr-bg:     #162032;
+  --bdr:        #2d3f55;
+  --txt:        #e2e8f0;
+  --mut:        #94a3b8;
+  --inp:        #162032;
+  --hov:        #243348;
+  --sh:         0 1px 3px rgba(0,0,0,.3);
+  --sh-md:      0 4px 16px rgba(0,0,0,.4);
+  --clr-ok:     #34d399;
+  --clr-red:    #f87171;
+  --clr-blue:   #60a5fa;
+  --clr-warn:   #fbbf24;
+  --clr-info:   #22d3ee;
+  --clr-purple: #a78bfa;
+  --st-act-bg:  #064e3b; --st-act-txt: #6ee7b7;
+  --st-baj-bg:  #450a0a; --st-baj-txt: #fca5a5;
+  --baj-row-bg: #1f1010; --baj-row-txt:#64748b;
+  --ac-bg:      #1e293b; --ac-hov:     #243348;
+  --eq-lap-bg:#1e3a5f;  --eq-lap-c:#93c5fd;
+  --eq-dsk-bg:#064e3b;  --eq-dsk-c:#6ee7b7;
+  --eq-mon-bg:#422006;  --eq-mon-c:#fde68a;
+  --eq-tab-bg:#2e1065;  --eq-tab-c:#c4b5fd;
+  --row-rec-bg:#0a2a1a; --row-rec-bdr:#34d399;
+  --mark-bg:#422006;    --mark-c:#fde68a;
+}
+
+/* ── Reset mínimo ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+.content-area {
+  margin-left: 0 !important;
+  padding-top: 0 !important;
+  width: 100% !important;
+  min-height: 100vh;
+}
+
+/* Mismo patron que .dashboard-wrapper del archivo dashboard.ejs */
+/* Identico a .dashboard-wrapper + .dashboard-content del dashboard.ejs
+   padding:16px lateral + max-width:1680px centrado = mismo borde en todas las paginas */
+.pg-wrapper {
+  width: 100%;
+  padding: 16px;
+  margin-top: 60px;
+  box-sizing: border-box;
+}
+
+.pg {
+  width: 100%;
+  max-width: 1680px;    /* igual que dashboard-content en dashboard.ejs */
+  margin: 0 auto;       /* centrado — genera el borde uniforme en pantallas grandes */
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-sizing: border-box;
+}
+/* ── Mini spinner (KPIs cargando) ─────────────────────────── */
+.mini-spin {
+  display: inline-block;
+  width: 18px; height: 18px;
+  border: 2px solid var(--bdr);
+  border-top-color: var(--clr-blue);
+  border-radius: 50%;
+  animation: _sp .7s linear infinite;
+  vertical-align: middle;
+}
+@keyframes _sp { to { transform: rotate(360deg); } }
+
+/* ── Tabs ─────────────────────────────────────────────────── */
+.tab-bar {
+  display: flex; gap: 4px;
+  background: var(--card-bg);
+  border: 1px solid var(--bdr);
+  border-radius: 14px; padding: 6px;
+  box-shadow: var(--sh); width: fit-content;
+}
+.tab-btn {
+  padding: 8px 20px; border-radius: 10px;
+  border: none; background: transparent;
+  color: var(--mut); font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: all .2s;
+  display: flex; align-items: center; gap: 7px;
+}
+.tab-btn:hover  { color: var(--txt); background: var(--hov); }
+.tab-btn.active { background: var(--clr-blue); color: #fff; box-shadow: 0 2px 8px rgba(59,130,246,.3); }
+.tab-panel { display: none; flex-direction: column; gap: 16px; }
+.tab-panel.active { display: flex; }
+
+/* ── KPI grid — EMPLEADOS ahora 6 columnas ────────────────── */
+.kpi-grid-6 {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+@media(max-width:1400px) { .kpi-grid-6 { grid-template-columns: repeat(3,1fr); } }
+@media(max-width:700px)  { .kpi-grid-6 { grid-template-columns: repeat(2,1fr); } }
+
+/* KPI reutilizado también en asignaciones */
+.kpi-grid-asg {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+@media(max-width:1400px) { .kpi-grid-asg { grid-template-columns: repeat(3,1fr); } }
+@media(max-width:700px)  { .kpi-grid-asg { grid-template-columns: repeat(2,1fr); } }
+
+.kpi {
+  background: var(--card-bg);
+  border: 1px solid var(--bdr);
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: var(--sh);
+  position: relative; overflow: hidden;
+  transition: transform .2s, background .3s, border-color .3s;
+  cursor: default;
+}
+.kpi:hover { transform: translateY(-2px); box-shadow: var(--sh-md); }
+
+/* Borde lateral de color */
+.kpi.kpi-ok     { border-left: 4px solid var(--clr-ok); }
+.kpi.kpi-red    { border-left: 4px solid var(--clr-red); }
+.kpi.kpi-blue   { border-left: 4px solid var(--clr-blue); }
+.kpi.kpi-warn   { border-left: 4px solid var(--clr-warn); }
+.kpi.kpi-info   { border-left: 4px solid var(--clr-info); }
+.kpi.kpi-purple { border-left: 4px solid var(--clr-purple); }
+
+.kpi-label {
+  font-size: 10px; text-transform: uppercase;
+  letter-spacing: .6px; color: var(--mut);
+  font-weight: 700; margin-bottom: 8px;
+}
+.kpi-val {
+  font-size: 28px; font-weight: 900;
+  line-height: 1; letter-spacing: -1px;
+  color: var(--txt);
+}
+.kpi-val.sm { font-size: 15px; font-weight: 700; letter-spacing: 0; margin-top: 4px; }
+.kpi-sub    {
+  font-size: 10px; color: var(--mut);
+  margin-top: 5px;
+  display: flex; align-items: center; gap: 3px;
+}
+.kpi-sub .up   { color: var(--clr-ok);  font-weight: 700; }
+.kpi-sub .down { color: var(--clr-red); font-weight: 700; }
+.kpi-icon {
+  font-size: 28px; opacity: .12;
+  position: absolute; right: 14px; top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Color helpers */
+.c-ok     { color: var(--clr-ok); }
+.c-red    { color: var(--clr-red); }
+.c-blue   { color: var(--clr-blue); }
+.c-warn   { color: var(--clr-warn); }
+.c-info   { color: var(--clr-info); }
+.c-purple { color: var(--clr-purple); }
+
+/* ── Cards genéricas ──────────────────────────────────────── */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--bdr);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--sh);
+  transition: background .3s, border-color .3s;
+}
+.card-head {
+  padding: 13px 18px;
+  background: var(--hdr-bg);
+  border-bottom: 1px solid var(--bdr);
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .4px; color: var(--mut);
+  transition: background .3s, border-color .3s;
+}
+.card-head .hl { display: flex; align-items: center; gap: 7px; }
+.card-body { padding: 16px; }
+.card-body canvas { max-height: 225px; }
+
+/* ── Charts rows ──────────────────────────────────────────── */
+.charts-row-3 { display: grid; grid-template-columns: 1.4fr 1fr 0.9fr; gap: 14px; }
+.charts-row-2 { display: grid; grid-template-columns: 1.7fr 1fr;       gap: 14px; }
+@media(max-width:1400px) { .charts-row-3 { grid-template-columns: 1fr 1fr; } }
+@media(max-width:1100px) { .charts-row-3, .charts-row-2 { grid-template-columns: 1fr; } }
+
+/* ── Donut ────────────────────────────────────────────────── */
+.donut-wrap {
+  display: flex; align-items: center;
+  gap: 20px; flex-wrap: wrap;
+  justify-content: center; padding: 20px;
+}
+.donut-canvas { width: 160px; height: 160px; flex-shrink: 0; }
+.legend-list  { flex: 1; min-width: 120px; }
+.legend-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 0; border-bottom: 1px solid var(--bdr);
+  font-size: 12px; transition: border-color .3s;
+}
+.legend-row:last-child { border-bottom: none; }
+.legend-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.legend-lbl  { flex: 1; color: var(--mut); }
+.legend-num  { font-weight: 700; font-size: 14px; color: var(--txt); }
+.legend-pct  { font-size: 10px; color: var(--mut); margin-left: 3px; }
+
+/* ── Top list ─────────────────────────────────────────────── */
+.top-list { padding: 0; margin: 0; list-style: none; }
+.top-list-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 16px; border-bottom: 1px solid var(--bdr);
+  font-size: 12px; transition: background .1s;
+}
+.top-list-item:last-child { border-bottom: none; }
+.top-list-item:hover { background: var(--hov); }
+.rank-badge {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800; flex-shrink: 0;
+  background: var(--bdr); color: var(--mut);
+}
+.rank-1 { background: #ffd700; color: #000; }
+.rank-2 { background: #c0c0c0; color: #000; }
+.rank-3 { background: #cd7f32; color: #fff; }
+.top-name  { flex: 1; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.top-bar-wrap { width: 70px; background: var(--bdr); border-radius: 4px; height: 5px; }
+.top-bar  { height: 5px; border-radius: 4px; background: var(--clr-blue); }
+.top-count{ font-weight: 700; font-size: 12px; color: var(--txt); min-width: 24px; text-align: right; }
+
+/* ── Buscador autocomplete (Empleados) ────────────────────── */
+.search-box {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--bdr);
+  background: var(--card-bg);
+  transition: background .3s, border-color .3s;
+}
+.search-inner { position: relative; }
+.search-field {
+  width: 100%;
+  padding: 11px 44px 11px 40px;
+  border: 1.5px solid var(--bdr);
+  border-radius: 12px; font-size: 14px; outline: none;
+  background: var(--inp); color: var(--txt);
+  transition: all .2s;
+}
+.search-field::placeholder { color: var(--mut); }
+.search-field:focus { border-color: var(--clr-blue); box-shadow: 0 0 0 3px rgba(59,130,246,.10); }
+.search-ico {
+  position: absolute; left: 13px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--mut); font-size: 15px; pointer-events: none;
+}
+.search-x {
+  position: absolute; right: 10px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none; color: var(--mut);
+  cursor: pointer; padding: 4px 6px; border-radius: 6px;
+  font-size: 13px; display: none; transition: all .15s;
+}
+.search-x:hover  { color: var(--txt); background: var(--hov); }
+.search-x.show   { display: block; }
+.search-hint { margin-top: 7px; font-size: 12px; color: var(--mut); }
+.search-hint a   { color: var(--clr-blue); font-weight: 600; }
+
+/* Dropdown autocomplete */
+.ac-drop {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  background: var(--ac-bg); border: 1px solid var(--bdr);
+  border-radius: 12px; box-shadow: var(--sh-md);
+  z-index: 1060; max-height: 320px; overflow-y: auto; display: none;
+}
+.ac-drop.open { display: block; animation: acIn .14s ease; }
+@keyframes acIn { from{opacity:0;transform:translateY(-5px)} to{opacity:1;transform:translateY(0)} }
+.ac-header {
+  padding: 7px 13px; font-size: 10px; color: var(--mut);
+  font-weight: 700; background: var(--hdr-bg);
+  border-bottom: 1px solid var(--bdr);
+}
+.ac-row {
+  padding: 10px 13px; cursor: pointer;
+  border-bottom: 1px solid var(--bdr);
+  display: flex; align-items: center; gap: 10px;
+  transition: background .1s;
+}
+.ac-row:last-child { border-bottom: none; }
+.ac-row:hover { background: var(--ac-hov); }
+.ac-avatar {
+  width: 34px; height: 34px; border-radius: 50%; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 11px; flex-shrink: 0;
+}
+.ac-info { flex: 1; min-width: 0; }
+.ac-name { font-weight: 600; font-size: 13px; color: var(--txt); }
+.ac-meta { font-size: 11px; color: var(--mut); margin-top: 1px; }
+.ac-pill { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; flex-shrink: 0; }
+.ac-pill.on  { background: var(--st-act-bg); color: var(--st-act-txt); }
+.ac-pill.off { background: var(--st-baj-bg); color: var(--st-baj-txt); }
+.ac-footer {
+  padding: 9px 13px; font-size: 12px; color: var(--clr-blue);
+  border-top: 1px solid var(--bdr); cursor: pointer; font-weight: 700;
+  display: flex; align-items: center; gap: 6px;
+  background: var(--hdr-bg); transition: background .1s;
+}
+.ac-footer:hover { background: var(--hov); }
+.ac-empty { padding: 22px; text-align: center; color: var(--mut); font-size: 13px; }
+mark.hl {
+  background: var(--mark-bg); color: var(--mark-c);
+  border-radius: 2px; padding: 0 2px; font-weight: 700;
+}
+
+/* ── Filter pills ─────────────────────────────────────────── */
+.pills-bar {
+  padding: 10px 18px; border-bottom: 1px solid var(--bdr);
+  background: var(--card-bg);
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  transition: background .3s, border-color .3s;
+}
+.pills-label { font-size: 10px; color: var(--mut); font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+.fpill {
+  padding: 4px 13px; border-radius: 20px;
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  border: 1.5px solid var(--bdr); background: var(--inp); color: var(--mut);
+  transition: all .15s; display: flex; align-items: center; gap: 5px; line-height: 1.7;
+}
+.fpill:hover            { border-color: var(--clr-blue); color: var(--clr-blue); }
+.fpill.f-all.on         { background: var(--clr-blue);   color: #fff; border-color: var(--clr-blue); }
+.fpill.f-active.on      { background: var(--clr-ok);     color: #fff; border-color: var(--clr-ok); }
+.fpill.f-baja.on        { background: var(--clr-red);    color: #fff; border-color: var(--clr-red); }
+.fpill.fp-all.active    { background: var(--clr-blue);   color: #fff; border-color: var(--clr-blue); }
+.fpill.fp-month.active  { background: var(--clr-info);   color: #fff; border-color: var(--clr-info); }
+.fpill.fp-multi.active  { background: var(--clr-warn);   color: #000; border-color: var(--clr-warn); }
+
+/* ── Tabla ────────────────────────────────────────────────── */
+.tbl-scroll { overflow: auto; max-height: 560px; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.tbl thead th {
+  font-size: 10px; text-transform: uppercase;
+  color: var(--mut); font-weight: 700;
+  padding: 10px 14px; background: var(--hdr-bg);
+  border-bottom: 1px solid var(--bdr);
+  white-space: nowrap; position: sticky; top: 0; z-index: 10;
+  text-align: center; transition: background .3s, border-color .3s;
+}
+.tbl thead th.left { text-align: left; }
+.tbl tbody td {
+  padding: 11px 14px; border-bottom: 1px solid var(--bdr);
+  color: var(--txt); vertical-align: middle; text-align: center;
+  transition: background .1s, border-color .3s;
+}
+.tbl tbody td.left { text-align: left; }
+.tbl tbody tr:hover td { background: var(--hov); }
+.tbl tbody tr:last-child td { border-bottom: none; }
+.tbl tbody tr.row-recent td { background: var(--row-rec-bg); }
+.tbl tbody tr.row-recent td:first-child { border-left: 3px solid var(--row-rec-bdr); }
+
+/* Filas de baja */
+.emp-baja td {
+  background: var(--baj-row-bg) !important;
+  color: var(--baj-row-txt) !important;
+  text-decoration: line-through;
+  text-decoration-color: var(--clr-red);
+}
+.emp-baja td .emp-actions,
+.emp-baja td .emp-actions * { text-decoration: none !important; color: inherit !important; }
+.badge-baja {
+  font-size: 9px; font-weight: 700;
+  padding: 2px 6px; border-radius: 4px;
+  background: var(--clr-red); color: #fff;
+  letter-spacing: .4px; vertical-align: middle;
+  margin-left: 5px; text-decoration: none !important;
+}
+
+/* ── Status / Badges ──────────────────────────────────────── */
+.status-pill {
+  font-size: 11px; font-weight: 600;
+  padding: 3px 10px; border-radius: 20px;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.status-pill.activo { background: var(--st-act-bg); color: var(--st-act-txt); }
+.status-pill.baja   { background: var(--st-baj-bg); color: var(--st-baj-txt); }
+
+.count-badge {
+  background: var(--inp); color: var(--mut);
+  font-size: 11px; font-weight: 700;
+  padding: 2px 9px; border-radius: 20px;
+  border: 1px solid var(--bdr);
+}
+.badge-count {
+  background: var(--clr-info); color: #fff;
+  border-radius: 20px; padding: 2px 9px;
+  font-size: 11px; font-weight: 700;
+}
+
+.pill { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; line-height: 1.6; }
+.p-blue   { background: rgba(59,130,246,.13);  color: var(--clr-blue); }
+.p-green  { background: rgba(16,185,129,.13);  color: var(--clr-ok); }
+.p-yellow { background: rgba(245,158,11,.13);  color: var(--clr-warn); }
+.p-red    { background: rgba(239,68,68,.13);   color: var(--clr-red); }
+.p-gray   { background: rgba(100,116,139,.10); color: var(--mut); }
+.p-purple { background: rgba(139,92,246,.13);  color: var(--clr-purple); }
+[data-theme="dark"] .p-purple { background: rgba(167,139,250,.2); }
+
+.eq-icon {
+  width: 26px; height: 26px; border-radius: 6px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 13px; margin-right: 5px; flex-shrink: 0; vertical-align: middle;
+}
+.eq-laptop  { background: var(--eq-lap-bg); color: var(--eq-lap-c); }
+.eq-desktop { background: var(--eq-dsk-bg); color: var(--eq-dsk-c); }
+.eq-monitor { background: var(--eq-mon-bg); color: var(--eq-mon-c); }
+.eq-tablet  { background: var(--eq-tab-bg); color: var(--eq-tab-c); }
+.eq-other   { background: var(--bdr);       color: var(--mut); }
+
+/* ── Botones ──────────────────────────────────────────────── */
+.btn-toggle {
+  border: none; border-radius: 8px;
+  font-size: 11px; font-weight: 600;
+  padding: 5px 11px; cursor: pointer;
+  transition: all .18s; white-space: nowrap;
+}
+.btn-toggle.is-active   { background: var(--st-baj-bg); color: var(--st-baj-txt); border: 1px solid var(--st-baj-txt); }
+.btn-toggle.is-inactive { background: var(--st-act-bg); color: var(--st-act-txt); border: 1px solid var(--st-act-txt); }
+.btn-toggle:hover { opacity: .85; }
+.btn-spin {
+  display: inline-block; width: 10px; height: 10px;
+  border: 2px solid rgba(0,0,0,.12);
+  border-top-color: currentColor;
+  border-radius: 50%; animation: _sp .6s linear infinite; vertical-align: middle;
+}
+.btn-ghost {
+  background: transparent; border: 1px solid var(--bdr); color: var(--mut);
+  border-radius: 9px; padding: 6px 12px; font-size: 12px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 5px; transition: all .15s;
+}
+.btn-ghost:hover { border-color: var(--clr-blue); color: var(--clr-blue); }
+.btn-primary-sm {
+  background: var(--clr-blue); color: #fff; border: none;
+  border-radius: 9px; padding: 7px 14px; font-size: 12.5px; font-weight: 700;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  transition: all .2s; white-space: nowrap;
+}
+.btn-primary-sm:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-success-sm {
+  background: var(--clr-ok); color: #fff; border: none;
+  border-radius: 9px; padding: 7px 14px; font-size: 12.5px; font-weight: 700;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  transition: all .2s; white-space: nowrap;
+}
+.btn-success-sm:hover { filter: brightness(1.1); }
+
+/* Botón Alta de Empleado */
+.btn-alta {
+  background: linear-gradient(135deg, var(--clr-ok), #059669);
+  color: #fff; border: none; border-radius: 9px;
+  padding: 7px 16px; font-size: 12.5px; font-weight: 700;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  transition: all .2s; white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(16,185,129,.25);
+}
+.btn-alta:hover { filter: brightness(1.07); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(16,185,129,.35); }
+
+/* ── Panel header ─────────────────────────────────────────── */
+.panel-head {
+  padding: 13px 18px; background: var(--hdr-bg);
+  border-bottom: 1px solid var(--bdr);
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 10px;
+  transition: background .3s, border-color .3s;
+}
+.panel-title {
+  font-size: 13px; font-weight: 800; color: var(--txt);
+  display: flex; align-items: center; gap: 8px;
+}
+.toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.search-input-sm {
+  background: var(--inp); border: 1px solid var(--bdr); color: var(--txt);
+  border-radius: 9px; padding: 7px 12px 7px 32px;
+  font-size: 12.5px; width: 280px; outline: none;
+  transition: background .3s, border-color .2s, color .3s;
+}
+.search-input-sm:focus { border-color: var(--clr-blue); box-shadow: 0 0 0 3px rgba(59,130,246,.12); }
+.search-input-sm::placeholder { color: var(--mut); }
+.search-wrap { position: relative; }
+.search-wrap i.ico {
+  position: absolute; left: 10px; top: 50%;
+  transform: translateY(-50%); color: var(--mut); font-size: 13px; pointer-events: none;
+}
+
+/* ── Paginación ───────────────────────────────────────────── */
+.pag-wrap {
+  padding: 11px 18px; border-top: 1px solid var(--bdr);
+  background: var(--hdr-bg); transition: background .3s, border-color .3s;
+}
+.tbl-foot {
+  padding: 10px 18px; border-top: 1px solid var(--bdr);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 8px; background: var(--hdr-bg);
+}
+.tbl-info { font-size: 11.5px; color: var(--mut); }
+.pagination-btns { display: flex; gap: 4px; }
+.pg-btn {
+  background: var(--card-bg); border: 1px solid var(--bdr);
+  color: var(--txt); border-radius: 7px; padding: 4px 10px;
+  font-size: 12px; cursor: pointer; transition: .15s;
+}
+.pg-btn:hover, .pg-btn.active { background: var(--clr-blue); color: #fff; border-color: var(--clr-blue); }
+.pg-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ── Autocomplete modales asignaciones ────────────────────── */
+.autocomplete-results {
+  display: none; max-height: 200px; overflow-y: auto;
+  border: 1px solid var(--bdr); border-radius: 9px; margin-top: 4px;
+  box-shadow: var(--sh-md); background: var(--card-bg); z-index: 9999; position: relative;
+}
+.autocomplete-item {
+  padding: 10px 13px; cursor: pointer;
+  border-bottom: 1px solid var(--bdr);
+  transition: background .12s; font-size: 13px; color: var(--txt);
+}
+.autocomplete-item:hover { background: var(--hov); }
+.autocomplete-item:last-child { border-bottom: none; }
+
+/* ── Modal ────────────────────────────────────────────────── */
+.modal-content {
+  border-radius: 16px; border: none;
+  background: var(--card-bg);
+  box-shadow: 0 24px 64px rgba(0,0,0,.25);
+}
+.modal-header {
+  border-bottom: 1px solid var(--bdr); padding: 18px 24px;
+  background: var(--hdr-bg);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-body   { padding: 24px; background: var(--card-bg); }
+.modal-footer {
+  border-top: 1px solid var(--bdr); padding: 14px 24px;
+  background: var(--card-bg); border-radius: 0 0 16px 16px;
+  display: flex; gap: 8px; justify-content: flex-end;
+}
+/* Modal Alta de Empleado — header verde */
+.modal-add-emp .modal-header {
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-radius: 16px 16px 0 0; padding: 20px 24px; border: none;
+}
+.modal-add-emp .modal-header .modal-title { color: #fff; font-weight: 700; font-size: 16px; }
+.modal-add-emp .modal-header .btn-close    { filter: invert(1) brightness(2); opacity: .9; }
+[data-theme="dark"] .modal-add-emp .modal-header { background: linear-gradient(135deg,#065f46,#047857); }
+
+.form-label-sm {
+  font-weight: 700; font-size: 11px; color: var(--mut);
+  text-transform: uppercase; letter-spacing: .5px;
+  margin-bottom: 5px; display: block;
+}
+.form-label-sm .req { color: var(--clr-red); }
+.field-input {
+  padding: 10px 14px; border: 1.5px solid var(--bdr);
+  border-radius: 10px; font-size: 13px;
+  background: var(--inp); color: var(--txt);
+  outline: none; width: 100%; transition: all .2s;
+}
+.field-input:focus   { border-color: var(--clr-blue); box-shadow: 0 0 0 3px rgba(59,130,246,.10); }
+.field-input.invalid { border-color: var(--clr-red); }
+.field-input::placeholder { color: var(--mut); opacity: .6; }
+.field-input[readonly]    { opacity: .7; cursor: not-allowed; }
+.section-div {
+  display: flex; align-items: center; gap: 10px;
+  margin: 16px 0 12px; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .6px; color: var(--mut);
+}
+.section-div::before, .section-div::after { content: ''; flex: 1; height: 1px; background: var(--bdr); }
+.switch-wrap {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border: 1.5px solid var(--bdr);
+  border-radius: 10px; cursor: pointer; transition: border-color .2s;
+}
+.switch-wrap:hover { border-color: var(--clr-blue); }
+.switch-wrap input { display: none; }
+.switch-track {
+  width: 38px; height: 20px; border-radius: 20px;
+  background: var(--bdr); position: relative;
+  transition: background .2s; flex-shrink: 0;
+}
+.switch-track::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 14px; height: 14px; border-radius: 50%; background: #fff;
+  transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.switch-wrap input:checked + .switch-track { background: var(--clr-ok); }
+.switch-wrap input:checked + .switch-track::after { transform: translateX(18px); }
+.switch-label { font-size: 13px; color: var(--txt); font-weight: 500; user-select: none; }
+.add-emp-alert {
+  padding: 10px 14px; border-radius: 10px;
+  font-size: 13px; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.add-emp-alert.error { background: var(--st-baj-bg); color: var(--st-baj-txt); }
+.field-group { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.field-wrap  { display: flex; flex-direction: column; gap: 5px; }
+.field-wrap.full { grid-column: 1/-1; }
+@media(max-width:576px) { .field-group { grid-template-columns: 1fr; } }
+.btn-modal {
+  border: none; border-radius: 9px; padding: 9px 20px;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px; transition: all .2s;
+}
+.btn-modal.primary { background: var(--clr-blue); color: #fff; }
+.btn-modal.success { background: var(--clr-ok);   color: #fff; }
+.btn-modal.cancel  { background: transparent; border: 1px solid var(--bdr); color: var(--mut); }
+.btn-modal.cancel:hover { border-color: var(--txt); color: var(--txt); }
+
+/* ── Toast ────────────────────────────────────────────────── */
+#toastWrap {
+  position: fixed; bottom: 24px; right: 24px;
+  z-index: 9999; display: flex; flex-direction: column; gap: 8px;
+}
+.toast-item {
+  background: var(--card-bg); border: 1px solid var(--bdr); color: var(--txt);
+  border-radius: 12px; padding: 12px 18px; font-size: 13px; font-weight: 500;
+  box-shadow: var(--sh-md); display: flex; align-items: center; gap: 10px;
+  min-width: 250px; animation: tIn .2s ease;
+}
+.toast-item.success, .toast-item.ok  { border-left: 4px solid var(--clr-ok); }
+.toast-item.error,   .toast-item.err { border-left: 4px solid var(--clr-red); }
+.toast-item.info,    .toast-item.inf { border-left: 4px solid var(--clr-info); }
+@keyframes tIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+
+/* ── Misc ─────────────────────────────────────────────────── */
+.empty-state { text-align: center; padding: 48px 20px; color: var(--mut); }
+.empty-state i { font-size: 32px; display: block; margin-bottom: 10px; opacity: .3; }
+.empty-state p { font-size: 13px; }
+.spin-anim { animation: _sp .7s linear infinite; }
+.d-none    { display: none !important; }
+@keyframes rowPulse {
+  0%  { outline: none }
+  15% { outline: 2.5px solid var(--clr-blue); outline-offset: 2px }
+  85% { outline: 2.5px solid var(--clr-blue); outline-offset: 2px }
+  100%{ outline: none }
+}
+.row-hl { animation: rowPulse 2.2s ease; }
+*::-webkit-scrollbar { width: 5px; height: 5px; }
+*::-webkit-scrollbar-thumb { background: var(--bdr); border-radius: 3px; }
+*::-webkit-scrollbar-track { background: transparent; }
+</style>
+</head>
+<body>
+
+<%# ══ SIDEBAR + NAVBAR — sin modificar ══════════════════════════ %>
+<%- include("partials/sidebar_top") %>
+
+<%# ══ TOAST ══════════════════════════════════════════════════════ %>
+<div id="toastWrap"></div>
+
+<%# ══ MODAL — Confirmar toggle ═══════════════════════════════════ %>
+<div class="modal fade" id="confirmModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:390px">
+    <div class="modal-content" style="border-radius:14px;overflow:hidden;">
+      <div class="modal-header border-0 justify-content-center pt-4 pb-0"
+           style="flex-direction:column;text-align:center;gap:6px;">
+        <span style="font-size:40px;" id="confirmIcon">⚠️</span>
+        <h5 class="fw-bold mt-1 mb-0" id="confirmTitle"
+            style="font-size:15px;color:var(--txt);">¿Confirmar?</h5>
+      </div>
+      <div class="modal-body text-center pb-1" id="confirmMsg"
+           style="font-size:13px;color:var(--mut);"></div>
+      <div class="modal-footer justify-content-center border-0 pb-4 gap-2">
+        <button class="btn btn-outline-secondary btn-sm px-4" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-sm px-4 fw-bold" id="confirmOkBtn" onclick="executeToggle()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%# ══ MODAL — Alta de Empleado ═══════════════════════════════════ %>
+<div class="modal fade modal-add-emp" id="addEmployeeModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width:580px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-person-check-fill me-2"></i>Alta de Empleado</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="addAlert" style="display:none;" class="add-emp-alert error">
+          <i class="bi bi-exclamation-circle-fill"></i>
+          <span id="addAlertMsg"></span>
+        </div>
+        <form id="addForm" novalidate>
+          <div class="section-div"><i class="bi bi-person"></i> Datos Personales</div>
+          <div class="field-group">
+            <div class="field-wrap full">
+              <label class="form-label-sm">Nombre Completo <span class="req">*</span></label>
+              <input type="text" id="new_full_name" class="field-input"
+                     placeholder="Ej: García López, Juan Carlos" required autocomplete="off">
+            </div>
+            <div class="field-wrap">
+              <label class="form-label-sm">Email <span class="req">*</span></label>
+              <input type="email" id="new_email" class="field-input"
+                     placeholder="usuario@empresa.com" required autocomplete="off">
+            </div>
+            <div class="field-wrap">
+              <label class="form-label-sm">CIP</label>
+              <input type="text" id="new_cip" class="field-input"
+                     placeholder="Código interno" autocomplete="off">
+            </div>
+          </div>
+          <div class="section-div"><i class="bi bi-briefcase"></i> Posición y Departamento</div>
+          <div class="field-group">
+            <div class="field-wrap">
+              <label class="form-label-sm">Posición / Cargo</label>
+              <input type="text" id="new_position" class="field-input"
+                     placeholder="Ej: Analista Senior" autocomplete="off">
+            </div>
+            <div class="field-wrap">
+              <label class="form-label-sm">Departamento</label>
+              <select id="new_department_id" class="field-input">
+                <option value="">— Sin departamento —</option>
+              </select>
+            </div>
+          </div>
+          <div class="section-div"><i class="bi bi-toggle-on"></i> Estado</div>
+          <label class="switch-wrap">
+            <input type="checkbox" id="new_is_active" checked>
+            <span class="switch-track"></span>
+            <span class="switch-label" id="switchLabel">Empleado activo al dar de alta</span>
+          </label>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary btn-sm px-4"
+                data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success btn-sm px-4 fw-bold" id="submitAdd">
+          <span id="addSpinner" class="spinner-border spinner-border-sm me-1 d-none"></span>
+          <i class="bi bi-person-check-fill me-1" id="addIcon"></i>
+          <span id="addBtnTxt">Registrar Alta</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%# ══ MODAL — Nueva Asignación ═══════════════════════════════════ %>
+<div class="modal fade" id="addAssignmentModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div style="font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px;color:var(--txt);">
+          <i class="bi bi-plus-circle" style="color:var(--clr-ok);"></i> Nueva Asignación
+        </div>
+        <button type="button" class="btn-ghost" data-bs-dismiss="modal" style="padding:4px 8px;">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-8">
+            <label class="form-label-sm">Empleado <span style="color:var(--clr-red)">*</span></label>
+            <input type="text" class="field-input" id="addEmployeeName"
+                   placeholder="Escribe para buscar..." autocomplete="off">
+            <div id="addEmployeeResults" class="autocomplete-results"></div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label-sm">CIP</label>
+            <input type="text" class="field-input" id="addEmployeeCip" readonly>
+          </div>
+          <div class="col-md-8">
+            <label class="form-label-sm">Equipo <span style="color:var(--clr-red)">*</span></label>
+            <input type="text" class="field-input" id="addEquipmentCode"
+                   placeholder="Código o modelo..." autocomplete="off">
+            <div id="addEquipmentResults" class="autocomplete-results"></div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label-sm">Modelo</label>
+            <input type="text" class="field-input" id="addEquipmentModel" readonly>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label-sm">Departamento
+              <span style="font-weight:400;color:var(--mut)">(Opcional)</span>
+            </label>
+            <input type="text" class="field-input" id="addDepartmentName"
+                   placeholder="Buscar..." autocomplete="off">
+            <input type="hidden" id="addDepartmentId">
+            <div id="addDepartmentResults" class="autocomplete-results"></div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label-sm">Ubicación
+              <span style="font-weight:400;color:var(--mut)">(Opcional)</span>
+            </label>
+            <input type="text" class="field-input" id="addLocationName"
+                   placeholder="Buscar..." autocomplete="off">
+            <input type="hidden" id="addLocationId">
+            <div id="addLocationResults" class="autocomplete-results"></div>
+          </div>
+          <div class="col-12">
+            <label class="form-label-sm">Fecha <span style="color:var(--clr-red)">*</span></label>
+            <input type="date" class="field-input" id="addAssignmentDate">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal cancel" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn-modal success" id="btnSaveNewAsg">
+          <span class="bi bi-arrow-repeat spin-anim d-none" id="spinnerNewAsg"></span>
+          Guardar Asignación
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%# ══ MODAL — Editar Asignación ══════════════════════════════════ %>
+<div class="modal fade" id="editAssignmentModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div style="font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px;color:var(--txt);">
+          <i class="bi bi-pencil" style="color:var(--clr-blue);"></i> Editar Asignación
+        </div>
+        <button type="button" class="btn-ghost" data-bs-dismiss="modal" style="padding:4px 8px;">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label-sm">ID</label>
+            <input type="text" class="field-input" id="editAsgId" readonly>
+          </div>
+          <div class="col-md-8">
+            <label class="form-label-sm">Empleado</label>
+            <input type="text" class="field-input" id="editAsgEmployee"
+                   placeholder="Buscar..." autocomplete="off">
+            <div id="editEmployeeResults" class="autocomplete-results"></div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label-sm">CIP</label>
+            <input type="text" class="field-input" id="editAsgCip" readonly>
+          </div>
+          <div class="col-md-8">
+            <label class="form-label-sm">Equipo</label>
+            <input type="text" class="field-input" id="editAsgEquipment"
+                   placeholder="Buscar..." autocomplete="off">
+            <div id="editEquipmentResults" class="autocomplete-results"></div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label-sm">Modelo</label>
+            <input type="text" class="field-input" id="editAsgModel" readonly>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label-sm">Departamento</label>
+            <input type="text" class="field-input" id="editAsgDept"
+                   placeholder="Buscar..." autocomplete="off">
+            <input type="hidden" id="editAsgDeptId">
+            <div id="editDepartmentResults" class="autocomplete-results"></div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label-sm">Ubicación</label>
+            <input type="text" class="field-input" id="editAsgLoc"
+                   placeholder="Buscar..." autocomplete="off">
+            <input type="hidden" id="editAsgLocId">
+            <div id="editLocationResults" class="autocomplete-results"></div>
+          </div>
+          <div class="col-12">
+            <label class="form-label-sm">Fecha</label>
+            <input type="date" class="field-input" id="editAsgDate">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal cancel" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn-modal primary" id="btnSaveEditAsg">
+          <span class="bi bi-arrow-repeat spin-anim d-none" id="spinnerEditAsg"></span>
+          Guardar Cambios
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%# ══ CONTENIDO PRINCIPAL ════════════════════════════════════════ %>
+<div class="content-area">
+<div class="pg-wrapper">
+<div class="pg">
+
+  <%# ── TABS ── %>
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab-emp" onclick="switchTab('emp')">
+      <i class="bi bi-people-fill"></i> Empleados
+    </button>
+    <button class="tab-btn" id="tab-asg" onclick="switchTab('asg')">
+      <i class="bi bi-clipboard-check-fill"></i> Asignaciones
+    </button>
+  </div>
+
+  <%# ╔═══════════════════════════════════════════════════════╗ %>
+  <%# ║  TAB EMPLEADOS                                        ║ %>
+  <%# ╚═══════════════════════════════════════════════════════╝ %>
+  <div class="tab-panel active" id="panel-emp">
+
+    <%# ── 6 KPIs Empleados (incluye Altas del Mes + Bajas del Mes) ── %>
+    <div class="kpi-grid-6">
+
+      <div class="kpi kpi-ok">
+        <div class="kpi-label">Activos</div>
+        <div class="kpi-val c-ok" id="kpiActivos"><span class="mini-spin"></span></div>
+        <div class="kpi-sub">empleados activos</div>
+        <i class="bi bi-person-check kpi-icon c-ok"></i>
+      </div>
+
+      <div class="kpi kpi-red">
+        <div class="kpi-label">De Baja</div>
+        <div class="kpi-val c-red" id="kpiBaja"><span class="mini-spin"></span></div>
+        <div class="kpi-sub" id="kpiBajaSub">—</div>
+        <i class="bi bi-person-x kpi-icon c-red"></i>
+      </div>
+
+      <div class="kpi kpi-blue">
+        <div class="kpi-label">Total</div>
+        <div class="kpi-val c-blue" id="kpiTotal"><span class="mini-spin"></span></div>
+        <div class="kpi-sub">en planilla</div>
+        <i class="bi bi-people kpi-icon c-blue"></i>
+      </div>
+
+      <%# NUEVO: Altas del Mes %>
+      <div class="kpi kpi-info">
+        <div class="kpi-label">Altas del Mes</div>
+        <div class="kpi-val c-info" id="kpiAltasMes"><span class="mini-spin"></span></div>
+        <div class="kpi-sub" id="kpiAltasSub">últimos 30 días</div>
+        <i class="bi bi-person-plus kpi-icon c-info"></i>
+      </div>
+
+      <%# NUEVO: Bajas del Mes %>
+      <div class="kpi kpi-warn">
+        <div class="kpi-label">Bajas del Mes</div>
+        <div class="kpi-val c-warn" id="kpiBajasMes"><span class="mini-spin"></span></div>
+        <div class="kpi-sub" id="kpiBajasMesSub">últimos 30 días</div>
+        <i class="bi bi-person-dash kpi-icon c-warn"></i>
+      </div>
+
+      <div class="kpi kpi-purple">
+        <div class="kpi-label">Tasa Baja</div>
+        <div class="kpi-val c-purple" id="kpiTasa"><span class="mini-spin"></span></div>
+        <div class="kpi-sub">sobre total</div>
+        <i class="bi bi-percent kpi-icon c-purple"></i>
+      </div>
+
+    </div><!-- /.kpi-grid-6 -->
+
+    <%# ── Gráficos — 3 columnas ── %>
+    <div class="charts-row-3">
+
+      <%# Altas vs Bajas por mes (NUEVO) %>
+      <div class="card">
+        <div class="card-head">
+          <span class="hl">
+            <i class="bi bi-graph-up-arrow c-ok"></i>
+            Altas vs Bajas — últimos 12 meses
+          </span>
+          <button class="btn-ghost"
+                  onclick="dlChart('chartAltasBajas','altas_vs_bajas')"
+                  title="Descargar PNG">
+            <i class="bi bi-download"></i>
+          </button>
+        </div>
+        <div class="card-body">
+          <canvas id="chartAltasBajas" style="max-height:220px;"></canvas>
+        </div>
+      </div>
+
+      <%# Activos / Bajas por categoría %>
+      <div class="card">
+        <div class="card-head">
+          <span class="hl">
+            <i class="bi bi-bar-chart-fill c-blue"></i>Por Categoría
+          </span>
+          <button class="btn-ghost"
+                  onclick="dlChart('barCat','por_categoria')"
+                  title="Descargar PNG">
+            <i class="bi bi-download"></i>
+          </button>
+        </div>
+        <div class="card-body">
+          <canvas id="barCat" style="max-height:220px;"></canvas>
+        </div>
+      </div>
+
+      <%# Donut %>
+      <div class="card">
+        <div class="card-head">
+          <span class="hl">
+            <i class="bi bi-pie-chart-fill c-blue"></i>Activos vs Baja
+          </span>
+          <button class="btn-ghost"
+                  onclick="dlChart('donutEmp','activos_vs_baja')"
+                  title="Descargar PNG">
+            <i class="bi bi-download"></i>
+          </button>
+        </div>
+        <div class="donut-wrap">
+          <div class="donut-canvas"><canvas id="donutEmp"></canvas></div>
+          <div class="legend-list" id="donutLegend"></div>
+        </div>
+      </div>
+
+    </div><!-- /.charts-row-3 -->
+
+    <%# ── Tabla Empleados ── %>
+    <div class="card">
+
+      <div class="panel-head">
+        <div class="panel-title">
+          <i class="bi bi-people-fill c-blue"></i>
+          Lista de Empleados
+          <span class="count-badge" id="tableCount">—</span>
+        </div>
+        <div class="toolbar">
+          <span style="font-size:11px;color:var(--mut);" id="empPageInfo"></span>
+          <button class="btn-alta"
+                  data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+            <i class="bi bi-person-check-fill"></i> Alta de Empleado
+          </button>
+          <button class="btn-ghost" onclick="refreshEmpCharts()" title="Recargar">
+            <i class="bi bi-arrow-clockwise"></i>
+          </button>
+        </div>
+      </div>
+
+      <%# Buscador con autocomplete %>
+      <div class="search-box">
+        <div class="search-inner">
+          <i class="bi bi-search search-ico"></i>
+          <input type="text" id="searchField" class="search-field"
+            placeholder="Buscar por nombre, CIP o email… (Enter = buscar en todos los registros)"
+            autocomplete="off" value="">
+          <button class="search-x" id="searchX" onclick="clearEmpSearch()">
+            <i class="bi bi-x-lg"></i>
+          </button>
+          <div class="ac-drop" id="acDrop"></div>
+        </div>
+        <div id="searchHint" style="display:none;" class="search-hint">
+          <i class="bi bi-info-circle"></i>
+          Resultados para <strong id="searchHintTerm"></strong> —
+          <a href="#" onclick="clearEmpSearch();return false;">Ver todos</a>
+        </div>
+      </div>
+
+      <%# Filtros de página %>
+      <div class="pills-bar">
+        <span class="pills-label">Filtrar página:</span>
+        <button class="fpill f-all on"  onclick="setEmpFilter(this,'all')">Todos</button>
+        <button class="fpill f-active"  onclick="setEmpFilter(this,'activo')">✅ Activos</button>
+        <button class="fpill f-baja"    onclick="setEmpFilter(this,'baja')">🔴 De Baja</button>
+      </div>
+
+      <div class="tbl-scroll">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th class="left">CIP</th>
+              <th class="left">Nombre Completo</th>
+              <th>Email</th><th>Posición</th><th>Ubicación</th>
+              <th>Estado</th><th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="empTbody">
+            <tr><td colspan="7" class="empty-state">
+              <i class="bi bi-arrow-repeat spin-anim"></i>
+              <p>Cargando empleados…</p>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pag-wrap" id="empPagWrap" style="display:none;">
+        <nav>
+          <ul class="pagination justify-content-center mb-0 flex-wrap"
+              id="empPagBtns"></ul>
+        </nav>
+      </div>
+
+    </div><!-- /.card tabla emp -->
+
+  </div><!-- /#panel-emp -->
+
+
+  <%# ╔═══════════════════════════════════════════════════════╗ %>
+  <%# ║  TAB ASIGNACIONES                                     ║ %>
+  <%# ╚═══════════════════════════════════════════════════════╝ %>
+  <div class="tab-panel" id="panel-asg">
+
+    <div class="kpi-grid-asg">
+      <div class="kpi kpi-info">
+        <div class="kpi-label">Total Activas</div>
+        <div class="kpi-val c-info" id="asgTotal">—</div>
+        <div class="kpi-sub">activas</div>
+        <i class="bi bi-clipboard-check kpi-icon c-info"></i>
+      </div>
+      <div class="kpi kpi-blue">
+        <div class="kpi-label">Este Mes</div>
+        <div class="kpi-val c-blue" id="asgEsteMes">—</div>
+        <div class="kpi-sub">asignaciones</div>
+        <i class="bi bi-calendar-check kpi-icon c-blue"></i>
+      </div>
+      <div class="kpi kpi-warn">
+        <div class="kpi-label">Multi-Equipo</div>
+        <div class="kpi-val c-warn" id="asgMulti">—</div>
+        <div class="kpi-sub">empleados</div>
+        <i class="bi bi-layers kpi-icon c-warn"></i>
+      </div>
+      <div class="kpi kpi-ok">
+        <div class="kpi-label">Última Asignación</div>
+        <div class="kpi-val sm c-ok" id="asgUltima">—</div>
+        <i class="bi bi-clock-history kpi-icon c-ok"></i>
+      </div>
+      <div class="kpi kpi-purple">
+        <div class="kpi-label">Modelo Top</div>
+        <div class="kpi-val sm c-purple" id="asgModeloTop">—</div>
+        <i class="bi bi-trophy kpi-icon c-purple"></i>
+      </div>
+      <div class="kpi kpi-red">
+        <div class="kpi-label">Depto Top</div>
+        <div class="kpi-val sm c-red" id="asgDeptoTop">—</div>
+        <i class="bi bi-building kpi-icon c-red"></i>
+      </div>
+    </div>
+
+    <div class="charts-row-2">
+      <div class="card">
+        <div class="card-head">
+          <span class="hl">
+            <i class="bi bi-bar-chart-fill c-blue"></i>
+            Asignaciones por Mes (últimos 12 meses)
+          </span>
+          <button class="btn-ghost" onclick="dlAsgChart()" title="Descargar">
+            <i class="bi bi-download"></i>
+          </button>
+        </div>
+        <div class="card-body"><canvas id="asgChartBar"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <span class="hl">
+            <i class="bi bi-trophy-fill c-warn"></i>Top Modelos Asignados
+          </span>
+        </div>
+        <div style="max-height:268px;overflow-y:auto;">
+          <ul class="top-list" id="asgTopModelos"></ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="panel-head">
+        <div class="panel-title">
+          <i class="bi bi-table"></i> Lista de Asignaciones
+          <span class="badge-count" id="asgTableCount">0</span>
+        </div>
+        <div class="toolbar">
+          <div class="search-wrap">
+            <i class="bi bi-search ico"></i>
+            <input type="text" class="search-input-sm" id="asgSearch"
+              placeholder="Buscar empleado, equipo, modelo, depto…">
+          </div>
+          <button class="btn-success-sm" id="btnNuevaAsg">
+            <i class="bi bi-plus-circle"></i> Nueva
+          </button>
+          <button class="btn-ghost" onclick="loadAsgData()" title="Recargar">
+            <i class="bi bi-arrow-clockwise"></i>
+          </button>
+          <button class="btn-ghost" onclick="exportAsg('excel')" title="Excel">
+            <i class="bi bi-file-earmark-excel c-ok"></i>
+          </button>
+          <button class="btn-ghost" onclick="exportAsg('csv')" title="CSV">
+            <i class="bi bi-file-earmark-text c-info"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="pills-bar">
+        <span class="pills-label">Filtrar:</span>
+        <div class="fpill fp-all active" id="pill-all"   onclick="setPill('all')">Todos</div>
+        <div class="fpill fp-month"      id="pill-month" onclick="setPill('month')">
+          <i class="bi bi-calendar3"></i> Último mes
+        </div>
+        <div class="fpill fp-multi"      id="pill-multi" onclick="setPill('multi')">
+          <i class="bi bi-layers"></i> Multi-equipo
+        </div>
+      </div>
+
+      <div class="tbl-scroll">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>ID</th><th>Empleado</th><th>CIP</th><th>Equipo</th>
+              <th>Modelo</th><th>Tipo</th><th>Fecha</th>
+              <th>Departamento</th><th>Ubicación</th><th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="asgTableBody">
+            <tr><td colspan="10" class="empty-state">
+              <i class="bi bi-arrow-repeat spin-anim"></i>
+              <p>Cargando asignaciones...</p>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tbl-foot">
+        <span class="tbl-info" id="asgPagInfo"></span>
+        <div class="pagination-btns" id="asgPagBtns"></div>
+      </div>
+    </div>
+
+  </div><!-- /#panel-asg -->
+
+</div><!-- /.pg -->
+</div><!-- /.pg-wrapper -->
+</div><!-- /.content-area -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/sidebar.js"></script>
+<script>
+/* ════════════════════════════════════════════════════════════════
+   UTILITIES
+════════════════════════════════════════════════════════════════ */
+function isDark(){ return document.documentElement.getAttribute('data-theme')==='dark'; }
+function getCC(){
+  return {
+    grid:   isDark() ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.04)',
+    tick:   isDark() ? '#94a3b8' : '#64748b',
+    border: isDark() ? '#1e293b' : '#ffffff'
+  };
+}
+
+/* El sidebar ya tiene toggleTheme() y updateChartsTheme().
+   Este listener re-renderiza los charts cuando cambia el tema. */
+function updateChartsTheme(){
+  if(EMP_DATA.length)  setTimeout(renderEmpCharts, 80);
+  if(ASG_DATA.length)  setTimeout(renderAsgChart,  80);
+}
+
+function showToast(msg, type='info'){
+  const icons={success:'bi-check-circle-fill',ok:'bi-check-circle-fill',
+               error:'bi-exclamation-triangle-fill',err:'bi-exclamation-triangle-fill',
+               info:'bi-info-circle-fill',inf:'bi-info-circle-fill'};
+  const clrs ={success:'var(--clr-ok)',ok:'var(--clr-ok)',
+               error:'var(--clr-red)',err:'var(--clr-red)',
+               info:'var(--clr-info)',inf:'var(--clr-info)'};
+  const el = document.createElement('div');
+  el.className = `toast-item ${type}`;
+  el.innerHTML = `<i class="bi ${icons[type]||icons.info}"
+    style="font-size:17px;flex-shrink:0;color:${clrs[type]||clrs.info}"></i> ${msg}`;
+  document.getElementById('toastWrap').appendChild(el);
+  setTimeout(()=>{
+    el.style.cssText='opacity:0;transform:translateX(20px);transition:.3s;';
+    setTimeout(()=>el.remove(),300);
+  },4000);
+}
+
+function fmtDate(d){
+  if(!d) return '—';
+  const dt = new Date(d);
+  return isNaN(dt) ? d : dt.toLocaleDateString('es-PE');
+}
+
+function dlChart(id, name){
+  const c = document.getElementById(id); if(!c) return;
+  const a = document.createElement('a');
+  a.download = `${name}_${new Date().toISOString().split('T')[0]}.png`;
+  a.href = c.toDataURL('image/png'); a.click();
+}
+
+/* ════════════════════════════════════════════════════════════════
+   TABS
+════════════════════════════════════════════════════════════════ */
+let asgLoaded = false;
+function switchTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='asg' && !asgLoaded){
+    loadAsgData(); initAddModalAC(); initEditModalAC(); asgLoaded=true;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   EMPLEADOS — DATOS
+════════════════════════════════════════════════════════════════ */
+let EMP_DATA         = [];
+let EMP_PAGE_DATA    = [];
+let EMP_CURRENT_PAGE = 1;
+let EMP_TOTAL_PAGES  = 1;
+let EMP_SEARCH_TERM  = '';
+const CAT_COLORS = {
+  'Especialista':'#10b981','Analista':'#f59e0b',
+  'Coordinador':'#3b82f6','Gerente':'#8b5cf6',
+  'Asistente':'#06b6d4','Técnico':'#6b7280'
+};
+
+let chartDonut=null, chartBar=null, chartAltasBajas=null;
+
+async function loadAllEmployeesData(){
+  try{
+    const [rA, rB] = await Promise.all([
+      fetch('/api/employees?limit=9999',{credentials:'include'}).then(r=>r.json()),
+      fetch('/api/employees/bajas',     {credentials:'include'}).then(r=>r.json())
+    ]);
+    EMP_DATA = [
+      ...(rA.data||[]).map(e=>({...e, is_active:true})),
+      ...(rB.data||[]).map(e=>({...e, is_active:false}))
+    ];
+    renderEmpCharts();
+  }catch(e){
+    console.error('loadAllEmployeesData:', e.message);
+    ['kpiActivos','kpiBaja','kpiTotal','kpiTasa',
+     'kpiAltasMes','kpiBajasMes'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) el.textContent = '—';
+    });
+  }
+}
+
+async function loadEmpPage(page=1, search=''){
+  EMP_CURRENT_PAGE = page;
+  EMP_SEARCH_TERM  = search;
+  document.getElementById('empTbody').innerHTML =
+    '<tr><td colspan="7" class="empty-state"><i class="bi bi-arrow-repeat spin-anim"></i><p>Cargando…</p></td></tr>';
+  try{
+    let url = `/api/employees?page=${page}&limit=25`;
+    if(search) url += `&search=${encodeURIComponent(search)}`;
+    const res  = await fetch(url, {credentials:'include'});
+    const json = await res.json();
+    EMP_PAGE_DATA  = json.data || [];
+    EMP_TOTAL_PAGES= json.totalPages || 1;
+    renderEmpTable();
+    renderEmpPagination();
+    const info = document.getElementById('empPageInfo');
+    if(info) info.textContent = `Página ${page} / ${EMP_TOTAL_PAGES}`;
+    const tc = document.getElementById('tableCount');
+    if(tc) tc.textContent = json.total || EMP_PAGE_DATA.length;
+    if(search){
+      const h=document.getElementById('searchHint'),t=document.getElementById('searchHintTerm');
+      if(h&&t){ h.style.display='block'; t.textContent=`"${search}"`; }
+    } else {
+      const h = document.getElementById('searchHint');
+      if(h) h.style.display='none';
+    }
+  }catch(e){ showToast('Error cargando empleados: '+e.message,'error'); }
+}
+
+function renderEmpTable(){
+  if(!EMP_PAGE_DATA.length){
+    document.getElementById('empTbody').innerHTML =
+      '<tr><td colspan="7" class="empty-state"><i class="bi bi-inbox"></i><p>No se encontraron empleados</p></td></tr>';
+    return;
+  }
+  document.getElementById('empTbody').innerHTML = EMP_PAGE_DATA.map(emp=>{
+    const isActive = emp.is_active !== false && emp.is_active !== 0;
+    return `<tr id="row-${emp.id}"
+               class="${!isActive?'emp-baja':''}"
+               data-status="${isActive?'activo':'baja'}"
+               data-name="${(emp.full_name||'').toLowerCase().replace(/"/g,'')}">
+      <td class="left">
+        <span style="font-family:monospace;font-size:11px;
+                     background:var(--hov);padding:2px 7px;border-radius:5px;">
+          ${emp.cip||'—'}
+        </span>
+      </td>
+      <td class="left" style="font-weight:600;">
+        ${emp.full_name||'—'}
+        ${!isActive?'<span class="badge-baja">BAJA</span>':''}
+      </td>
+      <td>${emp.email
+        ?`<a href="mailto:${emp.email}" style="font-size:12px;">${emp.email}</a>`
+        :'—'}</td>
+      <td style="font-size:12px;color:var(--mut);">${emp.position_name||'—'}</td>
+      <td style="font-size:12px;color:var(--mut);">${emp.state||'—'}</td>
+      <td>
+        <span class="status-pill ${isActive?'activo':'baja'}" id="pill-${emp.id}">
+          <i class="fas fa-circle" style="font-size:6px;"></i>
+          ${isActive?'Activo':'De baja'}
+        </span>
+      </td>
+      <td class="emp-actions" style="white-space:nowrap;">
+        <a href="/employees/${emp.id}"
+           class="btn btn-sm btn-info me-1" style="font-size:11px;">
+          <i class="bi bi-eye"></i> Ver
+        </a>
+        <button class="btn-toggle ${isActive?'is-active':'is-inactive'}"
+                id="toggleBtn-${emp.id}"
+                onclick="promptToggle(${emp.id},'${(emp.full_name||'').replace(/'/g,"\\'")}',${isActive})">
+          ${isActive
+            ?'<i class="fas fa-user-slash"></i> Dar de baja'
+            :'<i class="fas fa-user-check"></i> Reactivar'}
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderEmpPagination(){
+  const pag  = document.getElementById('empPagBtns');
+  const wrap = document.getElementById('empPagWrap');
+  if(!pag || EMP_TOTAL_PAGES<=1){ if(wrap) wrap.style.display='none'; return; }
+  if(wrap) wrap.style.display='block';
+  const delta=2, pages=[], prev=[];
+  let _prev=null;
+  for(let i=1;i<=EMP_TOTAL_PAGES;i++){
+    if(i===1||i===EMP_TOTAL_PAGES||(i>=EMP_CURRENT_PAGE-delta&&i<=EMP_CURRENT_PAGE+delta)){
+      if(_prev!==null&&i-_prev>1) pages.push('...');
+      pages.push(i); _prev=i;
+    }
+  }
+  pag.innerHTML =
+    `<li class="page-item ${EMP_CURRENT_PAGE===1?'disabled':''}">
+       <a class="page-link" href="#"
+          onclick="goEmpPage(${EMP_CURRENT_PAGE-1});return false;">‹</a>
+     </li>`
+    + pages.map(p => p==='...'
+      ? `<li class="page-item disabled"><span class="page-link">…</span></li>`
+      : `<li class="page-item ${p===EMP_CURRENT_PAGE?'active':''}">
+           <a class="page-link" href="#"
+              onclick="goEmpPage(${p});return false;">${p}</a>
+         </li>`
+    ).join('')
+    + `<li class="page-item ${EMP_CURRENT_PAGE===EMP_TOTAL_PAGES?'disabled':''}">
+         <a class="page-link" href="#"
+            onclick="goEmpPage(${EMP_CURRENT_PAGE+1});return false;">›</a>
+       </li>`;
+}
+
+function goEmpPage(p){
+  if(p<1||p>EMP_TOTAL_PAGES) return;
+  loadEmpPage(p, EMP_SEARCH_TERM);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   EMPLEADOS — CHARTS + KPIs de Altas/Bajas del Mes
+════════════════════════════════════════════════════════════════ */
+function renderEmpCharts(){
+  const activos = EMP_DATA.filter(e =>  e.is_active).length;
+  const bajas   = EMP_DATA.filter(e => !e.is_active).length;
+  const total   = activos + bajas;
+  const cc      = getCC();
+
+  /* ── KPIs básicos ──────────────────────────────────────── */
+  _setEl('kpiActivos', activos);
+  _setEl('kpiBaja',    bajas);
+  _setEl('kpiTotal',   total);
+  _setEl('kpiTasa',    total>0 ? ((bajas/total)*100).toFixed(1)+'%' : '0%');
+
+  const pctBajaGlobal = total>0 ? ((bajas/total)*100).toFixed(1) : '0.0';
+  const subBaja = document.getElementById('kpiBajaSub');
+  if(subBaja) subBaja.innerHTML =
+    `<span class="down">↑ ${pctBajaGlobal}%</span> del total`;
+
+  /* ── Altas y Bajas del Mes (últimos 30 días) ───────────── */
+  const ahora      = new Date();
+  const hace30dias = new Date(ahora.getTime() - 30*24*60*60*1000);
+
+  const altasMes = EMP_DATA.filter(e => {
+    if(!e.created_at) return false;
+    return new Date(e.created_at) >= hace30dias;
+  }).length;
+
+  // Bajas del mes: is_active=false + updated_at dentro de 30 días
+  const bajasMes = EMP_DATA.filter(e => {
+    if(e.is_active) return false;
+    const fecha = e.deactivated_at || e.updated_at;
+    if(!fecha) return false;
+    return new Date(fecha) >= hace30dias;
+  }).length;
+
+  _setEl('kpiAltasMes',  altasMes);
+  _setEl('kpiBajasMes',  bajasMes);
+
+  // Porcentaje Altas del mes sobre total activos
+  const pctAltas = activos > 0 ? ((altasMes/activos)*100).toFixed(1) : '0.0';
+  const subAltas = document.getElementById('kpiAltasSub');
+  if(subAltas){
+    subAltas.innerHTML = altasMes > 0
+      ? `<span class="up">↑ ${pctAltas}%</span> vs activos`
+      : 'últimos 30 días';
+  }
+
+  // Porcentaje Bajas del mes sobre total
+  const pctBajasMes = total > 0 ? ((bajasMes/total)*100).toFixed(1) : '0.0';
+  const subBajasMes = document.getElementById('kpiBajasMesSub');
+  if(subBajasMes){
+    subBajasMes.innerHTML = bajasMes > 0
+      ? `<span class="down">↑ ${pctBajasMes}%</span> del total`
+      : 'últimos 30 días';
+  }
+
+  /* ── Gráfico Altas vs Bajas por mes ────────────────────── */
+  const months=[]; const altasCnt={}; const bajasCnt={};
+  for(let i=11;i>=0;i--){
+    const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()-i);
+    const key  =`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const label= d.toLocaleDateString('es-PE',{month:'short',year:'2-digit'});
+    months.push({key,label}); altasCnt[key]=0; bajasCnt[key]=0;
+  }
+  EMP_DATA.forEach(e=>{
+    if(e.created_at){
+      const k=(e.created_at||'').substring(0,7);
+      if(altasCnt[k]!==undefined) altasCnt[k]++;
+    }
+    if(!e.is_active){
+      const k=(e.deactivated_at||e.updated_at||'').substring(0,7);
+      if(k && bajasCnt[k]!==undefined) bajasCnt[k]++;
+    }
+  });
+  const lbls   = months.map(m=>m.label);
+  const dAltas = months.map(m=>altasCnt[m.key]);
+  const dBajas = months.map(m=>bajasCnt[m.key]);
+  const ctx0   = document.getElementById('chartAltasBajas').getContext('2d');
+  if(chartAltasBajas) chartAltasBajas.destroy();
+  chartAltasBajas = new Chart(ctx0,{
+    type:'bar',
+    data:{
+      labels: lbls,
+      datasets:[
+        { label:'Altas',
+          data: dAltas,
+          backgroundColor: isDark()?'rgba(52,211,153,.7)':'rgba(16,185,129,.75)',
+          borderRadius:6, borderSkipped:false, order:2 },
+        { label:'Bajas',
+          data: dBajas,
+          backgroundColor: isDark()?'rgba(248,113,113,.7)':'rgba(239,68,68,.75)',
+          borderRadius:6, borderSkipped:false, order:2 },
+        { label:'Tendencia Altas',
+          data: dAltas, type:'line',
+          borderColor: isDark()?'#34d399':'#10b981', borderWidth:2,
+          pointRadius:3, pointBackgroundColor: isDark()?'#34d399':'#10b981',
+          fill:false, tension:.35, order:1 },
+        { label:'Tendencia Bajas',
+          data: dBajas, type:'line',
+          borderColor: isDark()?'#f87171':'#ef4444', borderWidth:2,
+          pointRadius:3, pointBackgroundColor: isDark()?'#f87171':'#ef4444',
+          fill:false, tension:.35, order:1 }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'top',labels:{font:{size:11},color:cc.tick,boxWidth:12}},
+        tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y}`}}
+      },
+      scales:{
+        x:{ grid:{display:false}, ticks:{font:{size:10},color:cc.tick} },
+        y:{ beginAtZero:true, ticks:{stepSize:1,font:{size:10},color:cc.tick,precision:0}, grid:{color:cc.grid} }
+      }
+    }
+  });
+
+  /* ── Donut ─────────────────────────────────────────────── */
+  if(chartDonut) chartDonut.destroy();
+  chartDonut = new Chart(document.getElementById('donutEmp').getContext('2d'),{
+    type:'doughnut',
+    data:{
+      labels:['Activos','De Baja'],
+      datasets:[{data:[activos,bajas],
+        backgroundColor:['#10b981','#ef4444'],
+        borderWidth:3, borderColor:cc.border, hoverOffset:8}]
+    },
+    options:{cutout:'66%',plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:c=>
+        ` ${c.label}: ${c.raw} (${total>0?((c.raw/total)*100).toFixed(1):0}%)`}}}}
+  });
+  document.getElementById('donutLegend').innerHTML =
+    ['Activos','De Baja'].map((l,i)=>`
+    <div class="legend-row">
+      <div class="legend-dot" style="background:${['#10b981','#ef4444'][i]}"></div>
+      <span class="legend-lbl">${l}</span>
+      <span class="legend-num">${[activos,bajas][i]}</span>
+      <span class="legend-pct">${total>0?(([activos,bajas][i]/total)*100).toFixed(1):0}%</span>
+    </div>`).join('');
+
+  /* ── Bar categoría ─────────────────────────────────────── */
+  const cats={};
+  EMP_DATA.forEach(e=>{
+    const c=e.category||'Sin categoría';
+    if(!cats[c]) cats[c]={activos:0,bajas:0};
+    e.is_active ? cats[c].activos++ : cats[c].bajas++;
+  });
+  const cl = Object.keys(cats).sort();
+  if(chartBar) chartBar.destroy();
+  chartBar = new Chart(document.getElementById('barCat').getContext('2d'),{
+    type:'bar',
+    data:{labels:cl,datasets:[
+      {label:'Activos',data:cl.map(l=>cats[l].activos),backgroundColor:'#10b981',borderRadius:6},
+      {label:'De Baja',data:cl.map(l=>cats[l].bajas),  backgroundColor:'#ef4444',borderRadius:6}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{font:{size:11},color:cc.tick}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:10},color:cc.tick}},
+              y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10},color:cc.tick,precision:0},grid:{color:cc.grid}}}}
+  });
+}
+
+function refreshEmpCharts(){
+  loadAllEmployeesData();
+  loadEmpPage(EMP_CURRENT_PAGE, EMP_SEARCH_TERM);
+}
+
+function _setEl(id, val){
+  const el = document.getElementById(id);
+  if(el) el.textContent = val;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   EMPLEADOS — BUSCADOR CON AUTOCOMPLETE
+════════════════════════════════════════════════════════════════ */
+const searchField = document.getElementById('searchField');
+const acDrop      = document.getElementById('acDrop');
+const searchX     = document.getElementById('searchX');
+let   acTimer     = null;
+
+function goSearch(term){
+  if(!term.trim()){ clearEmpSearch(); return; }
+  loadEmpPage(1, term.trim());
+  searchX.classList.add('show');
+}
+function clearEmpSearch(){
+  searchField.value='';
+  searchX.classList.remove('show');
+  document.getElementById('searchHint').style.display='none';
+  loadEmpPage(1,'');
+}
+searchField.addEventListener('input', function(){
+  const t=this.value.trim();
+  searchX.classList.toggle('show', t.length>0);
+  clearTimeout(acTimer);
+  if(t.length<2){ acDrop.classList.remove('open'); return; }
+  acTimer=setTimeout(()=>showAC(t),220);
+});
+searchField.addEventListener('keydown', function(e){
+  if(e.key==='Enter')  { acDrop.classList.remove('open'); goSearch(this.value); }
+  if(e.key==='Escape') { acDrop.classList.remove('open'); this.blur(); }
+});
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.search-inner')) acDrop.classList.remove('open');
+});
+function hlText(str, term){
+  if(!str) return '';
+  return str.replace(
+    new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`,'gi'),
+    '<mark class="hl">$1</mark>'
+  );
+}
+function showAC(term){
+  const t = term.toLowerCase();
+  const results = EMP_DATA.filter(e=>
+    (e.full_name||'').toLowerCase().includes(t)||
+    (e.cip||'').toLowerCase().includes(t)||
+    (e.email||'').toLowerCase().includes(t)
+  ).slice(0,8);
+  const footer=`<div class="ac-footer" onclick="goSearch('${term.replace(/'/g,"\\'")}')">
+    <i class="bi bi-search"></i> Buscar <strong>"${term}"</strong> en todos los registros
+  </div>`;
+  if(!results.length){
+    acDrop.innerHTML=`<div class="ac-empty">
+      <i class="bi bi-search" style="font-size:22px;opacity:.3;display:block;margin-bottom:8px;"></i>
+      Sin coincidencias en memoria
+    </div>${footer}`;
+    acDrop.classList.add('open'); return;
+  }
+  acDrop.innerHTML=`<div class="ac-header">${results.length} resultado${results.length!==1?'s':''} · click para ir al empleado</div>`
+    +results.map(emp=>{
+      const color=CAT_COLORS[emp.category]||'#64748b';
+      const init=(emp.full_name||'').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+      return `<div class="ac-row" onclick="selectEmp(${emp.id},'${(emp.full_name||'').replace(/'/g,"\\'")}')">
+        <div class="ac-avatar" style="background:${color}">${init}</div>
+        <div class="ac-info">
+          <div class="ac-name">${hlText(emp.full_name,term)}</div>
+          <div class="ac-meta">${emp.cip||'—'} · ${emp.position_name||'Sin cargo'}</div>
+        </div>
+        <span class="ac-pill ${emp.is_active?'on':'off'}">${emp.is_active?'Activo':'Baja'}</span>
+      </div>`;
+    }).join('')+footer;
+  acDrop.classList.add('open');
+}
+function selectEmp(id, name){
+  acDrop.classList.remove('open');
+  const row=document.getElementById(`row-${id}`);
+  if(row){
+    searchField.value=name; searchX.classList.add('show');
+    row.scrollIntoView({behavior:'smooth',block:'center'});
+    row.classList.add('row-hl');
+    setTimeout(()=>row.classList.remove('row-hl'),2300);
+  } else {
+    goSearch(name);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   EMPLEADOS — FILTRO LOCAL
+════════════════════════════════════════════════════════════════ */
+function setEmpFilter(btn, status){
+  document.querySelectorAll('.fpill.f-all,.fpill.f-active,.fpill.f-baja')
+    .forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  let v=0;
+  document.querySelectorAll('#empTbody tr').forEach(r=>{
+    if(!r.dataset.status) return;
+    const show = status==='all' || r.dataset.status===status;
+    r.style.display=show?'':'none';
+    if(show) v++;
+  });
+  document.getElementById('tableCount').textContent=v;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   EMPLEADOS — TOGGLE BAJA / REACTIVAR
+════════════════════════════════════════════════════════════════ */
+let _pid=null, _pActive=null;
+const cfmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+
+function promptToggle(id, name, isActive){
+  _pid=id; _pActive=isActive;
+  document.getElementById('confirmIcon').textContent  = isActive?'⚠️':'✅';
+  document.getElementById('confirmTitle').textContent = isActive?'Dar de baja':'Reactivar empleado';
+  document.getElementById('confirmMsg').textContent   = isActive
+    ?`¿Dar de baja a ${name}?` : `¿Reactivar a ${name}?`;
+  const ok = document.getElementById('confirmOkBtn');
+  ok.textContent = isActive?'Sí, dar de baja':'Sí, reactivar';
+  ok.className   = `btn btn-sm px-4 fw-bold ${isActive?'btn-danger':'btn-success'}`;
+  cfmModal.show();
+}
+
+async function executeToggle(){
+  cfmModal.hide();
+  const id=_pid, wasActive=_pActive, newStatus=!wasActive;
+  const btn  = document.getElementById(`toggleBtn-${id}`);
+  const orig = btn.innerHTML;
+  btn.innerHTML='<span class="btn-spin"></span>'; btn.disabled=true;
+  try{
+    const res  = await fetch(`/api/employees/${id}`,{
+      method:'PUT', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({is_active:newStatus})
+    });
+    const json = await res.json();
+    if(!res.ok||!json.success) throw new Error(json.error||json.message||'Error del servidor');
+    const row = document.getElementById(`row-${id}`);
+    row.dataset.status = newStatus?'activo':'baja';
+    if(newStatus){
+      row.classList.remove('emp-baja');
+      row.querySelector('.badge-baja')?.remove();
+      document.getElementById(`pill-${id}`).outerHTML =
+        `<span class="status-pill activo" id="pill-${id}">
+           <i class="fas fa-circle" style="font-size:6px;"></i> Activo
+         </span>`;
+      btn.className='btn-toggle is-active';
+      btn.innerHTML='<i class="fas fa-user-slash"></i> Dar de baja';
+      btn.setAttribute('onclick',`promptToggle(${id},'${json.data?.full_name||''}',true)`);
+      showToast('Empleado reactivado','success');
+    }else{
+      row.classList.add('emp-baja');
+      const nc=row.querySelectorAll('td')[1];
+      if(!nc.querySelector('.badge-baja')){
+        const b=document.createElement('span');
+        b.className='badge-baja'; b.textContent='BAJA'; nc.appendChild(b);
+      }
+      document.getElementById(`pill-${id}`).outerHTML =
+        `<span class="status-pill baja" id="pill-${id}">
+           <i class="fas fa-circle" style="font-size:6px;"></i> De baja
+         </span>`;
+      btn.className='btn-toggle is-inactive';
+      btn.innerHTML='<i class="fas fa-user-check"></i> Reactivar';
+      btn.setAttribute('onclick',`promptToggle(${id},'${json.data?.full_name||''}',false)`);
+      showToast('Empleado dado de baja','info');
+    }
+    await loadAllEmployeesData();
+  }catch(e){ showToast('Error: '+e.message,'error'); btn.innerHTML=orig; }
+  finally{ btn.disabled=false; _pid=null; _pActive=null; }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   MODAL ALTA DE EMPLEADO
+════════════════════════════════════════════════════════════════ */
+document.getElementById('addEmployeeModal')
+  .addEventListener('show.bs.modal', async function(){
+    const sel = document.getElementById('new_department_id');
+    if(sel.options.length>1) return;
+    try{
+      const res  = await fetch('/api/departments',{credentials:'include'});
+      const data = await res.json();
+      if(data.success&&data.data){
+        data.data.forEach(d=>{
+          const o=document.createElement('option');
+          o.value=d.id; o.textContent=d.department_name||d.name;
+          sel.appendChild(o);
+        });
+      }
+    }catch(e){ console.warn(e); }
+  });
+
+document.getElementById('addEmployeeModal')
+  .addEventListener('hidden.bs.modal', function(){
+    document.getElementById('addForm').reset();
+    document.getElementById('addAlert').style.display='none';
+    document.querySelectorAll('#addForm .field-input')
+      .forEach(el=>el.classList.remove('invalid'));
+  });
+
+document.getElementById('new_is_active').addEventListener('change',function(){
+  document.getElementById('switchLabel').textContent =
+    this.checked ? 'Empleado activo al dar de alta' : 'Empleado inactivo al dar de alta';
+});
+
+document.getElementById('new_email').addEventListener('blur',function(){
+  const ok=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.value);
+  this.classList.toggle('invalid', this.value.length>0 && !ok);
+});
+
+function showAddAlert(show, msg='', type='error'){
+  const box=document.getElementById('addAlert');
+  if(!show){ box.style.display='none'; return; }
+  box.className=`add-emp-alert ${type}`;
+  document.getElementById('addAlertMsg').textContent=msg;
+  box.style.display='flex';
+}
+
+document.getElementById('submitAdd').addEventListener('click', async function(){
+  showAddAlert(false);
+  const name  = document.getElementById('new_full_name').value.trim();
+  const email = document.getElementById('new_email').value.trim();
+  if(!name){
+    document.getElementById('new_full_name').classList.add('invalid');
+    document.getElementById('new_full_name').focus();
+    showAddAlert(true,'El nombre completo es obligatorio.'); return;
+  }
+  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    document.getElementById('new_email').classList.add('invalid');
+    document.getElementById('new_email').focus();
+    showAddAlert(true,'Ingresa un email válido.'); return;
+  }
+  const btn=this,sp=document.getElementById('addSpinner'),
+        ic=document.getElementById('addIcon'),tx=document.getElementById('addBtnTxt');
+  btn.disabled=true; sp.classList.remove('d-none');
+  ic.classList.add('d-none'); tx.textContent='Registrando…';
+  try{
+    const res  = await fetch('/api/employees',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body: JSON.stringify({
+        full_name:     name,
+        email,
+        cip:           document.getElementById('new_cip').value.trim()||null,
+        position:      document.getElementById('new_position').value.trim()||null,
+        department_id: document.getElementById('new_department_id').value||null,
+        is_active:     document.getElementById('new_is_active').checked
+      })
+    });
+    const data = await res.json();
+    if(res.ok&&data.success){
+      bootstrap.Modal.getInstance(document.getElementById('addEmployeeModal')).hide();
+      showToast(`Alta registrada: "${name}" ✅`,'success');
+      setTimeout(()=>{ loadAllEmployeesData(); loadEmpPage(1,EMP_SEARCH_TERM); },1000);
+    } else throw new Error(data.error||data.message||'Error al crear');
+  }catch(e){ showAddAlert(true,e.message); }
+  finally{
+    btn.disabled=false; sp.classList.add('d-none');
+    ic.classList.remove('d-none'); tx.textContent='Registrar Alta';
+  }
+});
+
+/* ════════════════════════════════════════════════════════════════
+   ASIGNACIONES — DATOS & CHARTS
+════════════════════════════════════════════════════════════════ */
+let ASG_DATA=[], ASG_FILTERED=[], ASG_PAGE=1;
+const ASG_PER_PAGE=25;
+let asgChart=null, asgActivePill='all', asgSearchTerm='';
+
+async function loadAsgData(){
+  document.getElementById('asgTableBody').innerHTML=
+    '<tr><td colspan="10" class="empty-state"><i class="bi bi-arrow-repeat spin-anim"></i><p>Cargando asignaciones...</p></td></tr>';
+  try{
+    const headers={};
+    const t=localStorage.getItem('token')||localStorage.getItem('authToken')||localStorage.getItem('jwt');
+    if(t) headers['Authorization']=`Bearer ${t}`;
+    const res  = await fetch('/api/assignments',{headers,credentials:'include'});
+    const json = await res.json();
+    if(!json.success) throw new Error(json.message||json.error||'Error API');
+    ASG_DATA=json.data||[];
+    renderAsgKPIs(); renderAsgChart(); renderAsgTopModels(); applyAsgFilters();
+  }catch(e){
+    document.getElementById('asgTableBody').innerHTML=
+      `<tr><td colspan="10" class="empty-state">
+         <i class="bi bi-exclamation-triangle-fill"></i>
+         <p>Error: ${e.message}</p>
+       </td></tr>`;
+    showToast('Error al cargar: '+e.message,'err');
+  }
+}
+
+function renderAsgKPIs(){
+  const now=new Date(), y=now.getFullYear(), m=now.getMonth();
+  const esteMes=ASG_DATA.filter(a=>{
+    const d=new Date(a.assignment_date);
+    return d.getFullYear()===y && d.getMonth()===m;
+  }).length;
+  const byEmp={};
+  ASG_DATA.forEach(a=>{ byEmp[a.employee_cip]=(byEmp[a.employee_cip]||0)+1; });
+  const multi=Object.values(byEmp).filter(v=>v>1).length;
+  const sorted=[...ASG_DATA].sort((a,b)=>new Date(b.assignment_date)-new Date(a.assignment_date));
+  const ultima=sorted[0]?fmtDate(sorted[0].assignment_date):'—';
+  const byModel={};
+  ASG_DATA.forEach(a=>{ byModel[a.equipment_model]=(byModel[a.equipment_model]||0)+1; });
+  const modelTop=Object.entries(byModel).sort((a,b)=>b[1]-a[1])[0];
+  const byDept={};
+  ASG_DATA.forEach(a=>{
+    const d=a.department_name||'Sin depto';
+    if(d!=='Sin departamento') byDept[d]=(byDept[d]||0)+1;
+  });
+  const deptTop=Object.entries(byDept).sort((a,b)=>b[1]-a[1])[0];
+  _setEl('asgTotal',     ASG_DATA.length);
+  _setEl('asgEsteMes',   esteMes);
+  _setEl('asgMulti',     multi);
+  _setEl('asgUltima',    ultima);
+  _setEl('asgModeloTop', modelTop?modelTop[0]:'—');
+  _setEl('asgDeptoTop',  deptTop?deptTop[0].substring(0,18)+(deptTop[0].length>18?'…':''):'—');
+}
+
+function renderAsgChart(){
+  const cc=getCC();
+  const months=[],counts={};
+  for(let i=11;i>=0;i--){
+    const d=new Date(); d.setMonth(d.getMonth()-i);
+    const key  =`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const label= d.toLocaleDateString('es-PE',{month:'short',year:'2-digit'});
+    months.push({key,label}); counts[key]=0;
+  }
+  ASG_DATA.forEach(a=>{
+    if(!a.assignment_date) return;
+    const k=a.assignment_date.substring(0,7);
+    if(counts[k]!==undefined) counts[k]++;
+  });
+  const labels=months.map(m=>m.label);
+  const data  =months.map(m=>counts[m.key]);
+  const maxVal=Math.max(...data);
+  const pClr  =isDark()?'#60a5fa':'#3b82f6';
+  const dClr  =isDark()?'rgba(96,165,250,.25)':'rgba(59,130,246,.2)';
+  const colors=data.map(v=>v===maxVal&&v>0?pClr:dClr);
+  const ctx=document.getElementById('asgChartBar').getContext('2d');
+  if(asgChart) asgChart.destroy();
+  asgChart=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderRadius:6,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{display:false},
+        tooltip:{backgroundColor:isDark()?'#1e293b':'#fff',
+                 borderColor:isDark()?'#2d3f55':'#e2e8f0',borderWidth:1,
+                 titleColor:isDark()?'#e2e8f0':'#1e293b',bodyColor:cc.tick,
+                 callbacks:{label:c=>` ${c.parsed.y} asignaciones`}}},
+      scales:{y:{beginAtZero:true,grid:{color:cc.grid},ticks:{color:cc.tick,font:{size:11},precision:0}},
+              x:{grid:{display:false},ticks:{color:cc.tick,font:{size:11}}}}}
+  });
+}
+
+function dlAsgChart(){
+  if(!asgChart) return;
+  const a=document.createElement('a');
+  a.download=`asignaciones_chart_${new Date().toISOString().split('T')[0]}.png`;
+  a.href=asgChart.toBase64Image(); a.click();
+}
+
+function renderAsgTopModels(){
+  const byModel={};
+  ASG_DATA.forEach(a=>{ const k=a.equipment_model||'Sin modelo'; byModel[k]=(byModel[k]||0)+1; });
+  const top=Object.entries(byModel).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxCount=top[0]?top[0][1]:1;
+  document.getElementById('asgTopModelos').innerHTML=top.map(([name,count],i)=>`
+    <li class="top-list-item">
+      <span class="rank-badge rank-${i+1}">${i+1}</span>
+      <span class="top-name" title="${name}">${name}</span>
+      <div class="top-bar-wrap"><div class="top-bar" style="width:${Math.round(count/maxCount*100)}%"></div></div>
+      <span class="top-count">${count}</span>
+    </li>`).join('');
+}
+
+/* ════════════════════════════════════════════════════════════════
+   ASIGNACIONES — FILTROS & TABLA
+════════════════════════════════════════════════════════════════ */
+function setPill(pill){
+  asgActivePill=pill;
+  ['all','month','multi'].forEach(p=>
+    document.getElementById(`pill-${p}`).classList.toggle('active',p===pill)
+  );
+  ASG_PAGE=1; applyAsgFilters();
+}
+
+function applyAsgFilters(){
+  const term=asgSearchTerm.toLowerCase();
+  const now=new Date();
+  const monthAgo=new Date(now.getFullYear(),now.getMonth()-1,now.getDate());
+  const byEmp={};
+  ASG_DATA.forEach(a=>{ byEmp[a.employee_cip]=(byEmp[a.employee_cip]||0)+1; });
+  ASG_FILTERED=ASG_DATA.filter(a=>{
+    if(asgActivePill==='month' && new Date(a.assignment_date)<monthAgo) return false;
+    if(asgActivePill==='multi' && (byEmp[a.employee_cip]||0)<=1) return false;
+    if(term){
+      const hay=[a.employee_name,a.employee_cip,a.equipment_code,
+                 a.equipment_model,a.department_name,a.location_name,a.assignment_id]
+               .join(' ').toLowerCase();
+      if(!hay.includes(term)) return false;
+    }
+    return true;
+  });
+  document.getElementById('asgTableCount').textContent=ASG_FILTERED.length;
+  renderAsgTable(); renderAsgPagination();
+}
+
+function eqIcon(type){
+  const map={Laptop:'eq-laptop bi-laptop',Desktop:'eq-desktop bi-pc-display',
+             Monitor:'eq-monitor bi-display',Tablet:'eq-tablet bi-tablet'};
+  const cls=map[type]||'eq-other bi-device-hdd';
+  const[bg,ic]=cls.split(' ');
+  return `<span class="eq-icon ${bg}"><i class="bi ${ic}"></i></span>`;
+}
+function typePill(type){
+  const map={Laptop:'p-blue',Desktop:'p-green',Monitor:'p-yellow',Tablet:'p-purple'};
+  return `<span class="pill ${map[type]||'p-gray'}">${type||'—'}</span>`;
+}
+
+function renderAsgTable(){
+  const start=(ASG_PAGE-1)*ASG_PER_PAGE;
+  const page =ASG_FILTERED.slice(start,start+ASG_PER_PAGE);
+  const sevenDaysAgo=new Date(Date.now()-7*24*60*60*1000);
+  if(!page.length){
+    document.getElementById('asgTableBody').innerHTML=
+      '<tr><td colspan="10" class="empty-state"><i class="bi bi-inbox"></i><p>No se encontraron asignaciones</p></td></tr>';
+    return;
+  }
+  document.getElementById('asgTableBody').innerHTML=page.map(a=>{
+    const isRecent=a.assignment_date&&new Date(a.assignment_date)>=sevenDaysAgo;
+    return `<tr class="${isRecent?'row-recent':''}">
+      <td><span style="font-family:monospace;font-size:11px;color:var(--mut)">#${a.assignment_id}</span></td>
+      <td style="text-align:left;"><strong style="font-size:13px">${a.employee_name||'—'}</strong></td>
+      <td><span style="font-family:monospace;font-size:12px">${a.employee_cip||'—'}</span></td>
+      <td style="text-align:left;">${eqIcon(a.equipment_type)}<strong>${a.equipment_code||'—'}</strong></td>
+      <td>${a.equipment_model||'—'}</td>
+      <td>${typePill(a.equipment_type)}</td>
+      <td style="font-size:12px;color:var(--mut)">${fmtDate(a.assignment_date)}</td>
+      <td style="font-size:12px">${a.department_name||'—'}</td>
+      <td style="font-size:12px">${a.location_name||'—'}</td>
+      <td>
+        <button class="btn-primary-sm" style="padding:4px 10px;font-size:11px;"
+                onclick='openEditAsg(${JSON.stringify(a)})'>
+          <i class="bi bi-pencil-fill"></i>
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAsgPagination(){
+  const total=ASG_FILTERED.length, pages=Math.ceil(total/ASG_PER_PAGE);
+  const start=Math.min((ASG_PAGE-1)*ASG_PER_PAGE+1,total);
+  const end  =Math.min(ASG_PAGE*ASG_PER_PAGE,total);
+  document.getElementById('asgPagInfo').textContent=
+    total>0 ? `${start.toLocaleString()}–${end.toLocaleString()} de ${total.toLocaleString()} asignaciones`
+            : 'Sin resultados';
+  const btns=document.getElementById('asgPagBtns');
+  if(pages<=1){ btns.innerHTML=''; return; }
+  let h=`<button class="pg-btn" onclick="goAsgPage(${ASG_PAGE-1})" ${ASG_PAGE===1?'disabled':''}>‹</button>`;
+  const s=Math.max(1,ASG_PAGE-2), e2=Math.min(pages,ASG_PAGE+2);
+  if(s>1) h+=`<button class="pg-btn" onclick="goAsgPage(1)">1</button>
+    ${s>2?'<span style="padding:0 4px;color:var(--mut)">…</span>':''}`;
+  for(let p=s;p<=e2;p++)
+    h+=`<button class="pg-btn ${p===ASG_PAGE?'active':''}" onclick="goAsgPage(${p})">${p}</button>`;
+  if(e2<pages) h+=`${e2<pages-1?'<span style="padding:0 4px;color:var(--mut)">…</span>':''}
+    <button class="pg-btn" onclick="goAsgPage(${pages})">${pages}</button>`;
+  h+=`<button class="pg-btn" onclick="goAsgPage(${ASG_PAGE+1})" ${ASG_PAGE>=pages?'disabled':''}>›</button>`;
+  btns.innerHTML=h;
+}
+function goAsgPage(p){ ASG_PAGE=p; renderAsgTable(); renderAsgPagination(); }
+
+/* ════════════════════════════════════════════════════════════════
+   ASIGNACIONES — EXPORTAR
+════════════════════════════════════════════════════════════════ */
+function exportAsg(fmt){
+  if(!ASG_FILTERED.length){ showToast('No hay datos','inf'); return; }
+  const rows=ASG_FILTERED.map(a=>({
+    ID:a.assignment_id, Empleado:a.employee_name, CIP:a.employee_cip,
+    Equipo:a.equipment_code, Modelo:a.equipment_model, Tipo:a.equipment_type,
+    Fecha:a.assignment_date, Departamento:a.department_name, Ubicacion:a.location_name
+  }));
+  const ws=XLSX.utils.json_to_sheet(rows);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Asignaciones');
+  XLSX.writeFile(wb,`asignaciones_${new Date().toISOString().split('T')[0]}.${fmt==='excel'?'xlsx':'csv'}`);
+  showToast('Exportación completada','success');
+}
+
+/* ════════════════════════════════════════════════════════════════
+   ASIGNACIONES — AUTOCOMPLETE MODALES
+════════════════════════════════════════════════════════════════ */
+let asgDebounceTimer=null;
+function setupAC(inputId,resultsId,url,handlers,minLen=2){
+  const input=document.getElementById(inputId);
+  const results=document.getElementById(resultsId);
+  if(!input||!results) return;
+  input.addEventListener('input',()=>{
+    clearTimeout(asgDebounceTimer);
+    const val=input.value.trim();
+    if(val.length<minLen){ results.style.display='none'; return; }
+    asgDebounceTimer=setTimeout(async()=>{
+      try{
+        const res =await fetch(url+encodeURIComponent(val),{credentials:'include'});
+        const json=await res.json();
+        const items=json.data||[];
+        results.innerHTML=items.length
+          ? items.slice(0,8).map((item,i)=>handlers.render(item,i)).join('')
+          : '<div class="autocomplete-item" style="color:var(--mut);cursor:default">Sin resultados</div>';
+        results.querySelectorAll('[data-idx]').forEach((el,idx)=>{
+          el.dataset.idx=idx;
+          el.addEventListener('click',()=>{
+            handlers.pick(items[parseInt(el.dataset.idx)]);
+            results.style.display='none';
+          });
+        });
+        results.style.display='block';
+      }catch(e){ results.style.display='none'; }
+    },300);
+  });
+  document.addEventListener('click',e=>{
+    if(!input.contains(e.target)&&!results.contains(e.target))
+      results.style.display='none';
+  });
+}
+
+function initAddModalAC(){
+  setupAC('addEmployeeName','addEmployeeResults','/api/employees/search?q=',{
+    render:(e,i)=>`<div class="autocomplete-item" data-idx="${i}">
+      <span class="ac-name">${e.full_name}</span>
+      <span class="ac-sub">CIP: ${e.cip||'—'}</span>
+    </div>`,
+    pick:e=>{ document.getElementById('addEmployeeName').value=e.full_name;
+              document.getElementById('addEmployeeCip').value=e.cip||''; }
+  },3);
+  setupAC('addEquipmentCode','addEquipmentResults','/api/equipment/search?term=',{
+    render:(e,i)=>`<div class="autocomplete-item" data-idx="${i}">
+      <span class="ac-name">${e.device_code}</span>
+      <span class="ac-sub">${e.model||''} · ${e.brand||''} · ${e.status||''}</span>
+    </div>`,
+    pick:e=>{ document.getElementById('addEquipmentCode').value=e.device_code;
+              document.getElementById('addEquipmentModel').value=e.model||''; }
+  },2);
+  setupAC('addDepartmentName','addDepartmentResults','/api/departments/search?term=',{
+    render:(e,i)=>`<div class="autocomplete-item" data-idx="${i}">
+      <span class="ac-name">${e.department_name}</span>
+      <span class="ac-sub">${e.division||''}</span>
+    </div>`,
+    pick:e=>{ document.getElementById('addDepartmentName').value=e.department_name;
+              document.getElementById('addDepartmentId').value=e.id; }
+  },3);
+  setupAC('addLocationName','addLocationResults','/api/locations/search?term=',{
+    render:(e,i)=>`<div class="autocomplete-item" data-idx="${i}">
+      <span class="ac-name">${e.location_name}</span>
+      <span class="ac-sub">${e.city||''}</span>
+    </div>`,
+    pick:e=>{ document.getElementById('addLocationName').value=e.location_name;
+              document.getElementById('addLocationId').value=e.id; }
+  },3);
+}
+
+function initEditModalAC(){
+  setupAC('editAsgEmployee','editEmployeeResults','/api/employees/search?q=',{
+    render:(e,i)=>`<div class="autocomplete-item" data-idx="${i}">
+      <span class="ac-name">${e.full_name}</span>
+      <span class="ac-sub">CIP: ${e.cip||'—'}</span>
+    </div>`,
+    pick:e=>{ document.getElementById('editAsgEmployee').value=e.full_name;
+              document.getElementById('editAsgCip').value=e.cip||''; }
+  },3);
+  setupAC('editAsgEquipment','editEquipmentResults','/api/equipment/search?term=',{
+    render:(e,i)=>`<div class="autocomplete-item" data-idx="${i}">
+      <span class="ac-name">${e.device_code}</span>
+      <span class="ac-sub">${e.model||''} · ${e.brand||''}</span>
+    </div>`,
+    pick:e=>{ document.getElementById('editAsgEquipment').value=e.device_code;
+              document.getElementById('editAsgModel').value=e.model||''; }
+  },2);
+  setupAC('editAsgDept','editDepartmentResults','/api/departments/search?term=',{
+    render:(e,i)=>`<div class="autocomplete-item" data-idx="${i}">
+      <span class="ac-name">${e.department_name}</span>
+      <span class="ac-sub">${e.division||''}</span>
+    </div>`,
+    pick:e=>{ document.getElementById('editAsgDept').value=e.department_name;
+              document.getElementById('editAsgDeptId').value=e.id; }
+  },3);
+  setupAC('editAsgLoc','editLocationResults','/api/locations/search?term=',{
+    render:(e,i)=>`<div class="autocomplete-item" data-idx="${i}">
+      <span class="ac-name">${e.location_name}</span>
+      <span class="ac-sub">${e.city||''}</span>
+    </div>`,
+    pick:e=>{ document.getElementById('editAsgLoc').value=e.location_name;
+              document.getElementById('editAsgLocId').value=e.id; }
+  },3);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   ASIGNACIONES — GUARDAR MODAL
+════════════════════════════════════════════════════════════════ */
+function openEditAsg(a){
+  document.getElementById('editAsgId').value        = a.assignment_id;
+  document.getElementById('editAsgEmployee').value  = a.employee_name||'';
+  document.getElementById('editAsgCip').value       = a.employee_cip||'';
+  document.getElementById('editAsgEquipment').value = a.equipment_code||'';
+  document.getElementById('editAsgModel').value     = a.equipment_model||'';
+  document.getElementById('editAsgDept').value      = a.department_name||'';
+  document.getElementById('editAsgDeptId').value    = a.department_id||'';
+  document.getElementById('editAsgLoc').value       = a.location_name||'';
+  document.getElementById('editAsgLocId').value     = a.location_id||'';
+  document.getElementById('editAsgDate').value      = a.assignment_date?a.assignment_date.substring(0,10):'';
+  new bootstrap.Modal(document.getElementById('editAssignmentModal')).show();
+}
+
+document.getElementById('btnSaveNewAsg').addEventListener('click',async()=>{
+  const spinner=document.getElementById('spinnerNewAsg');
+  spinner.classList.remove('d-none');
+  try{
+    const body={
+      employee_cip:    document.getElementById('addEmployeeCip').value,
+      equipment_code:  document.getElementById('addEquipmentCode').value,
+      department_id:   document.getElementById('addDepartmentId').value||null,
+      location_id:     document.getElementById('addLocationId').value||null,
+      assignment_date: document.getElementById('addAssignmentDate').value
+    };
+    if(!body.employee_cip||!body.equipment_code||!body.assignment_date){
+      showToast('Completa los campos obligatorios','err'); return;
+    }
+    const res =await fetch('/api/assignments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const json=await res.json();
+    if(!json.success) throw new Error(json.message||'Error');
+    bootstrap.Modal.getInstance(document.getElementById('addAssignmentModal'))?.hide();
+    showToast('Asignación creada','success');
+    loadAsgData();
+  }catch(e){ showToast('Error: '+e.message,'err'); }
+  finally{ spinner.classList.add('d-none'); }
+});
+
+document.getElementById('btnSaveEditAsg').addEventListener('click',async()=>{
+  const spinner=document.getElementById('spinnerEditAsg');
+  spinner.classList.remove('d-none');
+  try{
+    const body={
+      assignment_id:  document.getElementById('editAsgId').value,
+      employee_cip:   document.getElementById('editAsgCip').value,
+      employee_name:  document.getElementById('editAsgEmployee').value,
+      equipment_code: document.getElementById('editAsgEquipment').value,
+      department_id:  document.getElementById('editAsgDeptId').value||null,
+      location_id:    document.getElementById('editAsgLocId').value||null,
+      assignment_date:document.getElementById('editAsgDate').value
+    };
+    const res =await fetch('/api/assignments/update',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const json=await res.json();
+    if(!json.success) throw new Error(json.message||'Error');
+    bootstrap.Modal.getInstance(document.getElementById('editAssignmentModal'))?.hide();
+    showToast('Actualizado','success');
+    loadAsgData();
+  }catch(e){ showToast('Error: '+e.message,'err'); }
+  finally{ spinner.classList.add('d-none'); }
+});
+
+document.getElementById('asgSearch').addEventListener('input', e=>{
+  clearTimeout(asgDebounceTimer);
+  asgDebounceTimer=setTimeout(()=>{
+    asgSearchTerm=e.target.value.trim(); ASG_PAGE=1; applyAsgFilters();
+  },350);
+});
+
+document.getElementById('btnNuevaAsg').addEventListener('click',()=>{
+  document.getElementById('addAssignmentDate').value=new Date().toISOString().split('T')[0];
+  new bootstrap.Modal(document.getElementById('addAssignmentModal')).show();
+});
+
+/* ════════════════════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded',()=>{
+  loadAllEmployeesData();
+  loadEmpPage(1);
+});
+</script>
+</body>
+</html>

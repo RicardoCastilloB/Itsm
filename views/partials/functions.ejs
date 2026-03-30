@@ -1,0 +1,113 @@
+        
+    
+        <!-- Tarjetas de Estadísticas -->
+<div class="stats-cards">
+<a href="/api/employees/" style="text-decoration: none; color: inherit;">
+    <div class="stat-card" title="Total de empleados en la base de datos">
+        <p>👥 Empleados</p>
+        <h3 id="totalEmployees">0</h3>
+    </div>
+</a>
+<a href="/api/equipment" style="text-decoration: none; color: inherit;">
+            <div class="stat-card orange" title="Total de equipos registrados">
+                <p>💻 Equipos</p>
+                <h3 id="totalEquipment">0</h3>
+            </div>
+</a>
+<a href="/api/assignments" style="text-decoration: none; color: inherit;">
+            <div class="stat-card blue" title="Asignaciones activas">
+                <p>📋 Asignaciones</p>
+                <h3 id="totalAssignments">0</h3>
+            </div>
+            </a>
+            <div class="stat-card green" title="Departamentos activos">
+                <p>🏢 Departamentos</p>
+                <h3 id="totalDepartments">0</h3>
+            </div>
+            <div class="stat-card yellow" title="Ubicaciones activas">
+                <p>📍 Ubicaciones</p>
+                <h3 id="totalLocations">0</h3>
+            </div>
+        </div>
+
+        <!-- Controles superiores -->
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <div>
+                <button id="btnRefresh" class="btn btn-primary">
+                    🔄 Actualizar
+                </button>
+                <button id="btnClearSearch" class="btn btn-warning clear-search-btn">
+                    ✖ Limpiar Búsqueda
+                </button>
+            </div>
+            <div class="last-update">
+                Última actualización: <span id="lastUpdate">-</span>
+            </div>
+        </div>
+
+        <!-- Info de resultados de búsqueda -->
+        <div id="searchResultsInfo" class="search-results-info">
+            <strong>🔍 Búsqueda activa:</strong> "<span id="searchTermDisplay"></span>" - 
+            <span id="searchResultsCount">0</span> resultados encontrados en toda la base de datos
+        </div>
+
+        <!-- Búsqueda Global -->
+        <div class="search-box">
+            <input 
+                type="text" 
+                id="globalSearch" 
+                class="form-control form-control-lg" 
+                placeholder="🔍 Buscar en toda la base de datos (mín. 2 caracteres)..."
+            >
+            <span class="search-info" id="searchStatus">Escribe para buscar...</span>
+        </div>
+
+        <!-- Botones de Exportación -->
+        <div class="export-buttons">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-success btn-sm" id="exportExcel">
+                    📥 Excel
+                </button>
+                <button type="button" class="btn btn-info btn-sm" id="exportCSV">
+                    📄 CSV
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" id="exportPDF">
+                    📕 PDF
+                </button>
+            </div>
+            <small class="text-muted ms-2">Exporta la tabla actual visible</small>
+        </div>
+
+        <!-- Pestañas -->
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#employees" data-table="employees">
+                    👥 Empleados (<span id="countEmployees">0</span>)
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#equipment" data-table="equipment">
+                    💻 Equipos (<span id="countEquipment">0</span>)
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#assignments" data-table="assignments">
+                    📋 Asignaciones (<span id="countAssignments">0</span>)
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#departments" data-table="departments">
+                    🏢 Departamentos (<span id="countDepartments">0</span>)
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#locations" data-table="locations">
+                    📍 Ubicaciones (<span id="countLocations">0</span>)
+                </a>
+            </li>
+        </ul>
+        
+        <!-- Info de carga -->
+        <div class="alert alert-info mt-2" role="alert" id="loadingInfo">
+            ℹ️ Mostrando primeros 100 registros de cada tabla. Use el buscador para encontrar registros específicos o exporte para obtener todos los datos.
+        </div>
