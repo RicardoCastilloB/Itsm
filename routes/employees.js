@@ -148,7 +148,8 @@ router.put('/toggle-status', async (req, res) => {
         if (!cip) return res.status(400).json({ success: false, error: 'CIP es requerido' });
 
         const newStatus = is_active ? 1 : 0;
-        const [result] = await equipmentPool.query(
+        const [result] = await executeQuery(
+            equipmentPool,
             'UPDATE employees SET is_active = ?, updated_at = NOW() WHERE cip = ?',
             [newStatus, cip]
         );

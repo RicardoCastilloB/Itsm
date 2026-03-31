@@ -15,10 +15,12 @@ const path           = require('path');
 const methodOverride = require('method-override');
 const { RedisStore } = require('connect-redis');
 require('dotenv').config();
+const passport     = require('./middleware/passport');
+const { initCasbin } = require('./middleware/casbin');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
-
+const logger = require('./utils/logger');
 
 // ============================================================================
 // MOTOR DE VISTAS — EJS
@@ -62,16 +64,26 @@ app.use(session({
     },
 }));
 
+// Passport (inicializar después de session)
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Seguridad
 app.use(helmet({ contentSecurityPolicy: false }));
 
 
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+    : [`http://localhost:${PORT}`];
+
 app.use(cors({
     origin: function(origin, callback) {
-        // Permite cualquier origen (o puedes poner una lista)
-        callback(null, origin || '*');
+        // Permite requests sin origin (Postman, curl, server-to-server)
+        if (!origin) return callback(null, true);
+        if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+        callback(new Error(`Origen no permitido por CORS: ${origin}`));
     },
-    credentials: true  // ← esto es lo clave
+    credentials: true,
 }));
 
 // Body parsing
@@ -93,8 +105,8 @@ if (process.env.NODE_ENV === 'development') {
 
 // Límite general para todas las rutas /api/
 const apiLimiter = rateLimit({
-    windowMs:        (process.env.RATE_LIMIT_WINDOW || 3000) * 12000 * 200000,
-    max:             process.env.RATE_LIMIT_MAX_REQUESTS || 45000,
+    windowMs:        parseInt(process.env.RATE_LIMIT_WINDOW) || 15 * 60 * 1000, // 15 minutos
+    max:             parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 300,
     message:         'Demasiadas peticiones desde esta IP, intenta de nuevo más tarde',
     standardHeaders: true,
     legacyHeaders:   false,
@@ -147,7 +159,8 @@ const outlookSyncRouter     = require('./routes/outlook-sync');
 const recoveriesRouter      = require('./routes/recoveries');
 const adRouter              = require('./routes/ad');
 const soporteRouter    = require('./routes/soporte');
-const almacenRouter         = require('./routes/almacen');
+const almacenRouter    = require('./routes/almacen');
+const itsmRouter       = require('./routes/itsm');
 
 
 
@@ -253,6 +266,7 @@ app.use('/api/soporte',           soporteRouter);
 app.use('/api/jira',         jiraRoutes);
 app.use('/tickets',          jiraRoutes);
 app.use('/api/outlook-sync', outlookSyncRouter);
+app.use('/api/itsm',         itsmRouter);
 
 
 // ============================================================================
@@ -303,7 +317,11 @@ app.use((err, req, res, next) => {
 // ============================================================================
 // INICIAR SERVIDOR
 // ============================================================================
-const server = app.listen(PORT, () => {
+// SLA job — iniciar después de que los modelos están listos
+require('./services/slaJob');
+
+const server = app.listen(PORT, async () => {
+    await initCasbin();
     console.log('═'.repeat(75));
     console.log('🚀 EQUIPMENT MANAGEMENT SYSTEM — SERVER STARTED');
     console.log('═'.repeat(75));
@@ -316,7 +334,7 @@ const server = app.listen(PORT, () => {
     console.log(`🔷 AD:        http://localhost:${PORT}/ad`);
         console.log(`🔷 SOPORTE:        http://localhost:${PORT}/soporte`);
     console.log('═'.repeat(75));
-    console.log('✅ Servidor listo\n');
+   logger.info('✅ Servidor listo');
 });
 
 

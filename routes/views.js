@@ -418,6 +418,11 @@ router.get('/employees/:id',
 );
 
 
+// GET /incidencias
+router.get('/incidencias', authenticateToken, requireVerified, (req, res) => {
+    res.render('incidencias', { title: 'Gestión de Tickets', user: req.user });
+});
+
 // ============================================================================
 // EXPORTAR
 // ============================================================================

@@ -2,8 +2,9 @@
 // assignments-dashboard.js — Dashboard de Asignaciones CON GRÁFICOS INTERACTIVOS
 // ============================================================================
 
-const API_ASSIGNMENTS = 'http://localhost:3000/api/assignments';
-const API_DASHBOARD = 'http://localhost:3000/api/dashboard';
+const API_BASE_URL    = window.location.origin;
+const API_ASSIGNMENTS = `${API_BASE_URL}/api/assignments`;
+const API_DASHBOARD   = `${API_BASE_URL}/api/dashboard`;
 
 let asignacionesTable = null;
 let searchTimeout = null;
@@ -448,7 +449,7 @@ function configurarBusquedasModalAñadir() {
         
         addEmployeeSearchTimeout = setTimeout(async () => {
             try {
-                const response = await fetch(`http://localhost:3000/api/employees/search?q=${encodeURIComponent(searchTerm)}`);
+                const response = await fetch(`${API_BASE_URL}/api/employees/search?q=${encodeURIComponent(searchTerm)}`);
                 const result = await response.json();
                 
                 if (result.success && result.data.length > 0) {
@@ -480,7 +481,7 @@ function configurarBusquedasModalAñadir() {
         
         addEquipmentSearchTimeout = setTimeout(async () => {
             try {
-                const response = await fetch(`http://localhost:3000/api/equipment/search?term=${encodeURIComponent(searchTerm)}`);
+                const response = await fetch(`${API_BASE_URL}/api/equipment/search?term=${encodeURIComponent(searchTerm)}`);
                 const result = await response.json();
                 
                 if (result.success && result.data.length > 0) {
@@ -511,7 +512,7 @@ function configurarBusquedasModalAñadir() {
         
         addDepartmentSearchTimeout = setTimeout(async () => {
             try {
-                const response = await fetch(`http://localhost:3000/api/departments/search?term=${encodeURIComponent(searchTerm)}`);
+                const response = await fetch(`${API_BASE_URL}/api/departments/search?term=${encodeURIComponent(searchTerm)}`);
                 const result = await response.json();
                 
                 if (result.success && result.data.length > 0) {
@@ -543,7 +544,7 @@ function configurarBusquedasModalAñadir() {
         
         addLocationSearchTimeout = setTimeout(async () => {
             try {
-                const response = await fetch(`http://localhost:3000/api/locations/search?term=${encodeURIComponent(searchTerm)}`);
+                const response = await fetch(`${API_BASE_URL}/api/locations/search?term=${encodeURIComponent(searchTerm)}`);
                 const result = await response.json();
                 
                 if (result.success && result.data.length > 0) {
@@ -798,7 +799,7 @@ function configurarBusquedasModalEditar() {
         
         employeeSearchTimeout = setTimeout(async () => {
             try {
-                const response = await fetch(`http://localhost:3000/api/employees/search?q=${encodeURIComponent(searchTerm)}`);
+                const response = await fetch(`${API_BASE_URL}/api/employees/search?q=${encodeURIComponent(searchTerm)}`);
                 const result = await response.json();
                 
                 if (result.success && result.data.length > 0) {
@@ -830,7 +831,7 @@ function configurarBusquedasModalEditar() {
         
         equipmentSearchTimeout = setTimeout(async () => {
             try {
-                const response = await fetch(`http://localhost:3000/api/equipment/search?term=${encodeURIComponent(searchTerm)}`);
+                const response = await fetch(`${API_BASE_URL}/api/equipment/search?term=${encodeURIComponent(searchTerm)}`);
                 const result = await response.json();
                 
                 if (result.success && result.data.length > 0) {
@@ -862,7 +863,7 @@ function configurarBusquedasModalEditar() {
         
         departmentSearchTimeout = setTimeout(async () => {
             try {
-                const response = await fetch(`http://localhost:3000/api/departments/search?term=${encodeURIComponent(searchTerm)}`);
+                const response = await fetch(`${API_BASE_URL}/api/departments/search?term=${encodeURIComponent(searchTerm)}`);
                 const result = await response.json();
                 
                 if (result.success && result.data.length > 0) {
@@ -894,7 +895,7 @@ function configurarBusquedasModalEditar() {
         
         locationSearchTimeout = setTimeout(async () => {
             try {
-                const response = await fetch(`http://localhost:3000/api/locations/search?term=${encodeURIComponent(searchTerm)}`);
+                const response = await fetch(`${API_BASE_URL}/api/locations/search?term=${encodeURIComponent(searchTerm)}`);
                 const result = await response.json();
                 
                 if (result.success && result.data.length > 0) {
@@ -1093,7 +1094,7 @@ async function handleEditAssignment() {
     console.log('📤 Actualizando asignación:', updatedData);
     
     try {
-        const response = await fetch('http://localhost:3000/api/assignments/update', {
+        const response = await fetch('${API_BASE_URL}/api/assignments/update', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',

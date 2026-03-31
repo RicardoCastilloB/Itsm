@@ -1,112 +1,119 @@
-/********************************************
- * 1. Importaciones y configuración inicial
- ********************************************/
-const mysql = require('mysql2/promise');
-require('dotenv').config();
+// ============================================================================
+// config/database.js — Capa de acceso a datos
+//
+// Internamente usa Sequelize (mysql2 dialect).
+// Expone la misma API que antes: executeQuery, callStoredProcedure,
+// executeTransaction, equipmentPool — las rutas existentes no cambian.
+//
+// Ventaja: cambiar a PostgreSQL en el futuro = solo cambiar dialect
+// en src/config/database.js y ajustar 2-3 tipos de datos en los modelos.
+// ============================================================================
 
-/********************************************
- * 2. Configuración del pool de conexión
- ********************************************/
-const equipmentPool = mysql.createPool({
-  host:     process.env.EQUIPMENT_HOST     || 'localhost',
-  user:     process.env.EQUIPMENT_USER     || 'root',
-  password: process.env.EQUIPMENT_PASSWORD,
-  database: process.env.EQUIPMENT_DATABASE || 'equipment_management',
-  port:     process.env.EQUIPMENT_PORT     || 3306,
-  waitForConnections:    true,
-  connectionLimit:       15,      // era 10
-  queueLimit:            0,
-  connectTimeout:        10000,   // nuevo: 10s timeout de conexión
-  enableKeepAlive:       true,
-  keepAliveInitialDelay: 30000    // era 0, ahora cada 30s
-});
+const { QueryTypes } = require('sequelize');
+const sequelize = require('../src/config/database');
+const logger    = require('../utils/logger');
 
-/********************************************
- * 3. Función para probar la conexión
- ********************************************/
-async function testEquipmentConnection() {
-  try {
-    const connection = await equipmentPool.getConnection();
-    console.log('✅ Conexión exitosa a Equipment Management');
-    connection.release();
-    return true;
-  } catch (error) {
-    console.error('❌ Error conectando a Equipment Management:', error.message);
-    return false;
-  }
-}
+// ============================================================================
+// SHIM de pool — mantiene compatibilidad con rutas que usan
+// equipmentPool directamente (ej: equipmentPool.query(...))
+// ============================================================================
+const equipmentPool = {
+    query: async (sql, params = []) => {
+        const [results, metadata] = await sequelize.query(sql, {
+            replacements: params,
+            type:         QueryTypes.RAW,
+        });
+        return [results, metadata];
+    },
+    getConnection: async () => {
+        const t = await sequelize.transaction();
+        return {
+            execute:          async (sql, params = []) => sequelize.query(sql, { replacements: params, transaction: t, type: QueryTypes.RAW }),
+            beginTransaction: async () => {},
+            commit:           async () => t.commit(),
+            rollback:         async () => t.rollback(),
+            release:          () => {},
+        };
+    },
+};
 
-/********************************************
- * 4. Ejecutar consultas generales (SELECT, UPDATE, etc.)
- ********************************************/
-async function executeQuery(pool, query, params = []) {
-  let connection;
-  try {
-    connection = await pool.getConnection();
-    const [results] = await connection.execute(query, params);
+// ============================================================================
+// executeQuery — reemplazo directo de mysql2 pool.execute()
+// El argumento `pool` se ignora (compatibilidad hacia atrás).
+// ============================================================================
+async function executeQuery(_pool, sql, params = []) {
+    const [results] = await sequelize.query(sql, {
+        replacements: params,
+        type:         QueryTypes.RAW,
+    });
     return results;
-  } catch (error) {
-    console.error('Error en query:', error.message);
-    throw error;
-  } finally {
-    if (connection) connection.release();
-  }
 }
 
-/********************************************
- * 5. Ejecutar procedimientos almacenados (CALL)
- ********************************************/
-async function callStoredProcedure(pool, procedureName, params = []) {
-  let connection;
-  try {
-    connection = await pool.getConnection();
+// ============================================================================
+// callStoredProcedure — ejecuta un CALL al procedimiento almacenado
+// ============================================================================
+async function callStoredProcedure(_pool, procedureName, params = []) {
     const placeholders = params.map(() => '?').join(', ');
-    const query = `CALL ${procedureName}(${placeholders})`;
-    const [results] = await connection.execute(query, params);
+    const [results] = await sequelize.query(
+        `CALL ${procedureName}(${placeholders})`,
+        { replacements: params, type: QueryTypes.RAW }
+    );
     return results;
-  } catch (error) {
-    console.error(`Error ejecutando SP ${procedureName}:`, error.message);
-    throw error;
-  } finally {
-    if (connection) connection.release();
-  }
 }
 
-/********************************************
- * 6. Ejecutar transacciones SQL
- ********************************************/
-async function executeTransaction(pool, callback) {
-  const connection = await pool.getConnection();
-  try {
-    await connection.beginTransaction();
-    const result = await callback(connection);
-    await connection.commit();
-    return result;
-  } catch (error) {
-    await connection.rollback();
-    throw error;
-  } finally {
-    connection.release();
-  }
+// ============================================================================
+// executeTransaction — transacción Sequelize con API compatible
+// ============================================================================
+async function executeTransaction(_pool, callback) {
+    const t = await sequelize.transaction();
+    const connection = {
+        execute: async (sql, params = []) => {
+            const [results, meta] = await sequelize.query(sql, {
+                replacements: params,
+                transaction:  t,
+                type:         QueryTypes.RAW,
+            });
+            return [results, meta];
+        },
+        beginTransaction: async () => {},
+        commit:           async () => t.commit(),
+        rollback:         async () => t.rollback(),
+        release:          () => {},
+    };
+    try {
+        const result = await callback(connection);
+        await t.commit();
+        return result;
+    } catch (error) {
+        await t.rollback();
+        throw error;
+    }
 }
 
-/********************************************
- * 7. Prueba automática de la conexión
- ********************************************/
+// ============================================================================
+// Test de conexión al arrancar
+// ============================================================================
+async function testEquipmentConnection() {
+    try {
+        await sequelize.authenticate();
+        logger.info('✅ Conexión exitosa a Equipment Management (Sequelize)');
+        return true;
+    } catch (error) {
+        logger.error('❌ Error conectando a Equipment Management:', error.message);
+        return false;
+    }
+}
+
 (async () => {
-  console.log('\n Probando conexiones a bases de datos...\n');
-  
-  await testEquipmentConnection();
-  console.log('');
+    console.log('\n Probando conexiones a bases de datos...\n');
+    await testEquipmentConnection();
+    console.log('');
 })();
 
-/********************************************
- * 8. Exportación de funciones y pool
- ********************************************/
 module.exports = {
-  equipmentPool,
-  executeQuery,
-  callStoredProcedure,
-  executeTransaction,
-  testEquipmentConnection
+    equipmentPool,
+    executeQuery,
+    callStoredProcedure,
+    executeTransaction,
+    testEquipmentConnection,
 };

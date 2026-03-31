@@ -2,7 +2,8 @@
 // CONFIGURACIÓN GENERAL Y VARIABLES GLOBALES
 // ============================================================================
 
-const API_BASE = 'http://localhost:3000/api/dashboard';
+const API_BASE_URL = window.location.origin;
+const API_BASE     = `${API_BASE_URL}/api/dashboard`;
 
 let tables = {}; // Almacena las instancias de DataTables
 let searchTimeout = null; // Timeout para búsqueda global con debounce
@@ -156,7 +157,7 @@ function initTablesServerSide(data) {
         processing: true,
         serverSide: true,
         ajax: {
-            url: 'http://localhost:3000/api/employees',
+            url: '${API_BASE_URL}/api/employees',
             type: 'GET',
             credentials: 'include',
             data: function(d) {
@@ -215,7 +216,7 @@ function initTablesServerSide(data) {
         processing: true,
         serverSide: true,
         ajax: {
-            url: 'http://localhost:3000/api/equipment',
+            url: '${API_BASE_URL}/api/equipment',
             type: 'GET',
             credentials: 'include',
             data: function(d) {
@@ -807,7 +808,7 @@ if (tables.employees) {
         
         // ⭐ CONFIGURAR AJAX PARA BÚSQUEDAS
         ajax: {
-            url: 'http://localhost:3000/api/employees',
+            url: '${API_BASE_URL}/api/employees',
             type: 'GET',
             credentials: 'include',
             data: function(d) {
@@ -860,7 +861,7 @@ if (tables.equipment) {
         
         // ⭐ CONFIGURAR AJAX PARA BÚSQUEDAS
         ajax: {
-            url: 'http://localhost:3000/api/equipment',
+            url: '${API_BASE_URL}/api/equipment',
             type: 'GET',
             credentials: 'include',
             data: function(d) {
@@ -1050,7 +1051,7 @@ if (tables.equipment) {
  */
 async function loadStatusOptions() {
     try {
-        const response = await fetch('http://localhost:3000/api/equipment/status-options');
+        const response = await fetch('${API_BASE_URL}/api/equipment/status-options');
         const result = await response.json();
         
         if (result.success && result.options) {
@@ -1175,7 +1176,7 @@ $('#saveEquipmentChanges').off('click').on('click', async function() {
     console.log('📤 Enviando datos completos:', updatedData);
 
     try {
-        const response = await fetch('http://localhost:3000/api/equipment/update', {
+        const response = await fetch('${API_BASE_URL}/api/equipment/update', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedData)
@@ -1315,7 +1316,7 @@ $('#editEmployeeName').on('input', function() {
     
     employeeSearchTimeout = setTimeout(async () => {
         try {
-            const response = await fetch(`http://localhost:3000/api/employees/search?q=${encodeURIComponent(searchTerm)}`);
+            const response = await fetch(`${API_BASE_URL}/api/employees/search?q=${encodeURIComponent(searchTerm)}`);
             const result = await response.json();
             
             if (result.success && result.data.length > 0) {
@@ -1414,7 +1415,7 @@ $('#editEquipmentCode').on('input', function() {
     
     equipmentSearchTimeout = setTimeout(async () => {
         try {
-            const response = await fetch(`http://localhost:3000/api/equipment/search?term=${encodeURIComponent(searchTerm)}`);
+            const response = await fetch(`${API_BASE_URL}/api/equipment/search?term=${encodeURIComponent(searchTerm)}`);
             const result = await response.json();
             
             if (result.success && result.data.length > 0) {
@@ -1493,7 +1494,7 @@ $('#editDepartmentName').on('input', function() {
     
     departmentSearchTimeout = setTimeout(async () => {
         try {
-            const response = await fetch(`http://localhost:3000/api/departments/search?term=${encodeURIComponent(searchTerm)}`);
+            const response = await fetch(`${API_BASE_URL}/api/departments/search?term=${encodeURIComponent(searchTerm)}`);
             const result = await response.json();
             
             if (result.success && result.data.length > 0) {
@@ -1533,7 +1534,7 @@ $('#editLocationName').on('input', function() {
     
     locationSearchTimeout = setTimeout(async () => {
         try {
-            const response = await fetch(`http://localhost:3000/api/locations/search?term=${encodeURIComponent(searchTerm)}`);
+            const response = await fetch(`${API_BASE_URL}/api/locations/search?term=${encodeURIComponent(searchTerm)}`);
             const result = await response.json();
             
             if (result.success && result.data.length > 0) {
@@ -1721,7 +1722,7 @@ $('#saveAssignmentChanges').off('click').on('click', async function() {
     console.log('📤 Enviando datos de asignación:', updatedData);
 
     try {
-        const response = await fetch('http://localhost:3000/api/assignments/update', {
+        const response = await fetch('${API_BASE_URL}/api/assignments/update', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedData)
@@ -1802,7 +1803,7 @@ $('#saveDepartmentChanges').off('click').on('click', async function() {
     console.log('📤 Enviando datos departamento:', updatedData);
 
     try {
-        const response = await fetch('http://localhost:3000/api/departments/update', {
+        const response = await fetch('${API_BASE_URL}/api/departments/update', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedData)
@@ -1879,7 +1880,7 @@ $('#saveLocationChanges').off('click').on('click', async function() {
     console.log('📤 Enviando datos ubicación:', updatedData);
 
     try {
-        const response = await fetch('http://localhost:3000/api/locations/update', {
+        const response = await fetch('${API_BASE_URL}/api/locations/update', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedData)
@@ -2330,7 +2331,7 @@ $('#addEmployeeName').on('input', function() {
     
     addEmployeeSearchTimeout = setTimeout(async () => {
         try {
-            const response = await fetch(`http://localhost:3000/api/employees/search?q=${encodeURIComponent(searchTerm)}`);
+            const response = await fetch(`${API_BASE_URL}/api/employees/search?q=${encodeURIComponent(searchTerm)}`);
             const result = await response.json();
             
             if (result.success && result.data.length > 0) {
@@ -2405,7 +2406,7 @@ $('#addEquipmentCode').on('input', function() {
     
     addEquipmentSearchTimeout = setTimeout(async () => {
         try {
-            const response = await fetch(`http://localhost:3000/api/equipment/search?term=${encodeURIComponent(searchTerm)}`);
+            const response = await fetch(`${API_BASE_URL}/api/equipment/search?term=${encodeURIComponent(searchTerm)}`);
             const result = await response.json();
             
             if (result.success && result.data.length > 0) {
@@ -2472,7 +2473,7 @@ $('#addDepartmentName').on('input', function() {
     
     addDepartmentSearchTimeout = setTimeout(async () => {
         try {
-            const response = await fetch(`http://localhost:3000/api/departments/search?term=${encodeURIComponent(searchTerm)}`);
+            const response = await fetch(`${API_BASE_URL}/api/departments/search?term=${encodeURIComponent(searchTerm)}`);
             const result = await response.json();
             
             if (result.success && result.data.length > 0) {
@@ -2539,7 +2540,7 @@ $('#addLocationName').on('input', function() {
     
     addLocationSearchTimeout = setTimeout(async () => {
         try {
-            const response = await fetch(`http://localhost:3000/api/locations/search?term=${encodeURIComponent(searchTerm)}`);
+            const response = await fetch(`${API_BASE_URL}/api/locations/search?term=${encodeURIComponent(searchTerm)}`);
             const result = await response.json();
             
             if (result.success && result.data.length > 0) {
@@ -2655,7 +2656,7 @@ $('#saveNewAssignment').on('click', async function() {
     console.log('📤 Enviando nueva asignación:', newAssignment);
     
     try {
-        const response = await fetch('http://localhost:3000/api/assignments', {
+        const response = await fetch('${API_BASE_URL}/api/assignments', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newAssignment)
@@ -3013,7 +3014,7 @@ $('#addEmployeeModal').on('show.bs.modal', async function() {
     console.log('📋 Modal Empleado abierto - Cargando departamentos...');
     
     try {
-        const response = await fetch('http://localhost:3000/api/departments', {
+        const response = await fetch('${API_BASE_URL}/api/departments', {
             credentials: 'include'
         });
 
@@ -3073,7 +3074,7 @@ $('#addEmployeeForm').on('submit', async function(e) {
     console.log('📤 Enviando datos del empleado:', formData);
 
     try {
-        const response = await fetch('http://localhost:3000/api/employees', {
+        const response = await fetch('${API_BASE_URL}/api/employees', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -3244,7 +3245,7 @@ $('#addEquipmentForm').on('submit', async function(e) {
     console.log('📤 Enviando datos del equipo:', formData);
 
     try {
-        const response = await fetch('http://localhost:3000/api/equipment', {
+        const response = await fetch('${API_BASE_URL}/api/equipment', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -3348,7 +3349,7 @@ $('#device_code').on('blur', async function() {
     if (!code) return;
     
     try {
-        const response = await fetch(`http://localhost:3000/api/equipment/search?term=${encodeURIComponent(code)}`, {
+        const response = await fetch(`${API_BASE_URL}/api/equipment/search?term=${encodeURIComponent(code)}`, {
             credentials: 'include'
         });
         
@@ -3384,7 +3385,7 @@ $('#serial_number').on('blur', async function() {
     if (!serial) return;
     
     try {
-        const response = await fetch(`http://localhost:3000/api/equipment/search?term=${encodeURIComponent(serial)}`, {
+        const response = await fetch(`${API_BASE_URL}/api/equipment/search?term=${encodeURIComponent(serial)}`, {
             credentials: 'include'
         });
         

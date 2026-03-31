@@ -1,0 +1,85 @@
+# ============================================================================
+# Casbin RBAC Policy
+# Formato: p, rol, recurso, accion
+#          g, rol_hijo, rol_padre  (herencia)
+# ============================================================================
+
+# --- ADMIN: acceso total ---
+p, admin, equipment,   read
+p, admin, equipment,   create
+p, admin, equipment,   update
+p, admin, equipment,   delete
+p, admin, employees,   read
+p, admin, employees,   create
+p, admin, employees,   update
+p, admin, employees,   delete
+p, admin, assignments, read
+p, admin, assignments, create
+p, admin, assignments, update
+p, admin, assignments, delete
+p, admin, users,       read
+p, admin, users,       create
+p, admin, users,       update
+p, admin, users,       delete
+p, admin, roles,       read
+p, admin, roles,       create
+p, admin, roles,       update
+p, admin, roles,       delete
+p, admin, reports,     read
+p, admin, reports,     create
+p, admin, almacen,     read
+p, admin, almacen,     create
+p, admin, almacen,     update
+p, admin, almacen,     delete
+p, admin, recoveries,  read
+p, admin, recoveries,  create
+p, admin, recoveries,  update
+p, admin, recoveries,  delete
+p, admin, soporte,     read
+p, admin, soporte,     create
+p, admin, soporte,     update
+p, admin, soporte,     delete
+p, admin, warranty,    read
+p, admin, warranty,    create
+p, admin, warranty,    update
+p, admin, warranty,    delete
+
+# --- SUPERVISOR: lectura amplia + aprobar/actualizar ---
+p, supervisor, equipment,   read
+p, supervisor, equipment,   update
+p, supervisor, employees,   read
+p, supervisor, assignments, read
+p, supervisor, assignments, update
+p, supervisor, recoveries,  read
+p, supervisor, recoveries,  update
+p, supervisor, reports,     read
+p, supervisor, reports,     create
+p, supervisor, almacen,     read
+p, supervisor, soporte,     read
+p, supervisor, soporte,     update
+p, supervisor, warranty,    read
+
+# --- AGENTE: operaciones diarias de campo ---
+p, agente, equipment,   read
+p, agente, equipment,   create
+p, agente, equipment,   update
+p, agente, employees,   read
+p, agente, assignments, read
+p, agente, assignments, create
+p, agente, assignments, update
+p, agente, recoveries,  read
+p, agente, recoveries,  create
+p, agente, almacen,     read
+p, agente, almacen,     create
+p, agente, soporte,     read
+p, agente, soporte,     create
+p, agente, soporte,     update
+p, agente, warranty,    read
+
+# --- USUARIO: solo lectura ---
+p, usuario, equipment,   read
+p, usuario, employees,   read
+p, usuario, assignments, read
+p, usuario, reports,     read
+p, usuario, soporte,     read
+p, usuario, soporte,     create

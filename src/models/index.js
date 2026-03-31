@@ -1,46 +1,57 @@
-const { Sequelize } = require('sequelize');
-require('dotenv').config();
+// ============================================================================
+// src/models/index.js — Carga automática de modelos y asociaciones
+// ============================================================================
 
-const sequelize = new Sequelize(
-    process.env.EQUIPMENT_DATABASE,
-    process.env.EQUIPMENT_USER,
-    process.env.EQUIPMENT_PASSWORD,
-    {
-        host:    process.env.EQUIPMENT_HOST || 'localhost',
-        port:    process.env.EQUIPMENT_PORT || 3306,
-        dialect: 'mysql',
-        pool: {
-            max:     10,
-            min:     2,
-            acquire: 30000,
-            idle:    10000,
-        },
-        logging: process.env.NODE_ENV === 'development'
-            ? (msg) => console.log(`[SQL] ${msg}`)
-            : false,
-        define: {
-            timestamps:  true,
-            underscored: true,
-            paranoid:    true,
-        },
-    }
-);
+const sequelize = require('../config/database');
 
-// Modelos
-const User       = require('./User')(sequelize);
-const Role       = require('./Role')(sequelize);
-const Permission = require('./Permission')(sequelize);
-const AuditLog   = require('./AuditLog')(sequelize);
+// Importar modelos
+const Role             = require('./Role');
+const Permission       = require('./Permission');
+const User             = require('./User');
+const AuditLog         = require('./AuditLog');
+const Category         = require('./Category');
+const SLAPolicy        = require('./SLAPolicy');
+const Ticket           = require('./Ticket');
+const TicketComment    = require('./TicketComment');
+const TicketAttachment = require('./TicketAttachment');
 
-// Relaciones User ↔ Role
-//User.belongsToMany(Role,       { through: 'user_roles' });
-//Role.belongsToMany(User,       { through: 'user_roles' });
+// ============================================================================
+// ASOCIACIONES
+// ============================================================================
 
-// Relaciones Role ↔ Permission
-Role.belongsToMany(Permission, { through: 'role_permissions' });
-Permission.belongsToMany(Role, { through: 'role_permissions' });
+// Role ↔ Permission (1:N)
+Role.hasMany(Permission, { foreignKey: 'roleId', as: 'permisos' });
+Permission.belongsTo(Role, { foreignKey: 'roleId', as: 'rol' });
 
-// Relación AuditLog → User
-// AuditLog.belongsTo(User, { foreignKey: 'usuario_id' }); // pendiente migración UUID
+// User ↔ AuditLog (1:N)
+User.hasMany(AuditLog, { foreignKey: 'userId', as: 'logs' });
+AuditLog.belongsTo(User, { foreignKey: 'userId', as: 'usuario' });
 
-module.exports = { sequelize, Sequelize, User, Role, Permission, AuditLog };
+// Ticket ↔ Category (N:1)
+Ticket.belongsTo(Category, { foreignKey: 'categoryId', as: 'categoria' });
+Category.hasMany(Ticket,   { foreignKey: 'categoryId', as: 'tickets' });
+
+// Ticket ↔ TicketComment (1:N)
+Ticket.hasMany(TicketComment,       { foreignKey: 'ticketId', as: 'comentarios' });
+TicketComment.belongsTo(Ticket,     { foreignKey: 'ticketId', as: 'ticket' });
+
+// Ticket ↔ TicketAttachment (1:N)
+Ticket.hasMany(TicketAttachment,    { foreignKey: 'ticketId', as: 'adjuntos' });
+TicketAttachment.belongsTo(Ticket,  { foreignKey: 'ticketId', as: 'ticket' });
+
+// ============================================================================
+// EXPORTAR
+// ============================================================================
+
+module.exports = {
+    sequelize,
+    Role,
+    Permission,
+    User,
+    AuditLog,
+    Category,
+    SLAPolicy,
+    Ticket,
+    TicketComment,
+    TicketAttachment,
+};

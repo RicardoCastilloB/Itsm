@@ -1,6 +1,0 @@
-Listado de rutas de carpetas
-El número de serie del volumen es 0486-8FA8
-C:\USERS\RC\MUSIC\PROJECT-ROOT\-I
-Ruta de acceso no válida: \USERS\RC\MUSIC\PROJECT-ROOT\-I
-No existe ninguna subcarpeta 
-

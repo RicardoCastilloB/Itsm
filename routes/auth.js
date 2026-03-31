@@ -1,7 +1,9 @@
-const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const express  = require('express');
+const jwt      = require('jsonwebtoken');
+const { Op }   = require('sequelize');
 const { equipmentPool, executeQuery } = require('../config/database');
+const { User } = require('../src/models');
+// bcrypt ya no se usa directamente — User.verificarPassword() lo encapsula
 const router = express.Router();
 
 // Verificar variables de entorno
@@ -75,33 +77,23 @@ router.post('/login', async (req, res) => {
 
         console.log(`🔍 Intentando login para: ${username}`);
 
-        // Buscar usuario por username o email
-        const query = 'SELECT * FROM users WHERE username = ? OR email = ? LIMIT 1';
-        const results = await executeQuery(equipmentPool, query, [username, username]);
+        // Buscar usuario por username o email (Sequelize ORM)
+        const userData = await User.findOne({
+            where: {
+                [Op.or]: [{ username }, { email: username }],
+                activo: true,
+            },
+        });
 
-        // Validar si el usuario existe
-        if (!results || results.length === 0) {
+        if (!userData) {
             console.log(`❌ Usuario no encontrado: ${username}`);
-            return res.status(401).json({
-                success: false,
-                error: 'Credenciales inválidas'
-            });
+            return res.status(401).json({ success: false, error: 'Credenciales inválidas' });
         }
 
-        const userData = results[0];
         console.log(`✅ Usuario encontrado: ${userData.username} (ID: ${userData.id})`);
 
-        // Verificar si la cuenta está activa
-        if (!userData.is_active) {
-            console.log(`⚠️ Cuenta inactiva: ${userData.username}`);
-            return res.status(403).json({
-                success: false,
-                error: 'Cuenta inactiva. Contacta al administrador.'
-            });
-        }
-
         // Comparar contraseña con el hash almacenado
-        const isPasswordValid = await bcrypt.compare(password, userData.password_hash);
+        const isPasswordValid = await userData.verificarPassword(password);
         
         if (!isPasswordValid) {
             console.log(`❌ Contraseña inválida para: ${userData.username}`);
@@ -231,6 +223,31 @@ router.post('/logout', async (req, res) => {
             success: false,
             error: 'Error al cerrar sesión'
         });
+    }
+});
+
+// ============================================================================
+// GET /api/auth/perfil — Datos del usuario autenticado
+// ============================================================================
+router.get('/perfil', authenticateToken, async (req, res) => {
+    try {
+        const rows = await executeQuery(
+            equipmentPool,
+            `SELECT id, username, full_name, email, role, employee_cip,
+                    is_active, is_verified, created_at
+             FROM users WHERE id = ? AND is_active = 1 LIMIT 1`,
+            [req.user.id]
+        );
+
+        if (!rows || rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
+        }
+
+        return res.json({ success: true, data: rows[0] });
+
+    } catch (error) {
+        console.error('❌ Error en GET /perfil:', error);
+        return res.status(500).json({ success: false, error: 'Error al obtener perfil' });
     }
 });
 

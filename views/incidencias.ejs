@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestión de Tickets</title>
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+/* ════════════════════════════════════════════════════
+   VARIABLES — idénticas a tu plantilla
+════════════════════════════════════════════════════ */
+:root,[data-theme="light"]{
+    --bg:#f0f4f8;--card:#ffffff;--hdr:#f8fafc;--border:#e2e8f0;
+    --text:#1e293b;--muted:#64748b;--primary:#3b82f6;--success:#10b981;
+    --warning:#f59e0b;--info:#06b6d4;--danger:#ef4444;--purple:#8b5cf6;
+    --hover:#f1f5f9;--input-bg:#ffffff;
+    --sh-sm:0 1px 3px rgba(0,0,0,.06);--sh-md:0 4px 12px rgba(0,0,0,.08);--sh-lg:0 8px 24px rgba(0,0,0,.10);
+    --mono:'JetBrains Mono',monospace;
+}
+[data-theme="dark"]{
+    --bg:#0f172a;--card:#1e293b;--hdr:#162032;--border:#2d3f55;
+    --text:#e2e8f0;--muted:#94a3b8;--primary:#60a5fa;--success:#34d399;
+    --warning:#fbbf24;--info:#22d3ee;--danger:#f87171;--purple:#a78bfa;
+    --hover:#243348;--input-bg:#1e293b;
+    --sh-sm:0 1px 3px rgba(0,0,0,.3);--sh-md:0 4px 12px rgba(0,0,0,.4);--sh-lg:0 8px 24px rgba(0,0,0,.5);
+}
+*,*::before,*::after{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'DM Sans',-apple-system,sans-serif;transition:background .3s,color .3s;overflow-x:hidden;}
+.pg{max-width:1700px;margin:0 auto;padding:24px 20px;}
+
+/* PAGE HEADER */
+.page-hdr{display:flex;align-items:center;gap:16px;margin-bottom:28px;}
+.page-hdr-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;box-shadow:var(--sh-md);}
+.page-hdr h1{font-size:22px;font-weight:800;margin:0;color:var(--text);}
+.page-hdr p{margin:3px 0 0;font-size:13px;color:var(--muted);}
+.page-hdr-right{margin-left:auto;display:flex;gap:8px;align-items:center;}
+
+/* SECTION TITLE */
+.sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:0 0 14px;display:flex;align-items:center;gap:8px;}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* KPI GRID */
+.kpi-grid-tickets{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px;}
+@media(max-width:1100px){.kpi-grid-tickets{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:600px){.kpi-grid-tickets{grid-template-columns:repeat(2,1fr);}}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:all .2s;box-shadow:var(--sh-sm);position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;inset:0;background:var(--kc);opacity:0;transition:opacity .2s;}
+.kpi:hover::before,.kpi.active::before{opacity:.06;}
+.kpi.active{border-color:var(--kc)!important;box-shadow:0 0 0 2px var(--kc)!important;}
+.kpi.no-click{cursor:default;}
+.kpi-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:5px;}
+.kpi-val{font-size:28px;font-weight:800;line-height:1;color:var(--kc);}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+.kpi-icon{font-size:32px;opacity:.18;color:var(--kc);}
+.kpi-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;}
+
+/* MAIN TABS */
+.main-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;}
+.main-tab-btn{padding:12px 22px;font-size:13px;font-weight:700;color:var(--muted);background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;transition:all .15s;margin-bottom:-2px;display:flex;align-items:center;gap:7px;}
+.main-tab-btn:hover{color:var(--text);}
+.main-tab-btn.active{color:var(--primary);border-bottom-color:var(--primary);}
+.main-tab-btn .tab-count{background:var(--border);color:var(--muted);padding:1px 7px;border-radius:10px;font-size:11px;font-weight:700;}
+.main-tab-btn.active .tab-count{background:rgba(59,130,246,.15);color:var(--primary);}
+.main-tab-pane{display:none;}
+.main-tab-pane.active{display:block;}
+
+/* CARD BASE */
+.card-ui{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh-sm);overflow:hidden;margin-bottom:20px;}
+.card-head{padding:13px 18px;background:var(--hdr);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.card-head .title{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
+
+/* TABLE */
+.tbl-wrap{overflow:auto;max-height:520px;}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl thead th{background:var(--hdr);color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:11px 14px;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:5;}
+.tbl tbody td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text);}
+.tbl tbody tr:last-child td{border-bottom:none;}
+.tbl tbody tr{transition:background .12s;cursor:pointer;}
+.tbl tbody tr:hover td{background:var(--hover);}
+.mono{font-family:var(--mono);font-size:12px;}
+.link-cell{color:var(--primary);cursor:pointer;font-weight:600;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:700;border:1px solid transparent;}
+.bg-success{background:rgba(16,185,129,.12);color:#059669;border-color:rgba(16,185,129,.25);}
+.bg-info{background:rgba(6,182,212,.12);color:#0891b2;border-color:rgba(6,182,212,.25);}
+.bg-warning{background:rgba(245,158,11,.12);color:#d97706;border-color:rgba(245,158,11,.25);}
+.bg-danger{background:rgba(239,68,68,.12);color:#dc2626;border-color:rgba(239,68,68,.25);}
+.bg-secondary{background:rgba(100,116,139,.1);color:var(--muted);border-color:rgba(100,116,139,.2);}
+.bg-purple{background:rgba(139,92,246,.12);color:#7c3aed;border-color:rgba(139,92,246,.25);}
+.bg-primary-soft{background:rgba(59,130,246,.12);color:#2563eb;border-color:rgba(59,130,246,.25);}
+
+/* Status / tipo / prio badges */
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
+.status-abierto    {background:rgba(6,182,212,.12); color:#0891b2;}
+.status-en_progreso{background:rgba(245,158,11,.12);color:#d97706;}
+.status-pendiente  {background:rgba(139,92,246,.12);color:#7c3aed;}
+.status-resuelto   {background:rgba(16,185,129,.12);color:#059669;}
+.status-cerrado    {background:rgba(100,116,139,.12);color:#475569;}
+.type-incidente{background:rgba(239,68,68,.1);  color:#dc2626;}
+.type-solicitud{background:rgba(99,102,241,.1); color:#6366f1;}
+.prio-p1{background:rgba(239,68,68,.12); color:#dc2626;border-color:rgba(239,68,68,.25);}
+.prio-p2{background:rgba(249,115,22,.12);color:#c2410c;border-color:rgba(249,115,22,.25);}
+.prio-p3{background:rgba(245,158,11,.12);color:#d97706;border-color:rgba(245,158,11,.25);}
+.prio-p4{background:rgba(16,185,129,.12);color:#059669;border-color:rgba(16,185,129,.25);}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:600;border:1px solid transparent;cursor:pointer;transition:all .15s;text-decoration:none;font-family:'DM Sans',sans-serif;}
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:8px;}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary);}
+.btn-primary:hover{filter:brightness(1.1);}
+.btn-success{background:var(--success);color:#fff;}
+.btn-warning{background:var(--warning);color:#fff;}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-outline{background:none;border:1px solid var(--border);color:var(--muted);}
+.btn-outline:hover{border-color:var(--primary);color:var(--primary);}
+.btn-action{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--muted);display:inline-flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;transition:all .2s;}
+.btn-action:hover{border-color:var(--primary);color:var(--primary);background:rgba(59,130,246,.08);}
+.btn-action.btn-delete:hover{border-color:var(--danger);color:var(--danger);background:rgba(239,68,68,.08);}
+.btn-action.btn-resolve:hover{border-color:var(--success);color:var(--success);background:rgba(16,185,129,.08);}
+
+/* FORM CONTROLS */
+.form-control,.form-select{width:100%;padding:9px 13px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;background:var(--input-bg);color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s;font-family:'DM Sans',sans-serif;}
+.form-control:focus,.form-select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(59,130,246,.12);}
+.form-control::placeholder{color:var(--muted);}
+.form-label{font-size:12px;font-weight:600;color:var(--text);margin-bottom:5px;display:block;}
+.form-label .req{color:var(--danger);}
+textarea.form-control{resize:vertical;min-height:80px;}
+
+/* SEARCH BAR */
+.search-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.search-wrap{position:relative;flex:1;min-width:200px;}
+.search-wrap .ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none;}
+.search-inp{width:100%;padding:8px 12px 8px 36px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;background:var(--input-bg);color:var(--text);outline:none;transition:border-color .2s;font-family:'DM Sans',sans-serif;}
+.search-inp:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(59,130,246,.1);}
+
+/* FILTERS BAR */
+.filters-bar{background:var(--card);border-radius:12px;padding:13px 16px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;box-shadow:var(--sh-sm);border:1px solid var(--border);}
+.filter-pill{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .2s;}
+.filter-pill:hover,.filter-pill.active{border-color:var(--primary);color:var(--primary);background:rgba(59,130,246,.08);}
+.filter-pill.f-red.active{border-color:var(--danger);color:var(--danger);background:rgba(239,68,68,.08);}
+.filter-pill.f-amber.active{border-color:var(--warning);color:var(--warning);background:rgba(245,158,11,.08);}
+.filter-pill.f-purple.active{border-color:var(--purple);color:var(--purple);background:rgba(139,92,246,.08);}
+.filter-pill.f-green.active{border-color:var(--success);color:var(--success);background:rgba(16,185,129,.08);}
+.filter-sep{width:1px;height:22px;background:var(--border);margin:0 4px;}
+
+/* PAGINATION */
+.pag{display:flex;align-items:center;gap:6px;padding:12px 16px;border-top:1px solid var(--border);}
+.pag-info{font-size:12px;color:var(--muted);flex:1;}
+.pag-btn{padding:5px 11px;border:1px solid var(--border);border-radius:7px;background:none;color:var(--text);font-size:12px;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;}
+.pag-btn:hover:not(:disabled){border-color:var(--primary);color:var(--primary);}
+.pag-btn:disabled{opacity:.4;cursor:not-allowed;}
+.pag-btn.active{background:var(--primary);border-color:var(--primary);color:#fff;}
+
+/* MODAL — idéntico al sistema de tu plantilla */
+.modal-backdrop-custom{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1040;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-backdrop-custom.open{display:flex;}
+.modal-box{background:var(--card);border:1px solid var(--border);border-radius:18px;width:100%;margin:0;box-shadow:var(--sh-lg);overflow:hidden;max-height:90vh;display:flex;flex-direction:column;}
+.modal-box.sm{max-width:480px;}.modal-box.md{max-width:640px;}.modal-box.lg{max-width:900px;}.modal-box.xl{max-width:1080px;}
+.modal-hdr{padding:16px 22px;border-bottom:1px solid var(--border);background:var(--hdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.modal-hdr-left{display:flex;align-items:center;gap:10px;}
+.modal-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.modal-title-txt{font-size:14px;font-weight:700;color:var(--text);}
+.modal-sub-txt{font-size:11px;color:var(--muted);margin-top:2px;}
+.modal-close-btn{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;padding:2px 6px;border-radius:6px;transition:background .15s;}
+.modal-close-btn:hover{background:var(--hover);}
+.modal-body-custom{padding:22px;overflow-y:auto;flex:1;}
+.modal-ftr{padding:14px 22px;border-top:1px solid var(--border);background:var(--hdr);display:flex;gap:10px;justify-content:flex-end;flex-shrink:0;}
+
+/* DETAIL GRID */
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.detail-cell{background:var(--hdr);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+.detail-cell.span2{grid-column:1/-1;}
+.detail-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:4px;}
+.detail-val{font-size:13px;color:var(--text);font-weight:600;}
+
+/* LOG TIMELINE */
+.log-timeline{padding:4px 0;}
+.log-entry{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.log-entry:last-child{border-bottom:none;}
+.log-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.log-dot.dot-status {background:var(--info);}
+.log-dot.dot-comment{background:var(--success);}
+.log-dot.dot-assign {background:var(--warning);}
+.log-dot.dot-create {background:var(--purple);}
+.log-text{font-size:12px;color:var(--text);flex:1;line-height:1.4;}
+.log-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* SLA */
+.sla-ok     {font-size:12px;font-family:var(--mono);color:var(--success);}
+.sla-warning{font-size:12px;font-family:var(--mono);color:var(--warning);}
+.sla-breach {font-size:12px;font-family:var(--mono);color:var(--danger);}
+.sla-none   {font-size:12px;color:var(--muted);}
+
+/* MISC */
+.empty-row td{text-align:center;padding:40px;color:var(--muted);font-size:13px;}
+.spinner-sm{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .65s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.agent-wrap{display:flex;align-items:center;gap:7px;}
+.agent-avatar{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--purple));color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tt{font-weight:600;font-size:13px;color:var(--text);}
+.ts{font-size:11px;color:var(--muted);margin-top:1px;}
+.attach-item{display:flex;align-items:center;gap:8px;font-size:12px;padding:8px 10px;background:var(--hdr);border-radius:8px;border:1px solid var(--border);margin-bottom:6px;}
+.attach-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.attach-size{color:var(--muted);flex-shrink:0;}
+#toastZone{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast-item{padding:12px 18px;border-radius:12px;color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;box-shadow:var(--sh-md);animation:toastIn .25s ease;max-width:360px;}
+@keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.toast-ok{background:#10b981;}.toast-err{background:#ef4444;}.toast-inf{background:#3b82f6;}.toast-warn{background:#f59e0b;}
+*::-webkit-scrollbar{width:5px;height:5px;}
+*::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+<script>(function(){const t=localStorage.getItem('dashboardTheme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<div class="pg">
+
+<!-- ══ PAGE HEADER ══ -->
+<div class="page-hdr">
+    <div class="page-hdr-icon" style="background:linear-gradient(135deg,#3b82f6,#8b5cf6);">
+        <i class="bi bi-ticket-detailed-fill" style="color:#fff;"></i>
+    </div>
+    <div>
+        <h1>Gestión de Tickets</h1>
+        <p>Incidentes, solicitudes, historial de cambios y seguimiento de SLA</p>
+    </div>
+    <div class="page-hdr-right">
+        <button class="btn btn-outline btn-sm"><i class="bi bi-download"></i> Exportar</button>
+        <button class="btn btn-primary" onclick="openModalNuevoTicket()">
+            <i class="bi bi-plus-circle-fill"></i> Nuevo ticket
+        </button>
+    </div>
+</div>
+
+<!-- ══ KPIs ══ -->
+<p class="sec-title"><i class="bi bi-bar-chart-line"></i> Resumen del período</p>
+<div class="kpi-grid-tickets">
+    <div class="kpi" style="--kc:var(--info)" onclick="filtrarKPI('abierto')">
+        <div>
+            <div class="kpi-label"><span class="kpi-dot" style="background:var(--info)"></span>Abiertos</div>
+            <div class="kpi-val" id="kpiAbiertos">—</div>
+            <div class="kpi-sub">Sin resolver</div>
+        </div>
+        <i class="bi bi-folder2-open kpi-icon"></i>
+    </div>
+    <div class="kpi" style="--kc:var(--warning)" onclick="filtrarKPI('en_progreso')">
+        <div>
+            <div class="kpi-label"><span class="kpi-dot" style="background:var(--warning)"></span>En progreso</div>
+            <div class="kpi-val" id="kpiProgreso">—</div>
+            <div class="kpi-sub">Siendo atendidos</div>
+        </div>
+        <i class="bi bi-hourglass-split kpi-icon"></i>
+    </div>
+    <div class="kpi" style="--kc:var(--danger)" onclick="filtrarKPI('sla')">
+        <div>
+            <div class="kpi-label"><span class="kpi-dot" style="background:var(--danger)"></span>SLA en riesgo</div>
+            <div class="kpi-val" id="kpiSLA">—</div>
+            <div class="kpi-sub">Próximos a vencer</div>
+        </div>
+        <i class="bi bi-exclamation-circle kpi-icon"></i>
+    </div>
+    <div class="kpi" style="--kc:var(--success)" onclick="filtrarKPI('resuelto')">
+        <div>
+            <div class="kpi-label"><span class="kpi-dot" style="background:var(--success)"></span>Resueltos hoy</div>
+            <div class="kpi-val" id="kpiResueltos">—</div>
+            <div class="kpi-sub">Cerrados en el día</div>
+        </div>
+        <i class="bi bi-check-circle kpi-icon"></i>
+    </div>
+    <div class="kpi no-click" style="--kc:var(--primary)">
+        <div>
+            <div class="kpi-label"><span class="kpi-dot" style="background:var(--primary)"></span>Total activos</div>
+            <div class="kpi-val" id="kpiTotal">—</div>
+            <div class="kpi-sub">Todos los estados</div>
+        </div>
+        <i class="bi bi-ticket-detailed kpi-icon"></i>
+    </div>
+</div>
+
+<!-- ══ MAIN TABS ══ -->
+<div class="main-tabs">
+    <button class="main-tab-btn active" onclick="switchMainTab('todos',this)">
+        <i class="bi bi-list-ul"></i> Todos <span class="tab-count" id="mtc-todos">0</span>
+    </button>
+    <button class="main-tab-btn" onclick="switchMainTab('incidentes',this)">
+        <i class="bi bi-fire"></i> Incidentes <span class="tab-count" id="mtc-incidentes">0</span>
+    </button>
+    <button class="main-tab-btn" onclick="switchMainTab('solicitudes',this)">
+        <i class="bi bi-clipboard-check"></i> Solicitudes <span class="tab-count" id="mtc-solicitudes">0</span>
+    </button>
+    <button class="main-tab-btn" onclick="switchMainTab('historial',this)">
+        <i class="bi bi-clock-history"></i> Historial <span class="tab-count" id="mtc-historial">0</span>
+    </button>
+    <button class="main-tab-btn" onclick="switchMainTab('itsm',this)">
+        <i class="bi bi-shield-check"></i> ITSM <span class="tab-count" id="mtc-itsm">0</span>
+    </button>
+</div>
+
+<!-- ══ TAB: ITSM ══ -->
+<div id="maintab-itsm" class="main-tab-pane">
+    <div class="filters-bar" style="flex-wrap:wrap;gap:8px;">
+        <span style="font-size:12px;font-weight:600;color:var(--muted);margin-right:4px;">Estado:</span>
+        <button class="filter-pill active" data-istatus="todos"       onclick="itsmFilter('status','todos',this)">Todos</button>
+        <button class="filter-pill f-amber" data-istatus="abierto"    onclick="itsmFilter('status','abierto',this)">Abierto</button>
+        <button class="filter-pill f-amber" data-istatus="en_progreso" onclick="itsmFilter('status','en_progreso',this)">En progreso</button>
+        <button class="filter-pill f-purple" data-istatus="pendiente" onclick="itsmFilter('status','pendiente',this)">Pendiente</button>
+        <button class="filter-pill f-green" data-istatus="resuelto"   onclick="itsmFilter('status','resuelto',this)">Resuelto</button>
+        <button class="filter-pill" data-istatus="cerrado"            onclick="itsmFilter('status','cerrado',this)">Cerrado</button>
+        <div class="filter-sep"></div>
+        <span style="font-size:12px;font-weight:600;color:var(--muted);margin-right:4px;">SLA:</span>
+        <button class="filter-pill f-green" onclick="itsmFilter('sla','ok',this)">🟢 Ok</button>
+        <button class="filter-pill f-amber" onclick="itsmFilter('sla','riesgo',this)">🟡 Riesgo</button>
+        <button class="filter-pill f-red"   onclick="itsmFilter('sla','vencido',this)">🔴 Vencido</button>
+        <div class="filter-sep"></div>
+        <span style="font-size:12px;font-weight:600;color:var(--muted);margin-right:4px;">Prioridad:</span>
+        <button class="filter-pill f-red"   onclick="itsmFilter('priority','P1',this)">P1</button>
+        <button class="filter-pill f-red"   onclick="itsmFilter('priority','P2',this)">P2</button>
+        <button class="filter-pill f-amber" onclick="itsmFilter('priority','P3',this)">P3</button>
+        <button class="filter-pill f-green" onclick="itsmFilter('priority','P4',this)">P4</button>
+    </div>
+
+    <div class="card-ui">
+        <div class="card-head">
+            <span class="title"><i class="bi bi-shield-check"></i> Tickets ITSM <span class="badge bg-primary-soft" id="itsmCount">0</span></span>
+            <div class="search-bar">
+                <div class="search-wrap">
+                    <i class="bi bi-search ico"></i>
+                    <input type="text" class="search-inp" id="itsmSearch" placeholder="Buscar título..." oninput="loadItsm()">
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="openItsmModal()">
+                    <i class="bi bi-plus-lg"></i> Nuevo ticket
+                </button>
+            </div>
+        </div>
+        <div class="tbl-wrap">
+            <table class="tbl">
+                <thead>
+                    <tr>
+                        <th>ID</th><th>Título</th><th>Tipo</th><th>Prioridad</th>
+                        <th>Estado</th><th>SLA</th><th>Categoría</th><th>Creado</th><th></th>
+                    </tr>
+                </thead>
+                <tbody id="itsmTbody"><tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted);">Cargando...</td></tr></tbody>
+            </table>
+        </div>
+        <div class="pag" id="itsmPag"></div>
+    </div>
+</div>
+
+<!-- ══ MODAL: NUEVO TICKET ITSM ══ -->
+<div id="modalItsm" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:none;align-items:center;justify-content:center;">
+    <div style="background:var(--card);border-radius:16px;padding:28px;width:100%;max-width:560px;box-shadow:var(--sh-lg);position:relative;">
+        <button onclick="closeItsmModal()" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);">✕</button>
+        <h3 style="margin:0 0 20px;font-size:16px;font-weight:800;">Nuevo Ticket ITSM</h3>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+            <input id="itsmTitulo" class="form-input" placeholder="Título del ticket *" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--input-bg);color:var(--text);font-size:13px;">
+            <textarea id="itsmDesc" class="form-input" placeholder="Descripción" rows="3" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--input-bg);color:var(--text);font-size:13px;resize:vertical;"></textarea>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <select id="itsmTipo" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--input-bg);color:var(--text);font-size:13px;">
+                    <option value="incidente">🔥 Incidente</option>
+                    <option value="solicitud">📋 Solicitud</option>
+                    <option value="cambio">🔄 Cambio</option>
+                    <option value="problema">⚠️ Problema</option>
+                </select>
+                <select id="itsmPriority" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--input-bg);color:var(--text);font-size:13px;">
+                    <option value="P1">🔴 P1 — Crítico</option>
+                    <option value="P2">🟠 P2 — Alto</option>
+                    <option value="P3" selected>🟡 P3 — Medio</option>
+                    <option value="P4">🟢 P4 — Bajo</option>
+                </select>
+            </div>
+            <select id="itsmCategory" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--input-bg);color:var(--text);font-size:13px;">
+                <option value="">Categoría (opcional)</option>
+            </select>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end;">
+            <button class="btn btn-outline btn-sm" onclick="closeItsmModal()">Cancelar</button>
+            <button class="btn btn-primary btn-sm" onclick="crearItsmTicket()"><i class="bi bi-plus-lg"></i> Crear</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ TAB: TODOS ══ -->
+<div id="maintab-todos" class="main-tab-pane active">
+
+    <div class="filters-bar">
+        <span style="font-size:12px;font-weight:600;color:var(--muted);margin-right:4px;">Estado:</span>
+        <button class="filter-pill active" data-status="todos"        onclick="apStatus(this,'todos')">Todos</button>
+        <button class="filter-pill f-amber" data-status="abierto"     onclick="apStatus(this,'abierto')">Abierto</button>
+        <button class="filter-pill f-amber" data-status="en_progreso" onclick="apStatus(this,'en_progreso')">En progreso</button>
+        <button class="filter-pill f-purple" data-status="pendiente"  onclick="apStatus(this,'pendiente')">Pendiente</button>
+        <button class="filter-pill f-green" data-status="resuelto"    onclick="apStatus(this,'resuelto')">Resuelto</button>
+        <button class="filter-pill" data-status="cerrado"             onclick="apStatus(this,'cerrado')">Cerrado</button>
+        <div class="filter-sep"></div>
+        <span style="font-size:12px;font-weight:600;color:var(--muted);margin-right:4px;">Prioridad:</span>
+        <button class="filter-pill f-red"   data-prio="p1" onclick="apPrio(this,'p1')">P1</button>
+        <button class="filter-pill f-red"   data-prio="p2" onclick="apPrio(this,'p2')">P2</button>
+        <button class="filter-pill f-amber" data-prio="p3" onclick="apPrio(this,'p3')">P3</button>
+        <button class="filter-pill f-green" data-prio="p4" onclick="apPrio(this,'p4')">P4</button>
+    </div>
+
+    <div class="card-ui">
+        <div class="card-head">
+            <span class="title">
+                <i class="bi bi-ticket-detailed-fill"></i> Tickets
+                <span class="badge bg-primary-soft" id="cntTickets">0</span>
+            </span>
+            <div class="search-bar">
+                <div class="search-wrap">
+                    <i class="bi bi-search ico"></i>
+                    <input type="text" class="search-inp" id="searchTickets" placeholder="Buscar ID, título, categoría..." oninput="onSearch()">
+                </div>
+                <select class="form-select" style="width:150px;" id="fCat" onchange="onSearch()">
+                    <option value="">Categoría</option>
+                    <option>Infraestructura</option><option>Software</option><option>Hardware</option>
+                    <option>Seguridad</option><option>Redes</option><option>Base de Datos</option>
+                </select>
+                <select class="form-select" style="width:145px;" id="fAgt" onchange="onSearch()">
+                    <option value="">Agente</option>
+                    <option>Ana Torres</option><option>Carlos Rojas</option><option>María Vega</option>
+                    <option value="sin">Sin asignar</option>
+                </select>
+                <input type="date" class="form-control" style="width:148px;" id="fFecha" onchange="onSearch()">
+                <button class="btn btn-outline btn-sm" onclick="limpiarFiltros()" title="Limpiar"><i class="bi bi-x-circle"></i></button>
+                <button class="btn btn-outline btn-sm" onclick="renderTabla()" title="Actualizar"><i class="bi bi-arrow-clockwise"></i></button>
+            </div>
+        </div>
+        <div class="tbl-wrap">
+            <table class="tbl">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="chkAll" onchange="chkAllFn(this)"></th>
+                        <th>ID</th><th>Ticket</th><th>Tipo</th><th>Prioridad</th><th>Estado</th>
+                        <th>Categoría</th><th>Asignado a</th><th>SLA</th><th>Creado</th><th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tblTickets">
+                    <tr class="empty-row"><td colspan="11"><span class="spinner-sm"></span> Cargando...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pag" id="pagTickets"></div>
+    </div>
+</div>
+
+<!-- ══ TAB: INCIDENTES ══ -->
+<div id="maintab-incidentes" class="main-tab-pane">
+    <div class="card-ui">
+        <div class="card-head">
+            <span class="title"><i class="bi bi-fire" style="color:var(--danger)"></i> Incidentes activos <span class="badge bg-danger" id="cntInc">0</span></span>
+            <div class="search-bar">
+                <div class="search-wrap"><i class="bi bi-search ico"></i>
+                    <input type="text" class="search-inp" id="sInc" placeholder="Buscar incidente..." oninput="renderInc()">
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="renderInc()"><i class="bi bi-arrow-clockwise"></i></button>
+            </div>
+        </div>
+        <div class="tbl-wrap">
+            <table class="tbl">
+                <thead><tr><th>ID</th><th>Título</th><th>Prioridad</th><th>Estado</th><th>Asignado a</th><th>SLA</th><th>Creado</th><th>Acciones</th></tr></thead>
+                <tbody id="tblInc"><tr class="empty-row"><td colspan="8"><span class="spinner-sm"></span></td></tr></tbody>
+            </table>
+        </div>
+        <div class="pag" id="pagInc"></div>
+    </div>
+</div>
+
+<!-- ══ TAB: SOLICITUDES ══ -->
+<div id="maintab-solicitudes" class="main-tab-pane">
+    <div class="card-ui">
+        <div class="card-head">
+            <span class="title"><i class="bi bi-clipboard-check" style="color:var(--info)"></i> Solicitudes <span class="badge bg-info" id="cntSol">0</span></span>
+            <div class="search-bar">
+                <div class="search-wrap"><i class="bi bi-search ico"></i>
+                    <input type="text" class="search-inp" id="sSol" placeholder="Buscar solicitud..." oninput="renderSol()">
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="renderSol()"><i class="bi bi-arrow-clockwise"></i></button>
+            </div>
+        </div>
+        <div class="tbl-wrap">
+            <table class="tbl">
+                <thead><tr><th>ID</th><th>Título</th><th>Prioridad</th><th>Estado</th><th>Asignado a</th><th>SLA</th><th>Creado</th><th>Acciones</th></tr></thead>
+                <tbody id="tblSol"><tr class="empty-row"><td colspan="8"><span class="spinner-sm"></span></td></tr></tbody>
+            </table>
+        </div>
+        <div class="pag" id="pagSol"></div>
+    </div>
+</div>
+
+<!-- ══ TAB: HISTORIAL ══ -->
+<div id="maintab-historial" class="main-tab-pane">
+    <div class="card-ui">
+        <div class="card-head">
+            <span class="title"><i class="bi bi-clock-history"></i> Historial de cambios <span class="badge bg-secondary" id="cntHist">0</span></span>
+            <div class="search-bar">
+                <div class="search-wrap"><i class="bi bi-search ico"></i>
+                    <input type="text" class="search-inp" id="sHist" placeholder="Buscar ticket o usuario..." oninput="renderHist()">
+                </div>
+                <input type="date" class="form-control" style="width:148px;" id="histFecha" onchange="renderHist()">
+            </div>
+        </div>
+        <div class="tbl-wrap">
+            <table class="tbl">
+                <thead><tr><th>Ticket</th><th>Acción</th><th>Estado anterior</th><th>Estado nuevo</th><th>Realizado por</th><th>Fecha y hora</th><th>Nota</th></tr></thead>
+                <tbody id="tblHist"><tr class="empty-row"><td colspan="7"><span class="spinner-sm"></span></td></tr></tbody>
+            </table>
+        </div>
+        <div class="pag" id="pagHist"></div>
+    </div>
+</div>
+
+</div><!-- /.pg -->
+
+
+<!-- ══════════════════════════════════════
+     MODAL: NUEVO TICKET
+══════════════════════════════════════ -->
+<div class="modal-backdrop-custom" id="modalNuevoTicket" onclick="closeM('modalNuevoTicket')">
+<div class="modal-box lg" onclick="event.stopPropagation()">
+    <div class="modal-hdr">
+        <div class="modal-hdr-left">
+            <div class="modal-icon" style="background:rgba(59,130,246,.12);color:var(--primary);"><i class="bi bi-plus-circle-fill"></i></div>
+            <div><div class="modal-title-txt">Nuevo ticket</div><div class="modal-sub-txt">Completa los campos obligatorios</div></div>
+        </div>
+        <button class="modal-close-btn" onclick="closeM('modalNuevoTicket')">&times;</button>
+    </div>
+    <div class="modal-body-custom">
+        <div id="alertNuevo" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:9px;padding:10px 14px;font-size:13px;color:var(--danger);margin-bottom:14px;"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+            <div style="grid-column:1/-1;">
+                <label class="form-label">Título <span class="req">*</span></label>
+                <input type="text" class="form-control" id="nTitulo" placeholder="Describe brevemente el problema o solicitud">
+            </div>
+            <div>
+                <label class="form-label">Tipo <span class="req">*</span></label>
+                <select class="form-select" id="nTipo">
+                    <option value="">Seleccionar...</option>
+                    <option value="incidente">🔥 Incidente</option>
+                    <option value="solicitud">📋 Solicitud</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Prioridad <span class="req">*</span></label>
+                <select class="form-select" id="nPrioridad">
+                    <option value="p1">P1 — Crítico</option>
+                    <option value="p2">P2 — Alto</option>
+                    <option value="p3" selected>P3 — Medio</option>
+                    <option value="p4">P4 — Bajo</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Categoría <span class="req">*</span></label>
+                <select class="form-select" id="nCategoria">
+                    <option value="">Seleccionar...</option>
+                    <option>Infraestructura</option><option>Software</option><option>Hardware</option>
+                    <option>Seguridad</option><option>Redes</option><option>Base de Datos</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Asignar a</label>
+                <select class="form-select" id="nAgente">
+                    <option value="">— Sin asignar —</option>
+                    <option>Ana Torres</option><option>Carlos Rojas</option><option>María Vega</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">SLA vence</label>
+                <input type="datetime-local" class="form-control" id="nSLA">
+            </div>
+            <div style="grid-column:1/-1;">
+                <label class="form-label">Descripción <span class="req">*</span></label>
+                <textarea class="form-control" id="nDescripcion" rows="4" placeholder="Detalla el problema: pasos para reproducir, impacto, sistema afectado..."></textarea>
+            </div>
+            <div style="grid-column:1/-1;">
+                <label class="form-label">Adjuntos</label>
+                <input type="file" class="form-control" id="nAdjuntos" multiple>
+                <div style="font-size:11px;color:var(--muted);margin-top:4px;">Formatos: PNG, JPG, PDF, ZIP. Máx 10 MB c/u. (Requiere Multer en backend)</div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-ftr">
+        <button class="btn btn-outline btn-sm" onclick="closeM('modalNuevoTicket')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarNuevo()"><i class="bi bi-check-circle-fill"></i> Crear ticket</button>
+    </div>
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     MODAL: DETALLE / GESTIÓN
+══════════════════════════════════════ -->
+<div class="modal-backdrop-custom" id="modalDetalle" onclick="closeM('modalDetalle')">
+<div class="modal-box xl" onclick="event.stopPropagation()">
+    <div class="modal-hdr">
+        <div class="modal-hdr-left">
+            <div class="modal-icon" style="background:rgba(59,130,246,.12);color:var(--primary);"><i class="bi bi-ticket-detailed-fill"></i></div>
+            <div>
+                <div class="modal-title-txt" id="dTitulo">—</div>
+                <div class="modal-sub-txt" id="dSub">—</div>
+            </div>
+        </div>
+        <button class="modal-close-btn" onclick="closeM('modalDetalle')">&times;</button>
+    </div>
+    <div class="modal-body-custom">
+        <div style="display:grid;grid-template-columns:1fr 296px;gap:20px;">
+
+            <!-- col principal -->
+            <div>
+                <p class="sec-title" style="margin-bottom:10px;"><i class="bi bi-card-text"></i> Descripción</p>
+                <div id="dDesc" style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:20px;background:var(--hdr);border:1px solid var(--border);border-radius:10px;padding:14px;min-height:60px;">—</div>
+
+                <p class="sec-title" style="margin-bottom:10px;"><i class="bi bi-clock-history"></i> Historial de cambios</p>
+                <div id="dTimeline" class="log-timeline" style="margin-bottom:20px;min-height:40px;"></div>
+
+                <p class="sec-title" style="margin-bottom:10px;"><i class="bi bi-chat-dots"></i> Agregar comentario</p>
+                <textarea class="form-control" id="nuevoComentario" rows="3" placeholder="Escribe una actualización, solución aplicada o nota interna..." style="margin-bottom:10px;"></textarea>
+                <div style="display:flex;gap:8px;justify-content:flex-end;">
+                    <select class="form-select" style="width:165px;"><option>Comentario público</option><option>Nota interna</option></select>
+                    <button class="btn btn-success btn-sm" onclick="enviarComentario()"><i class="bi bi-send-fill"></i> Enviar</button>
+                </div>
+            </div>
+
+            <!-- col lateral -->
+            <div>
+                <p class="sec-title" style="margin-bottom:10px;"><i class="bi bi-info-circle"></i> Detalles</p>
+                <div id="dGrid" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;"></div>
+
+                <p class="sec-title" style="margin-bottom:10px;"><i class="bi bi-arrow-repeat"></i> Actualizar estado</p>
+                <select class="form-select" id="editEstado" style="margin-bottom:8px;">
+                    <option value="abierto">Abierto</option>
+                    <option value="en_progreso">En progreso</option>
+                    <option value="pendiente">Pendiente</option>
+                    <option value="resuelto">Resuelto</option>
+                    <option value="cerrado">Cerrado</option>
+                </select>
+                <input type="text" class="form-control" id="editNota" placeholder="Nota del cambio (opcional)" style="margin-bottom:8px;">
+                <button class="btn btn-primary" style="width:100%;" onclick="actualizarEstado()"><i class="bi bi-check-circle-fill"></i> Guardar estado</button>
+
+                <p class="sec-title" style="margin-top:16px;margin-bottom:10px;"><i class="bi bi-person-fill-gear"></i> Reasignar</p>
+                <select class="form-select" id="editAgente" style="margin-bottom:8px;">
+                    <option value="">— Sin asignar —</option>
+                    <option>Ana Torres</option><option>Carlos Rojas</option><option>María Vega</option>
+                </select>
+                <button class="btn btn-outline btn-sm" style="width:100%;" onclick="reasignar()"><i class="bi bi-person-check"></i> Reasignar</button>
+
+                <p class="sec-title" style="margin-top:16px;margin-bottom:10px;"><i class="bi bi-paperclip"></i> Adjuntos</p>
+                <div id="dAdjuntos"></div>
+
+                <div style="margin-top:16px;display:flex;gap:8px;">
+                    <button class="btn btn-danger btn-sm" style="flex:1;" onclick="eliminarActual()"><i class="bi bi-trash3"></i> Eliminar</button>
+                    <button class="btn btn-outline btn-sm" style="flex:1;" onclick="closeM('modalDetalle')"><i class="bi bi-x"></i> Cerrar</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     MODAL: RESOLVER / CERRAR RÁPIDO
+══════════════════════════════════════ -->
+<div class="modal-backdrop-custom" id="modalCerrar" onclick="closeM('modalCerrar')">
+<div class="modal-box sm" onclick="event.stopPropagation()">
+    <div class="modal-hdr">
+        <div class="modal-hdr-left">
+            <div class="modal-icon" style="background:rgba(16,185,129,.12);color:var(--success);"><i class="bi bi-check-circle-fill"></i></div>
+            <div><div class="modal-title-txt">Resolver ticket</div><div class="modal-sub-txt" id="cerrarSub">—</div></div>
+        </div>
+        <button class="modal-close-btn" onclick="closeM('modalCerrar')">&times;</button>
+    </div>
+    <div class="modal-body-custom">
+        <input type="hidden" id="cerrarId">
+        <div style="display:flex;flex-direction:column;gap:13px;">
+            <div>
+                <label class="form-label">Acción <span class="req">*</span></label>
+                <select class="form-select" id="cerrarAccion">
+                    <option value="resuelto">Marcar como Resuelto</option>
+                    <option value="cerrado">Cerrar ticket</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Solución aplicada <span class="req">*</span></label>
+                <textarea class="form-control" id="cerrarNota" rows="3" placeholder="Describe la solución o motivo de cierre..."></textarea>
+            </div>
+        </div>
+    </div>
+    <div class="modal-ftr">
+        <button class="btn btn-outline btn-sm" onclick="closeM('modalCerrar')">Cancelar</button>
+        <button class="btn btn-success" onclick="confirmarCierre()"><i class="bi bi-check-circle-fill"></i> Confirmar</button>
+    </div>
+</div>
+</div>
+
+<div id="toastZone"></div>
+
+<!-- ══ SCRIPTS ══ -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ════════════════════════════════════════════════════
+   DATOS DE MUESTRA — sustituir por fetch('/api/tickets')
+════════════════════════════════════════════════════ */
+const TICKETS = [
+    { id:'TKT-0042', titulo:'Servidor web principal caído en producción',  tipo:'incidente', prio:'p1', status:'en_progreso', cat:'Infraestructura', agente:'María Vega',   aInit:'MV', slaH:1.2,  crd:'hace 2 h',    desc:'El servidor nginx en producción cayó a las 14:32 hs. Timeout en healthcheck desde Datadog.',      adj:['nginx_error.log','screenshot.png'] },
+    { id:'TKT-0041', titulo:'No puedo acceder al VPN corporativo',          tipo:'incidente', prio:'p2', status:'abierto',     cat:'Redes',           agente:'',             aInit:'',   slaH:3.7,  crd:'hace 3 h',    desc:'Empleado reporta error 403 al conectarse a GlobalProtect desde casa.',                              adj:[] },
+    { id:'TKT-0040', titulo:'Solicitar instalación de Adobe Acrobat Pro',   tipo:'solicitud', prio:'p4', status:'abierto',     cat:'Software',        agente:'Ana Torres',   aInit:'AT', slaH:23,   crd:'hace 4 h',    desc:'Área de diseño requiere licencia de Adobe Acrobat Pro para flujo de aprobación de PDFs.',           adj:[] },
+    { id:'TKT-0039', titulo:'Base de datos PostgreSQL responde lento',       tipo:'incidente', prio:'p2', status:'en_progreso', cat:'Base de Datos',   agente:'Carlos Rojas', aInit:'CR', slaH:2.5,  crd:'hace 5 h',    desc:'Queries en producción tomando más de 8 segundos. EXPLAIN muestra full scan en tabla de pedidos.',  adj:['query_plan.txt'] },
+    { id:'TKT-0038', titulo:'Impresora de contabilidad no imprime en red',   tipo:'incidente', prio:'p3', status:'pendiente',   cat:'Hardware',        agente:'Ana Torres',   aInit:'AT', slaH:6,    crd:'hace 6 h',    desc:'HP LaserJet 401 no responde por red. Cola de impresión acumulada con 14 trabajos.',                adj:[] },
+    { id:'TKT-0037', titulo:'Acceso a repositorio GitHub para nuevo empleado',tipo:'solicitud',prio:'p3', status:'abierto',     cat:'Seguridad',       agente:'',             aInit:'',   slaH:18,   crd:'hace 7 h',    desc:'Nuevo developer requiere acceso al org privado de GitHub. Onboarding el lunes.',                   adj:[] },
+    { id:'TKT-0036', titulo:'Certificado SSL vencido en staging',            tipo:'incidente', prio:'p2', status:'en_progreso', cat:'Infraestructura', agente:'María Vega',   aInit:'MV', slaH:0.7,  crd:'hace 8 h',    desc:'Certbot no renovó automáticamente. Bloqueando pipelines de QA.',                                   adj:[] },
+    { id:'TKT-0035', titulo:'Actualizar dependencias críticas en app pagos', tipo:'solicitud', prio:'p2', status:'resuelto',    cat:'Software',        agente:'Carlos Rojas', aInit:'CR', slaH:null, crd:'hace 10 h',   desc:'Dependencias con CVE-2024-xxx actualizadas. Pruebas de regresión OK.',                              adj:[] },
+    { id:'TKT-0034', titulo:'Lentitud en CRM Salesforce — equipo de ventas',tipo:'incidente', prio:'p3', status:'en_progreso', cat:'Software',        agente:'Ana Torres',   aInit:'AT', slaH:4.3,  crd:'ayer',        desc:'12 usuarios reportan timeouts al cargar oportunidades. Conectando con Salesforce Support.',         adj:['har_capture.har'] },
+    { id:'TKT-0033', titulo:'Solicitud de segundo monitor para diseñadora',  tipo:'solicitud', prio:'p4', status:'cerrado',     cat:'Hardware',        agente:'Carlos Rojas', aInit:'CR', slaH:null, crd:'ayer',        desc:'Monitor Dell 27" entregado e instalado. Ticket cerrado.',                                          adj:[] },
+    { id:'TKT-0032', titulo:'Firewall bloqueando API externa de pagos',      tipo:'incidente', prio:'p1', status:'resuelto',    cat:'Seguridad',       agente:'María Vega',   aInit:'MV', slaH:null, crd:'hace 2 días', desc:'Regla del firewall actualizada. Egress habilitado para IP de Culqi.',                               adj:[] },
+    { id:'TKT-0031', titulo:'Laptop para nuevo colaborador (onboarding)',    tipo:'solicitud', prio:'p3', status:'pendiente',   cat:'Hardware',        agente:'',             aInit:'',   slaH:12,   crd:'hace 2 días', desc:'Onboarding el lunes. Requiere laptop con AD y VPN configurado.',                                   adj:[] },
+];
+
+const HISTORIAL = [
+    { tid:'TKT-0042', accion:'Creación',          sAnt:null,         sNuevo:'abierto',     quien:'Sistema',      fecha:'hoy 14:32', nota:'Ticket creado desde formulario web.' },
+    { tid:'TKT-0042', accion:'Cambio de estado',  sAnt:'abierto',    sNuevo:'en_progreso', quien:'Ana Torres',   fecha:'hoy 14:35', nota:'Tomé el ticket, revisando logs del servidor.' },
+    { tid:'TKT-0042', accion:'Reasignación',       sAnt:null,         sNuevo:null,          quien:'Carlos Rojas', fecha:'hoy 14:38', nota:'Reasignado a María Vega por especialidad en infra.' },
+    { tid:'TKT-0042', accion:'Comentario',         sAnt:null,         sNuevo:null,          quien:'María Vega',   fecha:'hoy 14:45', nota:'Proceso nginx muerto por OOM killer. Reiniciando y aumentando swap.' },
+    { tid:'TKT-0036', accion:'Cambio de estado',  sAnt:'abierto',    sNuevo:'en_progreso', quien:'María Vega',   fecha:'hoy 13:10', nota:'Renovando certificado manualmente con certbot.' },
+    { tid:'TKT-0035', accion:'Cambio de estado',  sAnt:'en_progreso',sNuevo:'resuelto',    quien:'Carlos Rojas', fecha:'ayer 18:02',nota:'Dependencias actualizadas y deploy completado en producción.' },
+];
+
+/* ════════ CONSTANTES ════════ */
+const PL = { p1:'P1 Crítico', p2:'P2 Alto', p3:'P3 Medio', p4:'P4 Bajo' };
+const PC = { p1:'prio-p1', p2:'prio-p2', p3:'prio-p3', p4:'prio-p4' };
+const SL = { abierto:'Abierto', en_progreso:'En progreso', pendiente:'Pendiente', resuelto:'Resuelto', cerrado:'Cerrado' };
+const SC = { abierto:'status-abierto', en_progreso:'status-en_progreso', pendiente:'status-pendiente', resuelto:'status-resuelto', cerrado:'status-cerrado' };
+const PER = 10;
+
+let fStatus = 'todos', fPrio = '', fPage = 1;
+let ticketActual = null;
+
+/* ════════ HELPERS ════════ */
+function slaHtml(h) {
+    if (h === null || h === undefined) return '<span class="sla-none">—</span>';
+    if (h < 1)  return `<span class="sla-breach"><i class="bi bi-exclamation-triangle-fill"></i> ${Math.round(h*60)}m</span>`;
+    if (h < 3)  return `<span class="sla-warning"><i class="bi bi-clock-fill"></i> ${h.toFixed(1)}h</span>`;
+    return `<span class="sla-ok"><i class="bi bi-clock"></i> ${h.toFixed(1)}h</span>`;
+}
+function agtHtml(t) {
+    if (!t.agente) return '<span style="font-size:12px;color:var(--muted);">Sin asignar</span>';
+    return `<div class="agent-wrap"><div class="agent-avatar">${t.aInit}</div><span style="font-size:12px;">${t.agente}</span></div>`;
+}
+function initials(name) { return (name||'').split(' ').map(w=>w[0]||'').join('').toUpperCase().substring(0,2); }
+
+function getFiltered() {
+    const q   = (document.getElementById('searchTickets')?.value||'').toLowerCase();
+    const cat = document.getElementById('fCat')?.value||'';
+    const agt = document.getElementById('fAgt')?.value||'';
+    return TICKETS.filter(t => {
+        if (fStatus !== 'todos' && t.status !== fStatus) return false;
+        if (fPrio && t.prio !== fPrio) return false;
+        if (cat && t.cat !== cat) return false;
+        if (agt === 'sin' && t.agente) return false;
+        if (agt && agt !== 'sin' && t.agente !== agt) return false;
+        if (q && !t.titulo.toLowerCase().includes(q) && !t.id.toLowerCase().includes(q) && !t.cat.toLowerCase().includes(q)) return false;
+        return true;
+    });
+}
+
+/* ════════ RENDER TABLA PRINCIPAL ════════ */
+function renderTabla() {
+    const data  = getFiltered();
+    const pages = Math.ceil(data.length / PER);
+    const slice = data.slice((fPage-1)*PER, fPage*PER);
+    const tbody = document.getElementById('tblTickets');
+    document.getElementById('cntTickets').textContent = data.length;
+
+    tbody.innerHTML = slice.length
+    ? slice.map(t => `
+        <tr onclick="abrirDetalle('${t.id}')">
+            <td onclick="event.stopPropagation()"><input type="checkbox" class="chk-row"></td>
+            <td><span class="mono link-cell">#${t.id}</span></td>
+            <td>
+                <div class="tt">${t.titulo}</div>
+                <div class="ts">${t.cat}</div>
+            </td>
+            <td><span class="status-badge ${t.tipo==='incidente'?'type-incidente':'type-solicitud'}">${t.tipo==='incidente'?'🔥 Incidente':'📋 Solicitud'}</span></td>
+            <td><span class="badge ${PC[t.prio]}">${PL[t.prio]}</span></td>
+            <td><span class="status-badge ${SC[t.status]}">${SL[t.status]}</span></td>
+            <td style="font-size:12px;color:var(--muted);">${t.cat}</td>
+            <td>${agtHtml(t)}</td>
+            <td>${slaHtml(t.slaH)}</td>
+            <td style="font-size:12px;color:var(--muted);font-family:var(--mono);">${t.crd}</td>
+            <td onclick="event.stopPropagation()">
+                <div style="display:flex;gap:4px;">
+                    <button class="btn-action" title="Ver detalle"  onclick="abrirDetalle('${t.id}')"><i class="bi bi-eye"></i></button>
+                    <button class="btn-action btn-resolve" title="Resolver" onclick="abrirCerrar('${t.id}')"><i class="bi bi-check-lg"></i></button>
+                    <button class="btn-action btn-delete" title="Eliminar"  onclick="elimRow('${t.id}',event)"><i class="bi bi-trash3"></i></button>
+                </div>
+            </td>
+        </tr>`).join('')
+    : `<tr class="empty-row"><td colspan="11"><i class="bi bi-inbox" style="font-size:26px;display:block;margin-bottom:8px;"></i>No se encontraron tickets</td></tr>`;
+
+    renderPag('pagTickets', data.length, fPage, p => { fPage = p; renderTabla(); });
+    kpis();
+}
+
+function renderSubTabla(tipo, searchId, tbodyId, cntId, mtcId, pagId) {
+    const q    = (document.getElementById(searchId)?.value||'').toLowerCase();
+    const data = TICKETS.filter(t => t.tipo === tipo && (tipo === 'solicitud' || ['abierto','en_progreso','pendiente'].includes(t.status)))
+                        .filter(t => !q || t.titulo.toLowerCase().includes(q) || t.id.toLowerCase().includes(q));
+    document.getElementById(cntId).textContent = data.length;
+    document.getElementById(mtcId).textContent = data.length;
+    document.getElementById(tbodyId).innerHTML = data.length
+    ? data.map(t => `
+        <tr onclick="abrirDetalle('${t.id}')">
+            <td><span class="mono link-cell">#${t.id}</span></td>
+            <td><div class="tt">${t.titulo}</div><div class="ts">${t.cat}</div></td>
+            <td><span class="badge ${PC[t.prio]}">${PL[t.prio]}</span></td>
+            <td><span class="status-badge ${SC[t.status]}">${SL[t.status]}</span></td>
+            <td>${agtHtml(t)}</td>
+            <td>${slaHtml(t.slaH)}</td>
+            <td style="font-size:12px;color:var(--muted);font-family:var(--mono);">${t.crd}</td>
+            <td onclick="event.stopPropagation()">
+                <div style="display:flex;gap:4px;">
+                    <button class="btn-action" onclick="abrirDetalle('${t.id}')"><i class="bi bi-eye"></i></button>
+                    <button class="btn-action btn-resolve" onclick="abrirCerrar('${t.id}')"><i class="bi bi-check-lg"></i></button>
+                </div>
+            </td>
+        </tr>`).join('')
+    : `<tr class="empty-row"><td colspan="8">Sin resultados</td></tr>`;
+}
+
+function renderInc() { renderSubTabla('incidente','sInc','tblInc','cntInc','mtc-incidentes','pagInc'); }
+function renderSol() { renderSubTabla('solicitud','sSol','tblSol','cntSol','mtc-solicitudes','pagSol'); }
+
+function renderHist() {
+    const q = (document.getElementById('sHist')?.value||'').toLowerCase();
+    const data = HISTORIAL.filter(h => !q || h.tid.toLowerCase().includes(q) || h.quien.toLowerCase().includes(q));
+    document.getElementById('cntHist').textContent = data.length;
+    document.getElementById('mtc-historial').textContent = data.length;
+    document.getElementById('tblHist').innerHTML = data.length
+    ? data.map(h => `
+        <tr>
+            <td><span class="mono link-cell">#${h.tid}</span></td>
+            <td style="font-size:12px;font-weight:600;">${h.accion}</td>
+            <td>${h.sAnt ? `<span class="status-badge ${SC[h.sAnt]||''}">${SL[h.sAnt]||h.sAnt}</span>` : '<span style="color:var(--muted)">—</span>'}</td>
+            <td>${h.sNuevo ? `<span class="status-badge ${SC[h.sNuevo]||''}">${SL[h.sNuevo]||h.sNuevo}</span>` : '<span style="color:var(--muted)">—</span>'}</td>
+            <td>${agtHtml({agente:h.quien, aInit:initials(h.quien)})}</td>
+            <td style="font-size:12px;font-family:var(--mono);color:var(--muted);">${h.fecha}</td>
+            <td style="font-size:12px;color:var(--muted);">${h.nota}</td>
+        </tr>`).join('')
+    : `<tr class="empty-row"><td colspan="7">Sin historial</td></tr>`;
+}
+
+/* ════════ KPIs ════════ */
+function kpis() {
+    const abiertos  = TICKETS.filter(t => t.status==='abierto').length;
+    const progreso  = TICKETS.filter(t => t.status==='en_progreso').length;
+    const slaRiesgo = TICKETS.filter(t => t.slaH !== null && t.slaH < 2).length;
+    const resueltos = TICKETS.filter(t => t.status==='resuelto').length;
+    const total     = TICKETS.filter(t => t.status !== 'cerrado').length;
+    document.getElementById('kpiAbiertos').textContent  = abiertos;
+    document.getElementById('kpiProgreso').textContent  = progreso;
+    document.getElementById('kpiSLA').textContent       = slaRiesgo;
+    document.getElementById('kpiResueltos').textContent = resueltos;
+    document.getElementById('kpiTotal').textContent     = total;
+    document.getElementById('mtc-todos').textContent    = total;
+}
+
+/* ════════ PAGINACIÓN ════════ */
+function renderPag(id, total, cur, cb) {
+    const pages = Math.ceil(total/PER);
+    const el    = document.getElementById(id);
+    if (!el) return;
+    const s = (cur-1)*PER+1, e = Math.min(cur*PER, total);
+    let btns = '';
+    for (let i=1; i<=pages; i++) {
+        if (pages>7 && i>2 && i<pages-1 && Math.abs(i-cur)>1) {
+            if (i===3||i===pages-2) btns += `<button class="pag-btn" disabled>…</button>`;
+            continue;
+        }
+        btns += `<button class="pag-btn${i===cur?' active':''}" onclick="(${cb.toString()})(${i})">${i}</button>`;
+    }
+    el.innerHTML = `
+        <span class="pag-info">Mostrando ${total?s:0}–${e} de ${total} tickets</span>
+        <button class="pag-btn" onclick="(${cb.toString()})(${cur-1})" ${cur===1?'disabled':''}>‹</button>
+        ${btns}
+        <button class="pag-btn" onclick="(${cb.toString()})(${cur+1})" ${cur>=pages||!pages?'disabled':''}>›</button>`;
+}
+
+/* ════════ FILTROS ════════ */
+function apStatus(btn, s) {
+    document.querySelectorAll('[data-status]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    fStatus = s; fPage = 1; renderTabla();
+}
+function apPrio(btn, p) {
+    if (fPrio === p) { fPrio=''; btn.classList.remove('active'); }
+    else { document.querySelectorAll('[data-prio]').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); fPrio=p; }
+    fPage = 1; renderTabla();
+}
+function filtrarKPI(tipo) {
+    switchMainTab('todos', document.querySelector('.main-tab-btn'));
+    fStatus = tipo === 'sla' ? 'todos' : tipo;
+    if (tipo !== 'sla') {
+        document.querySelectorAll('[data-status]').forEach(b => b.classList.toggle('active', b.dataset.status===tipo));
+    }
+    fPage = 1; renderTabla();
+}
+function onSearch() { fPage = 1; renderTabla(); }
+function limpiarFiltros() {
+    fStatus='todos'; fPrio=''; fPage=1;
+    ['searchTickets','fCat','fAgt','fFecha'].forEach(id => { const e=document.getElementById(id); if(e) e.value=''; });
+    document.querySelectorAll('[data-status]').forEach(b=>b.classList.remove('active'));
+    document.querySelector('[data-status="todos"]')?.classList.add('active');
+    document.querySelectorAll('[data-prio]').forEach(b=>b.classList.remove('active'));
+    renderTabla();
+}
+function chkAllFn(m) { document.querySelectorAll('.chk-row').forEach(c => c.checked=m.checked); }
+
+/* ════════ MAIN TABS ════════ */
+function switchMainTab(name, btn) {
+    document.querySelectorAll('.main-tab-pane').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.main-tab-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('maintab-'+name).classList.add('active');
+    if (btn) btn.classList.add('active');
+    if (name==='incidentes') renderInc();
+    if (name==='solicitudes') renderSol();
+    if (name==='historial') renderHist();
+}
+
+/* ════════ MODALES ════════ */
+function openM(id) { document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden'; }
+function closeM(id){ document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
+function openModalNuevoTicket() { openM('modalNuevoTicket'); }
+
+function guardarNuevo() {
+    const titulo = document.getElementById('nTitulo').value.trim();
+    const tipo   = document.getElementById('nTipo').value;
+    const desc   = document.getElementById('nDescripcion').value.trim();
+    const cat    = document.getElementById('nCategoria').value;
+    const alertEl = document.getElementById('alertNuevo');
+    if (!titulo||!tipo||!desc||!cat) {
+        alertEl.textContent='Por favor completa todos los campos obligatorios (*)';
+        alertEl.style.display='block'; return;
+    }
+    alertEl.style.display='none';
+    const agente = document.getElementById('nAgente').value;
+    const nuevo = {
+        id: 'TKT-' + String(TICKETS.length + 33).padStart(4,'0'),
+        titulo, tipo, prio: document.getElementById('nPrioridad').value,
+        status:'abierto', cat, agente, aInit:initials(agente),
+        slaH: null, crd:'hace un momento', desc, adj:[]
+    };
+    TICKETS.unshift(nuevo);
+    HISTORIAL.unshift({ tid:nuevo.id, accion:'Creación', sAnt:null, sNuevo:'abierto', quien:'Usuario actual', fecha:'ahora', nota:'Ticket creado.' });
+    closeM('modalNuevoTicket');
+    ['nTitulo','nTipo','nCategoria','nAgente','nDescripcion'].forEach(id => { const e=document.getElementById(id); if(e) e.value=''; });
+    renderTabla();
+    toast('Ticket '+nuevo.id+' creado exitosamente','ok');
+}
+
+/* ── DETALLE ── */
+function abrirDetalle(id) {
+    const t = TICKETS.find(x=>x.id===id);
+    if (!t) return;
+    ticketActual = id;
+    document.getElementById('dTitulo').textContent = t.titulo;
+    document.getElementById('dSub').innerHTML =
+        `<span class="mono">#${t.id}</span> &nbsp;·&nbsp; <span class="status-badge ${t.tipo==='incidente'?'type-incidente':'type-solicitud'}">${t.tipo==='incidente'?'🔥 Incidente':'📋 Solicitud'}</span>`;
+    document.getElementById('dDesc').textContent = t.desc;
+    document.getElementById('editEstado').value = t.status;
+    document.getElementById('editAgente').value = t.agente||'';
+
+    // Celdas de detalle
+    const cells = [
+        { l:'Estado',    v:`<span class="status-badge ${SC[t.status]}">${SL[t.status]}</span>` },
+        { l:'Prioridad', v:`<span class="badge ${PC[t.prio]}">${PL[t.prio]}</span>` },
+        { l:'Categoría', v:t.cat },
+        { l:'Asignado',  v:t.agente||'<span style="color:var(--muted)">Sin asignar</span>' },
+        { l:'SLA',       v:slaHtml(t.slaH) },
+        { l:'Creado',    v:`<span style="font-family:var(--mono);font-size:11px;">${t.crd}</span>` },
+    ];
+    document.getElementById('dGrid').innerHTML = cells.map(c=>`
+        <div class="detail-cell">
+            <div class="detail-lbl">${c.l}</div>
+            <div class="detail-val">${c.v}</div>
+        </div>`).join('');
+
+    // Timeline historial
+    const hist = HISTORIAL.filter(h=>h.tid===id);
+    const dotCls = { 'Cambio de estado':'dot-status','Comentario':'dot-comment','Reasignación':'dot-assign','Creación':'dot-create' };
+    document.getElementById('dTimeline').innerHTML = hist.length
+    ? hist.map(h=>`
+        <div class="log-entry">
+            <div class="log-dot ${dotCls[h.accion]||'dot-status'}"></div>
+            <div>
+                <div class="log-text">
+                    <strong>${h.quien}</strong> — ${h.accion}
+                    ${h.sNuevo ? ` → <span class="status-badge ${SC[h.sNuevo]||''}" style="font-size:10px;padding:2px 7px;">${SL[h.sNuevo]||h.sNuevo}</span>` : ''}
+                </div>
+                <div class="log-meta">${h.nota}&nbsp;·&nbsp;${h.fecha}</div>
+            </div>
+        </div>`).join('')
+    : '<div style="font-size:12px;color:var(--muted);padding:8px 0;">Sin historial de cambios registrado.</div>';
+
+    // Adjuntos
+    const extIcon = { log:'bi-file-text',png:'bi-image',jpg:'bi-image',har:'bi-file-zip',txt:'bi-file-earmark',pdf:'bi-file-pdf' };
+    document.getElementById('dAdjuntos').innerHTML = t.adj.length
+    ? t.adj.map(a=>`
+        <div class="attach-item">
+            <i class="bi ${extIcon[a.split('.').pop()]||'bi-paperclip'}"></i>
+            <span class="attach-name">${a}</span>
+            <span class="attach-size">—</span>
+        </div>`).join('')
+    : '<div style="font-size:12px;color:var(--muted);">Sin adjuntos.</div>';
+
+    openM('modalDetalle');
+}
+
+function actualizarEstado() {
+    if (!ticketActual) return;
+    const t    = TICKETS.find(x=>x.id===ticketActual);
+    const prev = t.status;
+    const nw   = document.getElementById('editEstado').value;
+    const nota = document.getElementById('editNota').value||'Sin nota.';
+    t.status   = nw;
+    HISTORIAL.unshift({ tid:ticketActual, accion:'Cambio de estado', sAnt:prev, sNuevo:nw, quien:'Usuario actual', fecha:'ahora', nota });
+    closeM('modalDetalle');
+    renderTabla(); renderHist();
+    toast(`Estado de ${ticketActual} → "${SL[nw]}"`, 'ok');
+}
+
+function reasignar() {
+    if (!ticketActual) return;
+    const t   = TICKETS.find(x=>x.id===ticketActual);
+    const nw  = document.getElementById('editAgente').value;
+    t.agente  = nw; t.aInit = initials(nw);
+    HISTORIAL.unshift({ tid:ticketActual, accion:'Reasignación', sAnt:null, sNuevo:null, quien:'Usuario actual', fecha:'ahora', nota:`Reasignado a ${nw||'Sin asignar'}` });
+    closeM('modalDetalle');
+    renderTabla();
+    toast(`Ticket reasignado a ${nw||'Sin asignar'}`, 'ok');
+}
+
+function enviarComentario() {
+    const nota = document.getElementById('nuevoComentario').value.trim();
+    if (!nota || !ticketActual) return;
+    HISTORIAL.unshift({ tid:ticketActual, accion:'Comentario', sAnt:null, sNuevo:null, quien:'Usuario actual', fecha:'ahora', nota });
+    document.getElementById('nuevoComentario').value='';
+    abrirDetalle(ticketActual);
+    renderHist();
+    toast('Comentario agregado','ok');
+}
+
+function eliminarActual() { if (ticketActual) { elimRow(ticketActual,null); closeM('modalDetalle'); } }
+function elimRow(id, ev) {
+    if (ev) ev.stopPropagation();
+    const i = TICKETS.findIndex(t=>t.id===id);
+    if (i>-1) TICKETS.splice(i,1);
+    renderTabla();
+    toast(`Ticket ${id} eliminado`,'warn');
+}
+
+/* ── CERRAR / RESOLVER ── */
+function abrirCerrar(id) {
+    const t = TICKETS.find(x=>x.id===id);
+    if (!t) return;
+    ticketActual = id;
+    document.getElementById('cerrarSub').innerHTML = `<span class="mono">#${t.id}</span> — ${t.titulo.substring(0,52)}${t.titulo.length>52?'…':''}`;
+    document.getElementById('cerrarId').value = id;
+    document.getElementById('cerrarNota').value='';
+    openM('modalCerrar');
+}
+function confirmarCierre() {
+    const id    = document.getElementById('cerrarId').value;
+    const accion= document.getElementById('cerrarAccion').value;
+    const nota  = document.getElementById('cerrarNota').value.trim();
+    if (!nota) { toast('Debes describir la solución aplicada','err'); return; }
+    const t = TICKETS.find(x=>x.id===id);
+    const prev = t.status;
+    t.status = accion; t.slaH = null;
+    HISTORIAL.unshift({ tid:id, accion:'Cambio de estado', sAnt:prev, sNuevo:accion, quien:'Usuario actual', fecha:'ahora', nota });
+    closeM('modalCerrar');
+    renderTabla(); renderHist();
+    toast(`${id} marcado como "${SL[accion]}"`, 'ok');
+}
+
+/* ════════ TOAST ════════ */
+function toast(msg, type='ok') {
+    const icons = { ok:'✅', err:'❌', warn:'⚠️', inf:'ℹ️' };
+    const el = document.createElement('div');
+    el.className = `toast-item toast-${type}`;
+    el.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+    document.getElementById('toastZone').appendChild(el);
+    setTimeout(()=>el.remove(), 3500);
+}
+
+/* ════════ ESC CLOSE ════════ */
+document.addEventListener('keydown', e => {
+    if (e.key==='Escape')
+        document.querySelectorAll('.modal-backdrop-custom.open').forEach(m=>closeM(m.id));
+});
+
+/* ════════ INIT ════════ */
+document.addEventListener('DOMContentLoaded', () => {
+    renderTabla();
+    renderInc();
+    renderSol();
+});
+</script>
+
+<!-- ══ ITSM JS ══ -->
+<script>
+// Estado del módulo ITSM
+const itsmState = { status: null, sla: null, priority: null, page: 1, limit: 25 };
+
+// Colores SLA
+const SLA_BADGE = {
+    ok:      '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;background:rgba(16,185,129,.12);color:#059669;">🟢 Ok</span>',
+    riesgo:  '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;background:rgba(245,158,11,.12);color:#d97706;">🟡 Riesgo</span>',
+    vencido: '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;background:rgba(239,68,68,.12);color:#dc2626;">🔴 Vencido</span>',
+};
+const PRIO_BADGE = {
+    P1: '<span style="padding:2px 8px;border-radius:5px;font-size:11px;font-weight:700;background:rgba(239,68,68,.15);color:#dc2626;">P1</span>',
+    P2: '<span style="padding:2px 8px;border-radius:5px;font-size:11px;font-weight:700;background:rgba(249,115,22,.15);color:#ea580c;">P2</span>',
+    P3: '<span style="padding:2px 8px;border-radius:5px;font-size:11px;font-weight:700;background:rgba(245,158,11,.15);color:#d97706;">P3</span>',
+    P4: '<span style="padding:2px 8px;border-radius:5px;font-size:11px;font-weight:700;background:rgba(16,185,129,.15);color:#059669;">P4</span>',
+};
+const STATUS_BADGE = {
+    abierto:     '<span style="padding:3px 9px;border-radius:12px;font-size:11px;font-weight:700;background:rgba(59,130,246,.12);color:#2563eb;">Abierto</span>',
+    en_progreso: '<span style="padding:3px 9px;border-radius:12px;font-size:11px;font-weight:700;background:rgba(245,158,11,.12);color:#d97706;">En progreso</span>',
+    pendiente:   '<span style="padding:3px 9px;border-radius:12px;font-size:11px;font-weight:700;background:rgba(139,92,246,.12);color:#7c3aed;">Pendiente</span>',
+    resuelto:    '<span style="padding:3px 9px;border-radius:12px;font-size:11px;font-weight:700;background:rgba(16,185,129,.12);color:#059669;">Resuelto</span>',
+    cerrado:     '<span style="padding:3px 9px;border-radius:12px;font-size:11px;font-weight:700;background:rgba(100,116,139,.12);color:#475569;">Cerrado</span>',
+};
+
+function itsmFilter(type, value, btn) {
+    // Toggle: si ya estaba activo, desactivar
+    const prev = itsmState[type];
+    document.querySelectorAll(`[data-i${type}]`).forEach(b => b.classList.remove('active'));
+    if (prev === value) {
+        itsmState[type] = null;
+    } else {
+        itsmState[type] = value;
+        if (btn) btn.classList.add('active');
+    }
+    itsmState.page = 1;
+    loadItsm();
+}
+
+async function loadItsm() {
+    const params = new URLSearchParams();
+    if (itsmState.status)   params.set('status',     itsmState.status);
+    if (itsmState.sla)      params.set('sla_status', itsmState.sla);
+    if (itsmState.priority) params.set('priority',   itsmState.priority);
+    params.set('page',  itsmState.page);
+    params.set('limit', itsmState.limit);
+    const search = document.getElementById('itsmSearch')?.value?.trim();
+    if (search) params.set('search', search);
+
+    try {
+        const r = await fetch(`/api/itsm/tickets?${params}`);
+        const j = await r.json();
+        if (!j.success) throw new Error(j.error);
+
+        const tbody = document.getElementById('itsmTbody');
+        document.getElementById('itsmCount').textContent = j.meta.total;
+        document.getElementById('mtc-itsm').textContent  = j.meta.total;
+
+        if (!j.data.length) {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted);">Sin tickets</td></tr>';
+            document.getElementById('itsmPag').innerHTML = '';
+            return;
+        }
+
+        tbody.innerHTML = j.data.map(t => {
+            const id    = t.id.substring(0, 8).toUpperCase();
+            const fecha = new Date(t.createdAt).toLocaleDateString('es', { day:'2-digit', month:'short' });
+            const cat   = t.categoria?.nombre || '—';
+            return `<tr>
+                <td><code style="font-size:11px;color:var(--muted);">#${id}</code></td>
+                <td style="max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;">${t.titulo}</td>
+                <td><span style="font-size:11px;color:var(--muted);">${t.tipo}</span></td>
+                <td>${PRIO_BADGE[t.priority] || t.priority}</td>
+                <td>${STATUS_BADGE[t.status] || t.status}</td>
+                <td>${SLA_BADGE[t.slaStatus] || t.slaStatus}</td>
+                <td style="font-size:12px;color:var(--muted);">${cat}</td>
+                <td style="font-size:12px;color:var(--muted);">${fecha}</td>
+                <td>
+                    <button class="btn-action" title="Resolver" onclick="cambiarEstadoItsm('${t.id}','resuelto')"><i class="bi bi-check-circle"></i></button>
+                    <button class="btn-action" title="Cerrar"   onclick="cambiarEstadoItsm('${t.id}','cerrado')"><i class="bi bi-x-circle"></i></button>
+                </td>
+            </tr>`;
+        }).join('');
+
+        renderItsmPag(j.meta);
+    } catch (e) {
+        console.error('Error cargando ITSM:', e);
+    }
+}
+
+function renderItsmPag({ page, pages }) {
+    const pag = document.getElementById('itsmPag');
+    if (pages <= 1) { pag.innerHTML = ''; return; }
+    let html = `<button class="pag-btn" ${page<=1?'disabled':''} onclick="itsmPage(${page-1})">‹</button>`;
+    for (let i = 1; i <= pages; i++) {
+        if (i === 1 || i === pages || Math.abs(i - page) <= 2) {
+            html += `<button class="pag-btn ${i===page?'active':''}" onclick="itsmPage(${i})">${i}</button>`;
+        } else if (Math.abs(i - page) === 3) {
+            html += `<span style="padding:5px 4px;color:var(--muted);">…</span>`;
+        }
+    }
+    html += `<button class="pag-btn" ${page>=pages?'disabled':''} onclick="itsmPage(${page+1})">›</button>`;
+    pag.innerHTML = html;
+}
+
+function itsmPage(p) { itsmState.page = p; loadItsm(); }
+
+async function cambiarEstadoItsm(id, status) {
+    try {
+        const r = await fetch(`/api/itsm/tickets/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status }),
+        });
+        const j = await r.json();
+        if (!j.success) throw new Error(j.error);
+        loadItsm();
+    } catch (e) { alert('Error: ' + e.message); }
+}
+
+// ── Modal nuevo ticket ─────────────────────────────────────────────────────
+async function openItsmModal() {
+    // Cargar categorías
+    const r = await fetch('/api/itsm/categories');
+    const j = await r.json();
+    const sel = document.getElementById('itsmCategory');
+    sel.innerHTML = '<option value="">Categoría (opcional)</option>' +
+        (j.data || []).map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+    document.getElementById('modalItsm').style.display = 'flex';
+}
+
+function closeItsmModal() {
+    document.getElementById('modalItsm').style.display = 'none';
+    document.getElementById('itsmTitulo').value = '';
+    document.getElementById('itsmDesc').value   = '';
+}
+
+async function crearItsmTicket() {
+    const titulo = document.getElementById('itsmTitulo').value.trim();
+    if (!titulo) { alert('El título es requerido'); return; }
+
+    const body = {
+        titulo,
+        descripcion: document.getElementById('itsmDesc').value.trim() || null,
+        tipo:        document.getElementById('itsmTipo').value,
+        priority:    document.getElementById('itsmPriority').value,
+        category_id: document.getElementById('itsmCategory').value || null,
+    };
+
+    try {
+        const r = await fetch('/api/itsm/tickets', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        const j = await r.json();
+        if (!j.success) throw new Error(j.error);
+        closeItsmModal();
+        loadItsm();
+    } catch (e) { alert('Error: ' + e.message); }
+}
+
+// Cargar al abrir el tab
+document.querySelector('[onclick*="itsm"]')?.addEventListener('click', loadItsm);
+</script>
+</body>
+</html>
