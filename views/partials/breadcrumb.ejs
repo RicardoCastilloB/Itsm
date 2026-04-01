@@ -1,0 +1,50 @@
+<%
+/*
+  Partial: breadcrumb.ejs
+  Uso: <%- include('partials/breadcrumb', { crumbs: [
+    { label: 'Inicio', href: APP_URL + '/dashboard' },
+    { label: 'Portal', href: APP_URL + '/portal' },
+    { label: 'Ticket #123' }  // sin href = ítem activo
+  ]}) %>
+*/
+const _crumbs = locals.crumbs || [];
+%>
+<% if (_crumbs.length > 0) { %>
+<nav class="breadcrumb-nav" aria-label="Breadcrumb">
+  <ol class="breadcrumb-list">
+    <% _crumbs.forEach((c, idx) => { %>
+      <li class="breadcrumb-list__item<%= idx === _crumbs.length - 1 ? ' breadcrumb-list__item--active' : '' %>">
+        <% if (c.href && idx < _crumbs.length - 1) { %>
+          <a href="<%= c.href %>" class="breadcrumb-list__link">
+            <% if (c.icon) { %><i class="<%= c.icon %>"></i> <% } %>
+            <%- c.label %>
+          </a>
+          <span class="breadcrumb-list__sep" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+        <% } else { %>
+          <span class="breadcrumb-list__current">
+            <% if (c.icon) { %><i class="<%= c.icon %>"></i> <% } %>
+            <%- c.label %>
+          </span>
+        <% } %>
+      </li>
+    <% }) %>
+  </ol>
+</nav>
+<% } %>
+
+<style>
+.breadcrumb-nav{margin-bottom:16px;}
+.breadcrumb-list{
+  display:flex;align-items:center;gap:4px;
+  list-style:none;margin:0;padding:0;flex-wrap:wrap;
+}
+.breadcrumb-list__item{display:flex;align-items:center;gap:4px;font-size:12px;}
+.breadcrumb-list__link{
+  color:var(--muted,#64748b);text-decoration:none;
+  transition:color .15s;display:flex;align-items:center;gap:4px;
+}
+.breadcrumb-list__link:hover{color:var(--primary,#3b82f6);}
+.breadcrumb-list__sep{color:var(--border,#e2e8f0);font-size:10px;}
+.breadcrumb-list__current{color:var(--text,#1e293b);font-weight:600;}
+.breadcrumb-list__item i{font-size:11px;}
+</style>

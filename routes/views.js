@@ -424,6 +424,74 @@ router.get('/incidencias', authenticateToken, requireVerified, (req, res) => {
 });
 
 // ============================================================================
+// ITSM EXTENDIDO
+// ============================================================================
+router.get('/solicitudes', authenticateToken, requireVerified, (req, res) => {
+    res.render('solicitudes', { title: 'Solicitudes de Servicio', user: req.user });
+});
+
+router.get('/cambios', authenticateToken, requireVerified, (req, res) => {
+    res.render('cambios', { title: 'Gestión de Cambios', user: req.user });
+});
+
+router.get('/problemas', authenticateToken, requireVerified, (req, res) => {
+    res.render('problemas', { title: 'Gestión de Problemas', user: req.user });
+});
+
+router.get('/catalogo', authenticateToken, requireVerified, (req, res) => {
+    res.render('catalogo', { title: 'Catálogo de Servicios', user: req.user });
+});
+
+router.get('/cmdb', authenticateToken, requireVerified, (req, res) => {
+    res.render('cmdb', { title: 'CMDB — Inventario de Configuración', user: req.user });
+});
+
+// ============================================================================
+// FASE 4 — SOPORTE Y CONOCIMIENTO
+// ============================================================================
+router.get('/agent-dashboard', authenticateToken, requireVerified, (req, res) => {
+    res.render('agent-dashboard', { title: 'Mi Dashboard', user: req.user });
+});
+
+router.get('/admin-dashboard', authenticateToken, requireRole('administrador'), (req, res) => {
+    res.render('admin-dashboard', { title: 'Dashboard Administrador', user: req.user });
+});
+
+router.get('/knowledge-base', authenticateToken, requireVerified, (req, res) => {
+    res.render('knowledge-base', { title: 'Base de Conocimiento', user: req.user });
+});
+
+router.get('/csi', authenticateToken, requireVerified, (req, res) => {
+    res.render('csi', { title: 'Mejora Continua (CSI)', user: req.user });
+});
+
+router.get('/reports-itsm', authenticateToken, requireVerified, (req, res) => {
+    res.render('reports-itsm', { title: 'Reportes ITSM', user: req.user });
+});
+
+// ============================================================================
+// FASE 5-6 — PORTAL AUTOSERVICIO + ADMIN REGLAS
+// ============================================================================
+
+// Portal de autoservicio (rol usuario / cualquier rol)
+router.get('/portal', authenticateToken, requireVerified, (req, res) => {
+    res.render('user/portal', { title: 'Portal de Autoservicio', user: req.user });
+});
+
+router.get('/portal/tickets', authenticateToken, requireVerified, (req, res) => {
+    res.render('user/portal', { title: 'Mis Tickets', user: req.user });
+});
+
+router.get('/portal/ticket/:id', authenticateToken, requireVerified, (req, res) => {
+    res.render('user/mi-ticket', { title: 'Detalle de Ticket', user: req.user, ticketId: req.params.id });
+});
+
+// Admin: motor de reglas
+router.get('/admin/reglas', authenticateToken, requireRole('administrador'), (req, res) => {
+    res.render('admin/reglas', { title: 'Motor de Reglas', user: req.user });
+});
+
+// ============================================================================
 // EXPORTAR
 // ============================================================================
 module.exports = router;

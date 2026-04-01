@@ -1,0 +1,16 @@
+<%
+const body = `
+<div class="header" style="background:linear-gradient(135deg,#10b981,#059669);">
+  <h1>📋 Ticket Asignado</h1>
+  <p>Se te ha asignado un nuevo ticket para atender</p>
+</div>
+<div class="body">
+  <div class="field"><div class="field-label">Número</div><div class="field-val">${ticket.ticketNumber || ticket.id}</div></div>
+  <div class="field"><div class="field-label">Título</div><div class="field-val">${ticket.title}</div></div>
+  <div class="field"><div class="field-label">Descripción</div><div class="field-val">${(ticket.description||'').substring(0,200)}</div></div>
+  <div class="field"><div class="field-label">Prioridad</div><div class="field-val"><span class="badge badge-${ticket.priority}">${ticket.priority?.toUpperCase()}</span></div></div>
+  <div class="field"><div class="field-label">SLA Vence</div><div class="field-val">${ticket.slaDueAt ? new Date(ticket.slaDueAt).toLocaleString('es') : '—'}</div></div>
+  <div class="cta"><a href="${process.env.APP_URL}/incidencias" style="background:#10b981;">Atender Ticket</a></div>
+</div>`;
+%>
+<%- include('_base', { body }) %>

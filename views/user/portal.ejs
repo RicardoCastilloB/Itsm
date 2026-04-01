@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal de Autoservicio</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="<%= APP_URL %>/css/base.css">
+<link rel="stylesheet" href="<%= APP_URL %>/css/ticket.css">
+<link rel="stylesheet" href="<%= APP_URL %>/css/forms.css">
+<style>
+body{background:var(--c-bg,#f0f4f8);color:var(--c-text,#1e293b);font-family:'DM Sans',sans-serif;}
+.pg{max-width:1200px;margin:0 auto;padding:80px 20px 40px;}
+
+/* Hero */
+.hero{text-align:center;padding:40px 20px 32px;margin-bottom:32px;}
+.hero__title{font-size:28px;font-weight:800;margin-bottom:8px;}
+.hero__sub{color:var(--c-muted,#64748b);font-size:15px;margin-bottom:24px;}
+.hero__search{max-width:560px;margin:0 auto;}
+.search-box{display:flex;align-items:center;background:var(--c-card,#fff);border:2px solid var(--c-border,#e2e8f0);border-radius:50px;padding:6px 8px 6px 20px;box-shadow:0 4px 20px rgba(0,0,0,.08);transition:border-color .2s,box-shadow .2s;}
+.search-box:focus-within{border-color:var(--c-primary,#3b82f6);box-shadow:0 4px 20px rgba(59,130,246,.2);}
+.search-box input{flex:1;border:none;outline:none;font-size:14px;background:transparent;color:var(--c-text,#1e293b);}
+.search-box input::placeholder{color:var(--c-muted,#64748b);}
+.search-box button{background:var(--c-primary,#3b82f6);color:#fff;border:none;border-radius:40px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s;}
+.search-box button:hover{background:#2563eb;}
+
+/* KB suggestions */
+.kb-suggestions{background:var(--c-card,#fff);border:1px solid var(--c-border,#e2e8f0);border-radius:14px;margin-top:8px;display:none;box-shadow:0 8px 24px rgba(0,0,0,.1);overflow:hidden;max-height:280px;overflow-y:auto;}
+.kb-suggestion{padding:12px 16px;display:flex;align-items:flex-start;gap:10px;cursor:pointer;transition:background .15s;border-bottom:1px solid var(--c-border,#e2e8f0);}
+.kb-suggestion:last-child{border-bottom:none;}
+.kb-suggestion:hover{background:var(--c-hover,#f1f5f9);}
+.kb-suggestion__icon{font-size:16px;color:var(--c-primary,#3b82f6);flex-shrink:0;margin-top:1px;}
+.kb-suggestion__title{font-size:13px;font-weight:600;margin-bottom:2px;}
+.kb-suggestion__excerpt{font-size:11px;color:var(--c-muted,#64748b);display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;}
+.kb-no-result{padding:16px;text-align:center;color:var(--c-muted,#64748b);font-size:13px;}
+
+/* Main grid */
+.portal-grid{display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start;}
+@media(max-width:900px){.portal-grid{grid-template-columns:1fr;}}
+
+/* Section */
+.section{background:var(--c-card,#fff);border:1px solid var(--c-border,#e2e8f0);border-radius:16px;padding:22px 24px;box-shadow:0 1px 4px rgba(0,0,0,.05);margin-bottom:20px;}
+.section__hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.section__title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.section__title i{opacity:.6;}
+
+/* Ticket item */
+.ticket-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--c-border,#e2e8f0);cursor:pointer;transition:background .15s;border-radius:8px;padding:10px;}
+.ticket-item:last-child{border-bottom:none;}
+.ticket-item:hover{background:var(--c-hover,#f1f5f9);}
+.ticket-item__num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--c-muted,#64748b);white-space:nowrap;}
+.ticket-item__title{font-size:13px;font-weight:600;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;}
+.ticket-item__meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.ticket-item__sla{font-size:11px;}
+.ticket-item__sla--risk{color:var(--c-warning,#f59e0b);font-weight:600;}
+.ticket-item__sla--breach{color:var(--c-danger,#ef4444);font-weight:600;}
+
+/* Sidebar */
+.side-card{background:var(--c-card,#fff);border:1px solid var(--c-border,#e2e8f0);border-radius:14px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.05);margin-bottom:16px;}
+.side-card__title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted,#64748b);margin-bottom:12px;}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--c-border,#e2e8f0);font-size:13px;}
+.stat-row:last-child{border-bottom:none;}
+.stat-val{font-weight:700;font-family:'JetBrains Mono',monospace;}
+
+/* Quick actions */
+.quick-btn{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--c-hover,#f1f5f9);border:1px solid var(--c-border,#e2e8f0);border-radius:10px;text-decoration:none;color:var(--c-text,#1e293b);font-size:13px;font-weight:600;transition:all .15s;margin-bottom:8px;}
+.quick-btn:hover{background:var(--c-primary,#3b82f6);color:#fff;border-color:var(--c-primary,#3b82f6);}
+.quick-btn i{font-size:18px;opacity:.7;}
+.quick-btn:hover i{opacity:1;}
+
+/* Estado badge inline */
+.sb{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;gap:3px;white-space:nowrap;}
+.sb::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.8;}
+.sb-open    {background:#dbeafe;color:#1d4ed8;}
+.sb-prog    {background:#ede9fe;color:#5b21b6;}
+.sb-pend    {background:#fef3c7;color:#92400e;}
+.sb-done    {background:#d1fae5;color:#065f46;}
+.sb-closed  {background:#f1f5f9;color:#475569;}
+[data-theme="dark"] .sb-open  {background:#1e3a5f;color:#93c5fd;}
+[data-theme="dark"] .sb-prog  {background:#2e1065;color:#c4b5fd;}
+[data-theme="dark"] .sb-pend  {background:#451a03;color:#fcd34d;}
+[data-theme="dark"] .sb-done  {background:#064e3b;color:#6ee7b7;}
+[data-theme="dark"] .sb-closed{background:#1e293b;color:#94a3b8;}
+
+/* Prioridad badge */
+.pb{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;white-space:nowrap;}
+.pb-P1{background:#fee2e2;color:#991b1b;}
+.pb-P2{background:#ffedd5;color:#9a3412;}
+.pb-P3{background:#fef3c7;color:#92400e;}
+.pb-P4{background:#f1f5f9;color:#475569;}
+
+/* Encuesta overlay */
+.survey-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9990;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+.survey-box{background:var(--c-card,#fff);border-radius:20px;padding:40px;max-width:460px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.survey-box h3{font-size:20px;font-weight:800;margin-bottom:6px;}
+.survey-box p{color:var(--c-muted,#64748b);font-size:13px;margin-bottom:24px;}
+.stars{display:flex;justify-content:center;gap:12px;margin-bottom:20px;}
+.star-btn{font-size:36px;cursor:pointer;transition:transform .1s;background:none;border:none;filter:grayscale(1) opacity(.4);}
+.star-btn.active,.star-btn:hover{filter:none;transform:scale(1.15);}
+.survey-comment{width:100%;padding:10px 14px;border:1px solid var(--c-border,#e2e8f0);border-radius:10px;font-size:13px;resize:vertical;min-height:80px;background:var(--c-input-bg,#fff);color:var(--c-text,#1e293b);font-family:'DM Sans',sans-serif;outline:none;margin-bottom:16px;}
+</style>
+</head>
+<body>
+<%- include('../partials/sidebar_top') %>
+<%- include('../partials/styles_sidebar') %>
+
+<div class="pg">
+
+  <!-- Hero + búsqueda KB -->
+  <div class="hero">
+    <h1 class="hero__title">👋 Bienvenido, <%= user.nombre.split(' ')[0] %></h1>
+    <p class="hero__sub">¿Tienes un problema? Primero busca en nuestra base de conocimiento</p>
+    <div class="hero__search">
+      <div class="search-box">
+        <i class="bi bi-search" style="color:var(--c-muted,#64748b);margin-right:8px;"></i>
+        <input type="text" id="kbSearch" placeholder="Ej: no puedo conectarme a internet…" autocomplete="off">
+        <button onclick="openNewTicket()"><i class="bi bi-plus-lg"></i> Crear ticket</button>
+      </div>
+      <div class="kb-suggestions" id="kbSuggestions"></div>
+    </div>
+  </div>
+
+  <div class="portal-grid">
+    <!-- LEFT: tickets activos -->
+    <div>
+      <!-- Mis tickets activos -->
+      <div class="section">
+        <div class="section__hdr">
+          <span class="section__title"><i class="bi bi-ticket-perforated"></i> Mis tickets activos</span>
+          <a href="<%= APP_URL %>/portal/tickets" style="font-size:12px;color:var(--c-primary,#3b82f6);font-weight:600;text-decoration:none;">Ver todos →</a>
+        </div>
+        <div id="activeTicketsList">
+          <div style="text-align:center;padding:24px;color:var(--c-muted,#64748b);font-size:13px;">
+            <i class="bi bi-arrow-repeat" style="animation:spin .8s linear infinite;font-size:20px;display:block;margin-bottom:8px;"></i>
+            Cargando tickets...
+          </div>
+        </div>
+      </div>
+
+      <!-- Tickets resueltos recientemente -->
+      <div class="section">
+        <div class="section__hdr">
+          <span class="section__title"><i class="bi bi-check-circle"></i> Resueltos recientemente</span>
+        </div>
+        <div id="resolvedTicketsList">
+          <div style="text-align:center;padding:16px;color:var(--c-muted,#64748b);font-size:13px;">Cargando...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: sidebar -->
+    <div>
+      <!-- Acciones rápidas -->
+      <div class="side-card">
+        <div class="side-card__title">Acciones rápidas</div>
+        <a href="#" class="quick-btn" onclick="openNewTicket();return false;">
+          <i class="bi bi-plus-circle-fill" style="color:var(--c-primary,#3b82f6)"></i> Crear nuevo ticket
+        </a>
+        <a href="<%= APP_URL %>/knowledge-base" class="quick-btn">
+          <i class="bi bi-book" style="color:var(--c-purple,#8b5cf6)"></i> Base de conocimiento
+        </a>
+        <a href="<%= APP_URL %>/portal/tickets" class="quick-btn">
+          <i class="bi bi-list-ul" style="color:var(--c-success,#10b981)"></i> Ver todos mis tickets
+        </a>
+      </div>
+
+      <!-- Mis estadísticas -->
+      <div class="side-card">
+        <div class="side-card__title">Mis estadísticas</div>
+        <div id="userStats">
+          <div style="text-align:center;padding:12px;color:var(--c-muted,#64748b);font-size:12px;">Cargando...</div>
+        </div>
+      </div>
+
+      <!-- Artículos populares -->
+      <div class="side-card">
+        <div class="side-card__title">Artículos más útiles</div>
+        <div id="popularKb">
+          <div style="text-align:center;padding:12px;color:var(--c-muted,#64748b);font-size:12px;">Cargando...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal nuevo ticket ───────────────────────────────────────────────── -->
+<div class="modal fade" id="newTicketModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" style="background:var(--c-card,#fff);border:1px solid var(--c-border,#e2e8f0);border-radius:16px;">
+      <div class="modal-header" style="border-bottom:1px solid var(--c-border,#e2e8f0);">
+        <h5 class="modal-title" style="font-weight:700;font-size:16px;">🎫 Crear nuevo ticket</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:24px;">
+        <form id="newTicketForm">
+          <div style="margin-bottom:16px;">
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted,#64748b);display:block;margin-bottom:6px;">Asunto <span style="color:var(--c-danger,#ef4444)">*</span></label>
+            <input type="text" id="nt-titulo" class="form__input" placeholder="Describe brevemente tu problema" required maxlength="255">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+            <div>
+              <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted,#64748b);display:block;margin-bottom:6px;">Tipo</label>
+              <select id="nt-tipo" class="form__select">
+                <option value="incidente">Incidente</option>
+                <option value="solicitud">Solicitud de servicio</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted,#64748b);display:block;margin-bottom:6px;">Categoría</label>
+              <select id="nt-category" class="form__select">
+                <option value="">— Selecciona —</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-bottom:16px;">
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted,#64748b);display:block;margin-bottom:6px;">Descripción <span style="color:var(--c-danger,#ef4444)">*</span></label>
+            <textarea id="nt-desc" class="form__textarea" rows="5" placeholder="Describe el problema con detalle: ¿Qué pasó? ¿Cuándo empezó? ¿Qué has intentado?" required></textarea>
+          </div>
+          <!-- Sugerencias KB en tiempo real -->
+          <div id="ntKbSuggest" style="display:none;background:var(--c-hover,#f1f5f9);border-radius:10px;padding:12px;margin-bottom:16px;">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted,#64748b);margin-bottom:8px;">💡 Artículos que podrían ayudarte</div>
+            <div id="ntKbList"></div>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted,#64748b);display:block;margin-bottom:6px;">Adjunto (opcional)</label>
+            <input type="file" id="nt-file" style="font-size:13px;color:var(--c-text,#1e293b);" accept="image/*,.pdf,.doc,.docx,.xlsx">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer" style="border-top:1px solid var(--c-border,#e2e8f0);padding:16px 24px;">
+        <button type="button" class="btn btn-sm" data-bs-dismiss="modal" style="background:var(--c-hover,#f1f5f9);border:1px solid var(--c-border,#e2e8f0);border-radius:8px;padding:8px 18px;font-weight:600;font-size:13px;">Cancelar</button>
+        <button type="button" class="btn" id="submitTicketBtn" onclick="submitTicket()" style="background:var(--c-primary,#3b82f6);color:#fff;border-radius:8px;padding:8px 20px;font-weight:600;font-size:13px;border:none;cursor:pointer;">
+          <i class="bi bi-send"></i> Enviar ticket
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Encuesta satisfacción ──────────────────────────────────────────────── -->
+<div class="survey-overlay" id="surveyOverlay" style="display:none;">
+  <div class="survey-box">
+    <div style="font-size:48px;margin-bottom:12px;">⭐</div>
+    <h3>¿Cómo fue tu experiencia?</h3>
+    <p id="surveySubtitle">Tu ticket ha sido resuelto. Tu opinión nos ayuda a mejorar.</p>
+    <div class="stars" id="surveyStars">
+      <button class="star-btn" data-val="1" title="Muy malo">😞</button>
+      <button class="star-btn" data-val="2" title="Malo">😕</button>
+      <button class="star-btn" data-val="3" title="Regular">😐</button>
+      <button class="star-btn" data-val="4" title="Bueno">😊</button>
+      <button class="star-btn" data-val="5" title="Excelente">🤩</button>
+    </div>
+    <textarea class="survey-comment" id="surveyComment" placeholder="Comentario opcional…"></textarea>
+    <button onclick="submitSurvey()" style="background:var(--c-success,#10b981);color:#fff;border:none;border-radius:10px;padding:11px 28px;font-weight:700;font-size:14px;cursor:pointer;width:100%;">Enviar valoración</button>
+    <button onclick="closeSurvey()" style="background:none;border:none;color:var(--c-muted,#64748b);font-size:12px;cursor:pointer;margin-top:10px;width:100%;">Saltar</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const APP_URL = '<%= APP_URL %>';
+let surveyTicketId = null;
+let surveyRating   = 0;
+let ticketModal;
+
+document.addEventListener('DOMContentLoaded', () => {
+  ticketModal = new bootstrap.Modal(document.getElementById('newTicketModal'));
+  loadPortal();
+  loadCategories();
+  loadPopularKb();
+  checkPendingSurveys();
+});
+
+/* ── Cargar datos portal ─────────────────────────────────────────── */
+async function loadPortal() {
+  try {
+    const r = await fetch(APP_URL + '/api/portal/my-tickets').then(r => r.json());
+    const tickets = r.data || [];
+    renderActiveTickets(tickets.filter(t => !['resuelto','cerrado'].includes(t.status)));
+    renderResolvedTickets(tickets.filter(t => ['resuelto','cerrado'].includes(t.status)));
+    renderStats(tickets);
+  } catch(e) {
+    document.getElementById('activeTicketsList').innerHTML = '<p style="text-align:center;color:var(--c-muted,#64748b);font-size:13px;padding:20px">Error cargando tickets</p>';
+  }
+}
+
+function statusClass(s) {
+  const m = { abierto:'sb-open', en_progreso:'sb-prog', pendiente:'sb-pend', resuelto:'sb-done', cerrado:'sb-closed' };
+  return m[s] || 'sb-closed';
+}
+function statusLabel(s) {
+  const m = { abierto:'Abierto', en_progreso:'En progreso', pendiente:'Pendiente', resuelto:'Resuelto', cerrado:'Cerrado' };
+  return m[s] || s;
+}
+
+function renderActiveTickets(tickets) {
+  const el = document.getElementById('activeTicketsList');
+  if (!tickets.length) {
+    el.innerHTML = `<div style="text-align:center;padding:28px;color:var(--c-muted,#64748b);">
+      <div style="font-size:32px;margin-bottom:8px">✅</div>
+      <div style="font-weight:600">No tienes tickets abiertos</div>
+      <div style="font-size:12px;margin-top:4px">¡Todo está en orden!</div>
+    </div>`;
+    return;
+  }
+  el.innerHTML = tickets.slice(0,8).map(t => {
+    let slaHtml = '';
+    if (t.slaStatus === 'riesgo') slaHtml = `<span class="ticket-item__sla ticket-item__sla--risk">⚠ SLA en riesgo</span>`;
+    if (t.slaStatus === 'vencido') slaHtml = `<span class="ticket-item__sla ticket-item__sla--breach">🔴 SLA vencido</span>`;
+    return `<div class="ticket-item" onclick="location.href='${APP_URL}/portal/ticket/${t.id}'">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+          <span class="ticket-item__num">#${t.id.slice(-6)}</span>
+          <span class="sb ${statusClass(t.status)}">${statusLabel(t.status)}</span>
+          <span class="pb pb-${t.priority}">${t.priority}</span>
+        </div>
+        <div class="ticket-item__title">${t.titulo}</div>
+        <div class="ticket-item__meta">
+          ${slaHtml}
+          <span style="font-size:11px;color:var(--c-muted,#64748b)">${new Date(t.createdAt).toLocaleDateString('es',{day:'numeric',month:'short'})}</span>
+        </div>
+      </div>
+      <i class="bi bi-chevron-right" style="color:var(--c-border,#e2e8f0);flex-shrink:0"></i>
+    </div>`;
+  }).join('');
+}
+
+function renderResolvedTickets(tickets) {
+  const el = document.getElementById('resolvedTicketsList');
+  if (!tickets.length) {
+    el.innerHTML = '<p style="font-size:13px;color:var(--c-muted,#64748b);text-align:center;padding:12px">Sin tickets resueltos aún</p>';
+    return;
+  }
+  el.innerHTML = tickets.slice(0,5).map(t => `
+    <div class="ticket-item" onclick="location.href='${APP_URL}/portal/ticket/${t.id}'">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+          <span class="ticket-item__num">#${t.id.slice(-6)}</span>
+          <span class="sb ${statusClass(t.status)}">${statusLabel(t.status)}</span>
+        </div>
+        <div class="ticket-item__title">${t.titulo}</div>
+        <div style="font-size:11px;color:var(--c-muted,#64748b)">${t.resolvedAt ? 'Resuelto el ' + new Date(t.resolvedAt).toLocaleDateString('es',{day:'numeric',month:'short',year:'numeric'}) : ''}</div>
+      </div>
+      <i class="bi bi-chevron-right" style="color:var(--c-border,#e2e8f0);flex-shrink:0"></i>
+    </div>`).join('');
+}
+
+function renderStats(tickets) {
+  const total  = tickets.length;
+  const open   = tickets.filter(t => !['resuelto','cerrado'].includes(t.status)).length;
+  const done   = tickets.filter(t => t.status === 'resuelto').length;
+  const risk   = tickets.filter(t => t.slaStatus === 'riesgo').length;
+  document.getElementById('userStats').innerHTML = `
+    <div class="stat-row"><span>Total tickets</span><span class="stat-val">${total}</span></div>
+    <div class="stat-row"><span>Abiertos</span><span class="stat-val" style="color:var(--c-primary,#3b82f6)">${open}</span></div>
+    <div class="stat-row"><span>Resueltos</span><span class="stat-val" style="color:var(--c-success,#10b981)">${done}</span></div>
+    ${risk ? `<div class="stat-row"><span>En riesgo SLA</span><span class="stat-val" style="color:var(--c-warning,#f59e0b)">${risk}</span></div>` : ''}
+  `;
+}
+
+/* ── KB búsqueda ─────────────────────────────────────────────────── */
+let kbTimer;
+document.getElementById('kbSearch').addEventListener('input', function() {
+  clearTimeout(kbTimer);
+  const q = this.value.trim();
+  if (q.length < 2) { document.getElementById('kbSuggestions').style.display = 'none'; return; }
+  kbTimer = setTimeout(() => searchKb(q, 'kbSuggestions'), 300);
+});
+
+async function searchKb(q, targetId) {
+  const el = document.getElementById(targetId);
+  el.style.display = 'block';
+  el.innerHTML = '<div class="kb-no-result"><i class="bi bi-arrow-repeat" style="animation:spin .8s linear infinite"></i> Buscando...</div>';
+  try {
+    const r = await fetch(APP_URL + '/api/kb/suggest?q=' + encodeURIComponent(q)).then(r => r.json());
+    const items = r.data || r || [];
+    if (!items.length) {
+      el.innerHTML = `<div class="kb-no-result">No encontramos artículos. <a href="#" onclick="openNewTicket();return false" style="color:var(--c-primary,#3b82f6)">Crear ticket →</a></div>`;
+      return;
+    }
+    el.innerHTML = items.map(a => `
+      <div class="kb-suggestion" onclick="window.open('${APP_URL}/knowledge-base?article=${a.id}','_blank')">
+        <i class="bi bi-file-text kb-suggestion__icon"></i>
+        <div>
+          <div class="kb-suggestion__title">${a.title}</div>
+          <div class="kb-suggestion__excerpt">${a.excerpt || a.content?.slice(0,100) || ''}</div>
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    el.innerHTML = '<div class="kb-no-result">Error buscando</div>';
+  }
+}
+
+/* Cerrar sugerencias al hacer clic fuera */
+document.addEventListener('click', e => {
+  if (!e.target.closest('#kbSearch') && !e.target.closest('#kbSuggestions')) {
+    document.getElementById('kbSuggestions').style.display = 'none';
+  }
+});
+
+/* ── Categorías ──────────────────────────────────────────────────── */
+async function loadCategories() {
+  const sel = document.getElementById('nt-category');
+  try {
+    const r = await fetch(APP_URL + '/api/itsm/categories').then(r => r.json());
+    const cats = r.data || [];
+    cats.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.nombre;
+      sel.appendChild(opt);
+    });
+  } catch(e) {}
+}
+
+/* ── KB popular ──────────────────────────────────────────────────── */
+async function loadPopularKb() {
+  const el = document.getElementById('popularKb');
+  try {
+    const r = await fetch(APP_URL + '/api/kb/popular').then(r => r.json());
+    const items = r.data || [];
+    el.innerHTML = items.slice(0,5).map(a => `
+      <a href="${APP_URL}/knowledge-base?article=${a.id}" target="_blank" style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--c-border,#e2e8f0);text-decoration:none;color:inherit;">
+        <i class="bi bi-file-text" style="color:var(--c-primary,#3b82f6);margin-top:1px;flex-shrink:0;font-size:14px"></i>
+        <span style="font-size:12px;font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${a.title}</span>
+      </a>`).join('') || '<p style="font-size:12px;color:var(--c-muted,#64748b)">Sin artículos aún</p>';
+  } catch(e) {}
+}
+
+/* ── Nuevo ticket ────────────────────────────────────────────────── */
+function openNewTicket() {
+  ticketModal.show();
+  // Sugerencias KB basadas en el título
+  document.getElementById('nt-titulo').addEventListener('input', function() {
+    clearTimeout(kbTimer);
+    const q = this.value.trim();
+    if (q.length < 3) { document.getElementById('ntKbSuggest').style.display = 'none'; return; }
+    kbTimer = setTimeout(() => suggestInModal(q), 400);
+  });
+}
+
+async function suggestInModal(q) {
+  try {
+    const r = await fetch(APP_URL + '/api/kb/suggest?q=' + encodeURIComponent(q)).then(r => r.json());
+    const items = r.data || r || [];
+    const box = document.getElementById('ntKbSuggest');
+    const list = document.getElementById('ntKbList');
+    if (!items.length) { box.style.display = 'none'; return; }
+    box.style.display = 'block';
+    list.innerHTML = items.slice(0,3).map(a => `
+      <a href="${APP_URL}/knowledge-base?article=${a.id}" target="_blank" style="display:flex;align-items:center;gap:8px;padding:6px 0;text-decoration:none;color:inherit;font-size:12px;font-weight:600;">
+        <i class="bi bi-arrow-right-circle" style="color:var(--c-primary,#3b82f6)"></i>${a.title}
+      </a>`).join('');
+  } catch(e) {}
+}
+
+async function submitTicket() {
+  const titulo = document.getElementById('nt-titulo').value.trim();
+  const desc   = document.getElementById('nt-desc').value.trim();
+  if (!titulo || !desc) { alert('Completa los campos obligatorios'); return; }
+
+  const btn = document.getElementById('submitTicketBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="bi bi-arrow-repeat" style="animation:spin .7s linear infinite"></i> Enviando...';
+
+  try {
+    const fd = new FormData();
+    fd.append('titulo', titulo);
+    fd.append('descripcion', desc);
+    fd.append('tipo', document.getElementById('nt-tipo').value);
+    fd.append('priority', 'P3');
+    const cat = document.getElementById('nt-category').value;
+    if (cat) fd.append('categoryId', cat);
+    const file = document.getElementById('nt-file').files[0];
+    if (file) fd.append('file', file);
+
+    const r = await fetch(APP_URL + '/api/itsm/tickets', {
+      method: 'POST', body: fd
+    }).then(r => r.json());
+
+    if (r.success) {
+      ticketModal.hide();
+      document.getElementById('newTicketForm').reset();
+      document.getElementById('ntKbSuggest').style.display = 'none';
+      showToast('✅ Ticket creado', `Tu ticket #${r.data.id.slice(-6)} fue enviado correctamente.`);
+      setTimeout(loadPortal, 800);
+    } else {
+      alert('Error: ' + (r.error || 'No se pudo crear el ticket'));
+    }
+  } catch(e) {
+    alert('Error de conexión');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-send"></i> Enviar ticket';
+  }
+}
+
+/* ── Encuesta ────────────────────────────────────────────────────── */
+async function checkPendingSurveys() {
+  try {
+    const r = await fetch(APP_URL + '/api/portal/pending-survey').then(r => r.json());
+    if (r.ticket) {
+      surveyTicketId = r.ticket.id;
+      document.getElementById('surveySubtitle').textContent = `Tu ticket "${r.ticket.titulo.slice(0,50)}…" fue resuelto. ¿Cómo te fue?`;
+      document.getElementById('surveyOverlay').style.display = 'flex';
+    }
+  } catch(e) {}
+}
+
+document.querySelectorAll('.star-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    surveyRating = parseInt(btn.dataset.val);
+    document.querySelectorAll('.star-btn').forEach((b, i) => {
+      b.classList.toggle('active', i < surveyRating);
+    });
+  });
+});
+
+async function submitSurvey() {
+  if (!surveyRating) { alert('Por favor selecciona una calificación'); return; }
+  const comment = document.getElementById('surveyComment').value.trim();
+  await fetch(APP_URL + '/api/portal/survey', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ticketId: surveyTicketId, rating: surveyRating, comment })
+  });
+  closeSurvey();
+  showToast('🙏 Gracias por tu valoración', 'Tu opinión nos ayuda a mejorar el servicio.');
+}
+
+function closeSurvey() {
+  document.getElementById('surveyOverlay').style.display = 'none';
+  if (surveyTicketId) {
+    fetch(APP_URL + '/api/portal/survey/skip', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticketId: surveyTicketId })
+    });
+  }
+}
+
+/* ── Toast ───────────────────────────────────────────────────────── */
+function showToast(title, body) {
+  let c = document.getElementById('toastStack');
+  if (!c) {
+    c = document.createElement('div');
+    c.id = 'toastStack';
+    c.style.cssText = 'position:fixed;top:76px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:320px;pointer-events:none;';
+    document.body.appendChild(c);
+  }
+  const el = document.createElement('div');
+  el.style.cssText = 'background:var(--c-card,#fff);border:1px solid var(--c-border,#e2e8f0);border-radius:12px;padding:14px 16px;box-shadow:0 8px 24px rgba(0,0,0,.12);pointer-events:all;animation:toast-in .3s ease;font-size:13px;';
+  el.innerHTML = `<strong style="display:block;margin-bottom:2px">${title}</strong><span style="color:var(--c-muted,#64748b)">${body}</span>`;
+  c.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(40px)'; el.style.transition = 'all .3s'; setTimeout(() => el.remove(), 300); }, 4000);
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes toast-in { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:none; } }
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<%
+const body = `
+<div class="header" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);">
+  <h1>✅ Cambio Aprobado</h1>
+  <p>El CAB ha aprobado el RFC — puede proceder con la implementación</p>
+</div>
+<div class="body">
+  <div class="field"><div class="field-label">N° Cambio</div><div class="field-val">${change.changeNumber}</div></div>
+  <div class="field"><div class="field-label">Título</div><div class="field-val">${change.title}</div></div>
+  <div class="field"><div class="field-label">Tipo</div><div class="field-val">${change.type}</div></div>
+  <div class="field"><div class="field-label">Inicio planificado</div><div class="field-val">${change.plannedStart ? new Date(change.plannedStart).toLocaleString('es') : '—'}</div></div>
+  <div class="field"><div class="field-label">Fin planificado</div><div class="field-val">${change.plannedEnd ? new Date(change.plannedEnd).toLocaleString('es') : '—'}</div></div>
+  <div class="cta"><a href="${process.env.APP_URL}/cambios" style="background:#8b5cf6;">Ver Cambio</a></div>
+</div>`;
+%>
+<%- include('_base', { body }) %>

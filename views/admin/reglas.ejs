@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Motor de Reglas</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="<%= APP_URL %>/css/base.css">
+<link rel="stylesheet" href="<%= APP_URL %>/css/forms.css">
+<style>
+body{background:var(--c-bg,#f0f4f8);color:var(--c-text,#1e293b);font-family:'DM Sans',sans-serif;}
+.pg{max-width:1300px;margin:0 auto;padding:80px 20px 40px;}
+.card{background:var(--c-card,#fff);border:1px solid var(--c-border,#e2e8f0);border-radius:16px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:20px;}
+.card-title{font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.page-hdr{display:flex;align-items:center;gap:16px;margin-bottom:28px;flex-wrap:wrap;}
+.page-hdr-icon{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 12px rgba(0,0,0,.1);}
+.page-hdr h1{font-size:22px;font-weight:800;margin:0;}
+.page-hdr p{color:var(--c-muted,#64748b);font-size:13px;margin:2px 0 0;}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl th{background:var(--c-header,#f8fafc);padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted,#64748b);border-bottom:1px solid var(--c-border,#e2e8f0);}
+.tbl td{padding:12px 14px;border-bottom:1px solid var(--c-border,#e2e8f0);vertical-align:middle;}
+.tbl tbody tr:hover{background:var(--c-hover,#f1f5f9);}
+.tbl tbody tr:last-child td{border-bottom:none;}
+.tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--c-border,#e2e8f0);}
+.badge-on {background:#d1fae5;color:#065f46;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;}
+.badge-off{background:#f1f5f9;color:#475569;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;}
+.run-badge{background:#ede9fe;color:#5b21b6;padding:3px 10px;border-radius:999px;font-size:10px;font-weight:700;}
+.prio-chip{background:var(--c-hover,#f1f5f9);border:1px solid var(--c-border,#e2e8f0);padding:2px 8px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;}
+.actions{display:flex;gap:6px;}
+.btn-icon{background:none;border:1px solid var(--c-border,#e2e8f0);border-radius:8px;padding:5px 9px;font-size:13px;cursor:pointer;transition:all .15s;color:var(--c-text,#1e293b);}
+.btn-icon:hover{background:var(--c-hover,#f1f5f9);}
+.btn-icon.danger:hover{background:#fee2e2;border-color:#fca5a5;color:#991b1b;}
+.btn-main{background:var(--c-primary,#3b82f6);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:opacity .15s;}
+.btn-main:hover{opacity:.85;}
+/* JSON editor */
+.json-editor{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--c-input-bg,#fff);border:1px solid var(--c-input-border,#cbd5e1);border-radius:10px;padding:12px;min-height:100px;resize:vertical;width:100%;color:var(--c-text,#1e293b);outline:none;}
+.json-editor:focus{border-color:var(--c-input-focus,#3b82f6);box-shadow:0 0 0 3px rgba(59,130,246,.12);}
+/* Explicación acción */
+.action-examples{background:var(--c-hover,#f1f5f9);border-radius:10px;padding:14px 16px;font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--c-muted,#64748b);margin-top:8px;white-space:pre-wrap;}
+/* Test result */
+.test-result{background:var(--c-hover,#f1f5f9);border:1px solid var(--c-border,#e2e8f0);border-radius:10px;padding:14px;margin-top:12px;font-size:12px;font-family:'JetBrains Mono',monospace;white-space:pre-wrap;display:none;}
+</style>
+</head>
+<body>
+<%- include('../partials/sidebar_top') %>
+<%- include('../partials/styles_sidebar') %>
+
+<div class="pg">
+  <div class="page-hdr">
+    <div class="page-hdr-icon">⚙️</div>
+    <div>
+      <h1>Motor de Reglas de Negocio</h1>
+      <p>Define reglas automáticas de enrutamiento, escalado y priorización sin tocar código</p>
+    </div>
+    <div style="margin-left:auto">
+      <button class="btn-main" onclick="openNewRule()"><i class="bi bi-plus-lg"></i> Nueva regla</button>
+    </div>
+  </div>
+
+  <!-- Ayuda -->
+  <div class="card" style="border-left:3px solid var(--c-info,#06b6d4);">
+    <div class="card-title"><i class="bi bi-info-circle" style="color:var(--c-info,#06b6d4)"></i> Cómo funcionan las reglas</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;font-size:13px;">
+      <div><strong>Condiciones</strong> — JSON con formato json-rules-engine. Hechos disponibles: <code>priority</code>, <code>assignedTo</code>, <code>categoryName</code>, <code>ageMinutes</code>, <code>slaStatus</code>, <code>creatorTag</code></div>
+      <div><strong>Acciones</strong> — Array de <code>{type, params}</code>. Tipos: <code>notify_role</code>, <code>set_sla_status</code>, <code>upgrade_priority</code>, <code>assign_group</code>, <code>add_comment</code>, <code>add_tag</code></div>
+      <div><strong>Prioridad</strong> — Número menor = evaluada primero. Las reglas se evalúan en orden al crear/actualizar tickets.</div>
+      <div><strong>Disparador</strong> — <code>ticket_created</code>, <code>ticket_updated</code>, <code>sla_check</code> (cada 5min)</div>
+    </div>
+  </div>
+
+  <!-- Tabla de reglas -->
+  <div class="card">
+    <div class="card-title"><i class="bi bi-list-ul"></i> Reglas configuradas</div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>ID</th><th>Nombre</th><th>Disparador</th><th>Prioridad</th><th>Estado</th><th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="rulesTbody">
+          <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--c-muted,#64748b)">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Probar reglas -->
+  <div class="card">
+    <div class="card-title"><i class="bi bi-play-circle"></i> Probar reglas (dry-run)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div>
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted,#64748b);display:block;margin-bottom:6px">Contexto JSON del ticket</label>
+        <textarea class="json-editor" id="testContext" rows="8">{
+  "ticketId": "test-123",
+  "priority": "P1",
+  "assignedTo": null,
+  "categoryName": "Redes y Conectividad",
+  "ageMinutes": 20,
+  "slaStatus": "ok",
+  "creatorTag": null
+}</textarea>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted,#64748b);display:block;margin-bottom:6px">Resultado</label>
+        <div class="test-result" id="testResult">Sin resultado aún</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <select id="testRunOn" class="form__select" style="max-width:200px;">
+        <option value="ticket_created">ticket_created</option>
+        <option value="ticket_updated">ticket_updated</option>
+        <option value="sla_check" selected>sla_check</option>
+      </select>
+      <button class="btn-main" onclick="testRules()"><i class="bi bi-play"></i> Ejecutar dry-run</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal nueva/editar regla ─────────────────────────────────────────────── -->
+<div class="modal fade" id="ruleModal" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content" style="background:var(--c-card,#fff);border:1px solid var(--c-border,#e2e8f0);border-radius:16px;">
+      <div class="modal-header" style="border-bottom:1px solid var(--c-border,#e2e8f0);">
+        <h5 class="modal-title" style="font-weight:700" id="ruleModalTitle">Nueva regla</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:24px;">
+        <input type="hidden" id="ruleId">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div>
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted,#64748b);display:block;margin-bottom:6px">Nombre *</label>
+            <input type="text" id="ruleName" class="form__input" placeholder="Ej: Escalado P1 sin agente">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted,#64748b);display:block;margin-bottom:6px">Disparador</label>
+            <select id="ruleRunOn" class="form__select">
+              <option value="ticket_created">ticket_created</option>
+              <option value="ticket_updated">ticket_updated</option>
+              <option value="sla_check">sla_check</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted,#64748b);display:block;margin-bottom:6px">Prioridad (1-100)</label>
+            <input type="number" id="rulePriority" class="form__input" value="10" min="1" max="100">
+          </div>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted,#64748b);display:block;margin-bottom:6px">Descripción</label>
+          <input type="text" id="ruleDescription" class="form__input" placeholder="Describe qué hace esta regla">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div>
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted,#64748b);display:block;margin-bottom:6px">Condiciones (JSON) *</label>
+            <textarea class="json-editor" id="ruleConditions" rows="10">{
+  "all": [
+    { "fact": "priority", "operator": "equal", "value": "P1" },
+    { "fact": "assignedTo", "operator": "equal", "value": null }
+  ]
+}</textarea>
+            <div style="margin-top:6px;font-size:11px;color:var(--c-muted,#64748b)">Operadores: equal, notEqual, lessThan, greaterThan, lessThanInclusive, greaterThanInclusive, in, notIn, contains, doesNotContain</div>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted,#64748b);display:block;margin-bottom:6px">Acciones (JSON array) *</label>
+            <textarea class="json-editor" id="ruleActions" rows="10">[
+  { "type": "notify_role", "params": { "role": "supervisor", "message": "Ticket P1 sin asignar" } },
+  { "type": "set_sla_status", "params": { "status": "riesgo" } }
+]</textarea>
+            <div class="action-examples">Tipos disponibles:
+notify_role → { role, message }
+set_sla_status → { status: ok|riesgo|vencido }
+upgrade_priority → { levels: 1 }
+assign_group → { group: "redes" }
+add_comment → { text: "..." }
+add_tag → { tag: "..." }</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top:1px solid var(--c-border,#e2e8f0);padding:16px 24px;">
+        <button type="button" class="btn-icon" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn-main" onclick="saveRule()"><i class="bi bi-check-lg"></i> Guardar regla</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const APP_URL = '<%= APP_URL %>';
+let ruleModal;
+document.addEventListener('DOMContentLoaded', () => {
+  ruleModal = new bootstrap.Modal(document.getElementById('ruleModal'));
+  loadRules();
+});
+
+async function loadRules() {
+  const r = await fetch(APP_URL + '/api/business-rules').then(r => r.json());
+  const rules = r.data || [];
+  const tbody = document.getElementById('rulesTbody');
+  if (!rules.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--c-muted,#64748b)">Sin reglas configuradas</td></tr>'; return; }
+  tbody.innerHTML = rules.map(rule => `
+    <tr>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--c-muted)">#${rule.id}</span></td>
+      <td>
+        <div style="font-weight:700;font-size:13px">${rule.name}</div>
+        ${rule.description ? `<div style="font-size:11px;color:var(--c-muted)">${rule.description}</div>` : ''}
+      </td>
+      <td><span class="run-badge">${rule.runOn}</span></td>
+      <td><span class="prio-chip">${rule.priority}</span></td>
+      <td>
+        <span class="${rule.isActive ? 'badge-on' : 'badge-off'}">${rule.isActive ? 'Activa' : 'Inactiva'}</span>
+      </td>
+      <td>
+        <div class="actions">
+          <button class="btn-icon" onclick="editRule(${rule.id})" title="Editar"><i class="bi bi-pencil"></i></button>
+          <button class="btn-icon" onclick="toggleRule(${rule.id})" title="${rule.isActive ? 'Desactivar' : 'Activar'}">
+            <i class="bi bi-${rule.isActive ? 'pause-circle' : 'play-circle'}"></i>
+          </button>
+          <button class="btn-icon danger" onclick="deleteRule(${rule.id})" title="Eliminar"><i class="bi bi-trash3"></i></button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function openNewRule() {
+  document.getElementById('ruleId').value = '';
+  document.getElementById('ruleName').value = '';
+  document.getElementById('ruleDescription').value = '';
+  document.getElementById('ruleRunOn').value = 'ticket_created';
+  document.getElementById('rulePriority').value = '10';
+  document.getElementById('ruleConditions').value = JSON.stringify({"all":[{"fact":"priority","operator":"equal","value":"P1"}]}, null, 2);
+  document.getElementById('ruleActions').value = JSON.stringify([{"type":"notify_role","params":{"role":"supervisor","message":"Alerta"}}], null, 2);
+  document.getElementById('ruleModalTitle').textContent = 'Nueva regla';
+  ruleModal.show();
+}
+
+async function editRule(id) {
+  const r = await fetch(APP_URL + '/api/business-rules/' + id).then(r => r.json());
+  const rule = r.data;
+  document.getElementById('ruleId').value = rule.id;
+  document.getElementById('ruleName').value = rule.name;
+  document.getElementById('ruleDescription').value = rule.description || '';
+  document.getElementById('ruleRunOn').value = rule.runOn;
+  document.getElementById('rulePriority').value = rule.priority;
+  document.getElementById('ruleConditions').value = JSON.stringify(rule.conditions, null, 2);
+  document.getElementById('ruleActions').value = JSON.stringify(rule.actions, null, 2);
+  document.getElementById('ruleModalTitle').textContent = 'Editar regla #' + rule.id;
+  ruleModal.show();
+}
+
+async function saveRule() {
+  let conditions, actions;
+  try {
+    conditions = JSON.parse(document.getElementById('ruleConditions').value);
+    actions    = JSON.parse(document.getElementById('ruleActions').value);
+  } catch(e) { alert('JSON inválido: ' + e.message); return; }
+
+  const id   = document.getElementById('ruleId').value;
+  const body = {
+    name:        document.getElementById('ruleName').value.trim(),
+    description: document.getElementById('ruleDescription').value.trim(),
+    runOn:       document.getElementById('ruleRunOn').value,
+    priority:    parseInt(document.getElementById('rulePriority').value) || 10,
+    conditions, actions,
+  };
+  if (!body.name) { alert('El nombre es obligatorio'); return; }
+
+  const method = id ? 'PATCH' : 'POST';
+  const url    = id ? APP_URL + '/api/business-rules/' + id : APP_URL + '/api/business-rules';
+  const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(r => r.json());
+  if (r.success) { ruleModal.hide(); loadRules(); }
+  else alert('Error: ' + (r.error || 'Desconocido'));
+}
+
+async function toggleRule(id) {
+  await fetch(APP_URL + '/api/business-rules/' + id + '/toggle', { method: 'PATCH' });
+  loadRules();
+}
+
+async function deleteRule(id) {
+  if (!confirm('¿Eliminar esta regla?')) return;
+  await fetch(APP_URL + '/api/business-rules/' + id, { method: 'DELETE' });
+  loadRules();
+}
+
+async function testRules() {
+  let ctx;
+  try { ctx = JSON.parse(document.getElementById('testContext').value); }
+  catch(e) { alert('JSON inválido: ' + e.message); return; }
+  ctx.runOn = document.getElementById('testRunOn').value;
+  const r = await fetch(APP_URL + '/api/business-rules/test', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(ctx)
+  }).then(r => r.json());
+  const el = document.getElementById('testResult');
+  el.style.display = 'block';
+  el.textContent = JSON.stringify(r, null, 2);
+  el.style.background = r.matched > 0 ? '#d1fae5' : 'var(--c-hover,#f1f5f9)';
+}
+</script>
+</body>
+</html>

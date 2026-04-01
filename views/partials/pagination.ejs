@@ -1,0 +1,116 @@
+<%
+/*
+  Partial: pagination.ejs
+  Uso: <%- include('partials/pagination', {
+    meta: { page: 1, pages: 10, total: 250, limit: 25 },
+    baseUrl: '/portal/tickets'  // sin ?page=
+  }) %>
+*/
+const _meta    = locals.meta    || { page: 1, pages: 1, total: 0, limit: 25 };
+const _baseUrl = locals.baseUrl || '';
+const _page    = parseInt(_meta.page)  || 1;
+const _pages   = parseInt(_meta.pages) || 1;
+
+// Calcular rango de páginas a mostrar (máximo 7)
+function pageRange(cur, total) {
+  const delta = 2;
+  const range = [];
+  const rangeWithDots = [];
+  let l;
+  for (let i = Math.max(2, cur - delta); i <= Math.min(total - 1, cur + delta); i++) {
+    range.push(i);
+  }
+  if (cur - delta > 2) range.unshift('...');
+  if (cur + delta < total - 1) range.push('...');
+  range.unshift(1);
+  if (total > 1) range.push(total);
+  return range;
+}
+const _range = _pages > 1 ? pageRange(_page, _pages) : [1];
+%>
+
+<% if (_pages > 1) { %>
+<nav class="pagination" aria-label="Paginación">
+  <div class="pagination__info">
+    Mostrando <strong><%= ((_page - 1) * _meta.limit) + 1 %>–<%= Math.min(_page * _meta.limit, _meta.total) %></strong>
+    de <strong><%= _meta.total %></strong>
+  </div>
+  <ul class="pagination__list">
+    <!-- Prev -->
+    <li>
+      <% if (_page > 1) { %>
+        <a class="pagination__btn" href="<%= _baseUrl %>?page=<%= _page - 1 %>" aria-label="Anterior">
+          <i class="bi bi-chevron-left"></i>
+        </a>
+      <% } else { %>
+        <span class="pagination__btn pagination__btn--disabled" aria-disabled="true">
+          <i class="bi bi-chevron-left"></i>
+        </span>
+      <% } %>
+    </li>
+
+    <!-- Pages -->
+    <% _range.forEach(p => { %>
+      <li>
+        <% if (p === '...') { %>
+          <span class="pagination__dots">…</span>
+        <% } else if (p === _page) { %>
+          <span class="pagination__btn pagination__btn--active" aria-current="page"><%= p %></span>
+        <% } else { %>
+          <a class="pagination__btn" href="<%= _baseUrl %>?page=<%= p %>"><%= p %></a>
+        <% } %>
+      </li>
+    <% }) %>
+
+    <!-- Next -->
+    <li>
+      <% if (_page < _pages) { %>
+        <a class="pagination__btn" href="<%= _baseUrl %>?page=<%= _page + 1 %>" aria-label="Siguiente">
+          <i class="bi bi-chevron-right"></i>
+        </a>
+      <% } else { %>
+        <span class="pagination__btn pagination__btn--disabled" aria-disabled="true">
+          <i class="bi bi-chevron-right"></i>
+        </span>
+      <% } %>
+    </li>
+  </ul>
+</nav>
+<% } %>
+
+<style>
+.pagination{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:20px;flex-wrap:wrap;gap:12px;
+}
+.pagination__info{font-size:12px;color:var(--muted,#64748b);}
+.pagination__list{
+  display:flex;align-items:center;gap:4px;
+  list-style:none;margin:0;padding:0;
+}
+.pagination__btn{
+  display:flex;align-items:center;justify-content:center;
+  min-width:34px;height:34px;padding:0 8px;
+  background:var(--card,#fff);border:1px solid var(--border,#e2e8f0);
+  border-radius:8px;font-size:13px;font-weight:500;
+  color:var(--text,#1e293b);text-decoration:none;
+  transition:background .15s,border-color .15s,color .15s;
+  cursor:pointer;
+}
+.pagination__btn:hover{
+  background:var(--hover,#f1f5f9);border-color:var(--primary,#3b82f6);
+  color:var(--primary,#3b82f6);
+}
+.pagination__btn--active{
+  background:var(--primary,#3b82f6);border-color:var(--primary,#3b82f6);
+  color:#fff;cursor:default;
+}
+.pagination__btn--active:hover{background:var(--primary,#3b82f6);color:#fff;}
+.pagination__btn--disabled{
+  opacity:.4;cursor:not-allowed;pointer-events:none;
+}
+.pagination__dots{
+  display:flex;align-items:center;justify-content:center;
+  min-width:34px;height:34px;font-size:13px;color:var(--muted,#64748b);
+}
+</style>

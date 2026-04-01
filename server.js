@@ -13,12 +13,19 @@ const cookieParser   = require('cookie-parser');
 const session        = require('express-session');
 const path           = require('path');
 const methodOverride = require('method-override');
+const http           = require('http');
+const { Server: SocketIO } = require('socket.io');
 const { RedisStore } = require('connect-redis');
 require('dotenv').config();
 const passport     = require('./middleware/passport');
 const { initCasbin } = require('./middleware/casbin');
 
-const app  = express();
+const app    = express();
+const server = http.createServer(app);
+const io     = new SocketIO(server, {
+    cors: { origin: process.env.ALLOWED_ORIGINS?.split(',') || '*', credentials: true },
+});
+app.set('io', io);
 const PORT = process.env.PORT || 3000;
 const logger = require('./utils/logger');
 
@@ -29,6 +36,21 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(methodOverride('_method'));
+
+// ============================================================================
+// BULL BOARD — Monitor de colas /admin/queues
+// ============================================================================
+const { createBullBoard }       = require('@bull-board/api');
+const { BullAdapter }           = require('@bull-board/api/bullAdapter');
+const { ExpressAdapter }        = require('@bull-board/express');
+const { emailQueue, slaQueue, reportsQueue } = require('./src/queues/index');
+const bullBoardAdapter = new ExpressAdapter();
+bullBoardAdapter.setBasePath('/admin/queues');
+createBullBoard({
+    queues:  [new BullAdapter(emailQueue), new BullAdapter(slaQueue), new BullAdapter(reportsQueue)],
+    serverAdapter: bullBoardAdapter,
+});
+app.use('/admin/queues', bullBoardAdapter.getRouter());
 
 // Middleware para exponer APP_URL a todas las vistas
 app.use((req, res, next) => {
@@ -160,7 +182,20 @@ const recoveriesRouter      = require('./routes/recoveries');
 const adRouter              = require('./routes/ad');
 const soporteRouter    = require('./routes/soporte');
 const almacenRouter    = require('./routes/almacen');
-const itsmRouter       = require('./routes/itsm');
+const itsmRouter            = require('./routes/itsm');
+const serviceRequestsRouter = require('./routes/service-requests');
+const changesRouter         = require('./routes/changes');
+const problemsRouter        = require('./routes/problems');
+const catalogRouter         = require('./routes/catalog');
+const cmdbRouter            = require('./routes/cmdb');
+// Phase 4
+const notificationsRouter   = require('./routes/notifications');
+const knowledgeBaseRouter   = require('./routes/knowledge-base');
+const csiRouter             = require('./routes/csi');
+const reportsItsmRouter     = require('./routes/reports-itsm');
+// Phase 5-6
+const portalRouter          = require('./routes/portal');
+const businessRulesRouter   = require('./routes/business-rules');
 
 
 
@@ -266,7 +301,23 @@ app.use('/api/soporte',           soporteRouter);
 app.use('/api/jira',         jiraRoutes);
 app.use('/tickets',          jiraRoutes);
 app.use('/api/outlook-sync', outlookSyncRouter);
-app.use('/api/itsm',         itsmRouter);
+app.use('/api/itsm',             itsmRouter);
+app.use('/api/service-requests', serviceRequestsRouter);
+app.use('/api/changes',          changesRouter);
+app.use('/api/problems',         problemsRouter);
+app.use('/api/catalog',          catalogRouter);
+app.use('/api/cmdb',             cmdbRouter);
+// Phase 4
+app.use('/api/notifications',    notificationsRouter);
+app.use('/api/kb',               knowledgeBaseRouter);
+app.use('/api/csi',              csiRouter);
+app.use('/api/reports-itsm',     reportsItsmRouter);
+app.use('/public/reports', require('express').static(require('path').join(__dirname, 'public/reports')));
+// Phase 5-6
+app.use('/api/portal',           portalRouter);
+app.use('/api/business-rules',   businessRulesRouter);
+// Servir uploads de tickets
+app.use('/uploads/tickets', require('express').static(require('path').join(__dirname, 'uploads/tickets')));
 
 
 // ============================================================================
@@ -320,7 +371,25 @@ app.use((err, req, res, next) => {
 // SLA job — iniciar después de que los modelos están listos
 require('./services/slaJob');
 
-const server = app.listen(PORT, async () => {
+// ── Workers de colas ────────────────────────────────────────────────────────
+require('./src/queues/emailWorker');
+require('./src/queues/slaWorker');
+require('./src/queues/reportsWorker');
+
+// ── Jobs programados (node-cron) ─────────────────────────────────────────────
+const { startJobs } = require('./src/jobs/index');
+startJobs();
+
+// ── Socket.io — Notificaciones en tiempo real ───────────────────────────────
+io.on('connection', (socket) => {
+    // El cliente debe emitir 'join' con su userId al conectarse
+    socket.on('join', (userId) => {
+        if (userId) socket.join(`user:${userId}`);
+    });
+    socket.on('disconnect', () => {});
+});
+
+server.listen(PORT, async () => {
     await initCasbin();
     console.log('═'.repeat(75));
     console.log('🚀 EQUIPMENT MANAGEMENT SYSTEM — SERVER STARTED');

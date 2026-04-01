@@ -1,0 +1,278 @@
+/* ============================================================================
+   ticket.css — Componentes de ticket: badges prioridad, indicadores SLA,
+   estado, tipo. Metodología BEM.
+   Requiere: base.css
+   ============================================================================ */
+
+/* ── Badge genérico ────────────────────────────────────────────────────────── */
+.badge {
+  display:       inline-flex;
+  align-items:   center;
+  gap:           4px;
+  padding:       3px 10px;
+  border-radius: var(--r-full);
+  font-size:     11px;
+  font-weight:   600;
+  line-height:   1.4;
+  white-space:   nowrap;
+  vertical-align: middle;
+}
+
+/* ── Badge prioridad (BEM: badge--priority-P1 …) ──────────────────────────── */
+.badge--priority-P1 {
+  background: #fee2e2;
+  color:      #991b1b;
+  border:     1px solid #fca5a5;
+}
+.badge--priority-P2 {
+  background: #ffedd5;
+  color:      #9a3412;
+  border:     1px solid #fdba74;
+}
+.badge--priority-P3 {
+  background: #fef3c7;
+  color:      #92400e;
+  border:     1px solid #fcd34d;
+}
+.badge--priority-P4 {
+  background: #f1f5f9;
+  color:      #475569;
+  border:     1px solid #cbd5e1;
+}
+
+[data-theme="dark"] .badge--priority-P1 { background: #450a0a; color: #fca5a5; border-color: #7f1d1d; }
+[data-theme="dark"] .badge--priority-P2 { background: #431407; color: #fdba74; border-color: #7c2d12; }
+[data-theme="dark"] .badge--priority-P3 { background: #451a03; color: #fcd34d; border-color: #78350f; }
+[data-theme="dark"] .badge--priority-P4 { background: #1e293b; color: #94a3b8; border-color: #334155; }
+
+/* Punto de color en el badge */
+.badge::before {
+  content:       '';
+  width:         6px;
+  height:        6px;
+  border-radius: 50%;
+  background:    currentColor;
+  opacity:       .8;
+}
+
+/* ── Badge estado ──────────────────────────────────────────────────────────── */
+.badge--status-abierto      { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
+.badge--status-en_progreso  { background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd; }
+.badge--status-pendiente    { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+.badge--status-resuelto     { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+.badge--status-cerrado      { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+
+[data-theme="dark"] .badge--status-abierto     { background: #1e3a5f; color: #93c5fd; border-color: #1d4ed8; }
+[data-theme="dark"] .badge--status-en_progreso { background: #2e1065; color: #c4b5fd; border-color: #5b21b6; }
+[data-theme="dark"] .badge--status-pendiente   { background: #451a03; color: #fcd34d; border-color: #78350f; }
+[data-theme="dark"] .badge--status-resuelto    { background: #064e3b; color: #6ee7b7; border-color: #065f46; }
+[data-theme="dark"] .badge--status-cerrado     { background: #1e293b; color: #94a3b8; border-color: #334155; }
+
+/* ── Indicador SLA (semáforo) ──────────────────────────────────────────────── */
+.sla-indicator {
+  display:     inline-flex;
+  align-items: center;
+  gap:         6px;
+  font-size:   12px;
+  font-weight: 600;
+}
+
+.sla-indicator__dot {
+  width:         10px;
+  height:        10px;
+  border-radius: 50%;
+  flex-shrink:   0;
+}
+
+.sla-indicator--ok    .sla-indicator__dot { background: var(--c-sla-ok);    box-shadow: 0 0 0 3px rgba(16,185,129,.2); }
+.sla-indicator--risk  .sla-indicator__dot { background: var(--c-sla-risk);  box-shadow: 0 0 0 3px rgba(245,158,11,.2); animation: sla-pulse 1.5s infinite; }
+.sla-indicator--breach .sla-indicator__dot { background: var(--c-sla-breach); box-shadow: 0 0 0 3px rgba(239,68,68,.2); animation: sla-pulse .8s infinite; }
+
+.sla-indicator--ok     .sla-indicator__label { color: var(--c-sla-ok); }
+.sla-indicator--risk   .sla-indicator__label { color: var(--c-sla-risk); }
+.sla-indicator--breach .sla-indicator__label { color: var(--c-sla-breach); }
+
+@keyframes sla-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .4; }
+}
+
+/* ── Barra SLA progreso ────────────────────────────────────────────────────── */
+.sla-bar {
+  height:        6px;
+  border-radius: var(--r-full);
+  background:    var(--c-border);
+  overflow:      hidden;
+  position:      relative;
+}
+
+.sla-bar__fill {
+  height:        100%;
+  border-radius: var(--r-full);
+  transition:    width .5s ease;
+}
+
+.sla-bar--ok     .sla-bar__fill { background: var(--c-sla-ok); }
+.sla-bar--risk   .sla-bar__fill { background: var(--c-sla-risk); }
+.sla-bar--breach .sla-bar__fill { background: var(--c-sla-breach); }
+
+/* ── Tarjeta de ticket ─────────────────────────────────────────────────────── */
+.ticket-card {
+  background:    var(--c-card);
+  border:        1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding:       var(--sp-4) var(--sp-5);
+  box-shadow:    var(--sh-sm);
+  transition:    box-shadow var(--t-mid), transform var(--t-mid), border-color var(--t-mid);
+  cursor:        pointer;
+  position:      relative;
+}
+
+.ticket-card:hover {
+  box-shadow:    var(--sh-md);
+  transform:     translateY(-2px);
+  border-color:  var(--c-primary);
+}
+
+.ticket-card__id {
+  font-family:  var(--font-mono);
+  font-size:    11px;
+  color:        var(--c-muted);
+  margin-bottom: var(--sp-1);
+}
+
+.ticket-card__title {
+  font-size:    14px;
+  font-weight:  600;
+  color:        var(--c-text);
+  margin-bottom: var(--sp-2);
+  display:      -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow:     hidden;
+}
+
+.ticket-card__meta {
+  display:     flex;
+  gap:         var(--sp-2);
+  align-items: center;
+  flex-wrap:   wrap;
+  margin-top:  var(--sp-3);
+}
+
+/* Prioridad borde izquierdo */
+.ticket-card--P1 { border-left: 3px solid var(--c-p1); }
+.ticket-card--P2 { border-left: 3px solid var(--c-p2); }
+.ticket-card--P3 { border-left: 3px solid var(--c-p3); }
+.ticket-card--P4 { border-left: 3px solid var(--c-p4); }
+
+/* ── Tabla de tickets ──────────────────────────────────────────────────────── */
+.ticket-table {
+  width:           100%;
+  border-collapse: collapse;
+  font-size:       13px;
+}
+
+.ticket-table th {
+  background:     var(--c-header);
+  padding:        10px 14px;
+  text-align:     left;
+  font-size:      11px;
+  font-weight:    700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color:          var(--c-muted);
+  border-bottom:  2px solid var(--c-border);
+  white-space:    nowrap;
+}
+
+.ticket-table td {
+  padding:       10px 14px;
+  border-bottom: 1px solid var(--c-border);
+  vertical-align: middle;
+  color:         var(--c-text);
+}
+
+.ticket-table tbody tr:hover { background: var(--c-hover); }
+.ticket-table tbody tr:last-child td { border-bottom: none; }
+
+/* ── Historial de comentarios ──────────────────────────────────────────────── */
+.comment {
+  display:       flex;
+  gap:           var(--sp-3);
+  padding:       var(--sp-3) 0;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.comment:last-child { border-bottom: none; }
+
+.comment__avatar {
+  width:         36px;
+  height:        36px;
+  border-radius: 50%;
+  background:    var(--c-primary);
+  color:         #fff;
+  display:       flex;
+  align-items:   center;
+  justify-content: center;
+  font-size:     13px;
+  font-weight:   700;
+  flex-shrink:   0;
+}
+
+.comment__body { flex: 1; }
+
+.comment__header {
+  display:     flex;
+  gap:         var(--sp-2);
+  align-items: center;
+  margin-bottom: var(--sp-1);
+}
+
+.comment__author { font-weight: 600; font-size: 13px; }
+.comment__time   { font-size: 11px; color: var(--c-muted); }
+
+.comment__text {
+  font-size:   13px;
+  color:       var(--c-text);
+  white-space: pre-wrap;
+  word-break:  break-word;
+}
+
+.comment--system .comment__text { color: var(--c-muted); font-style: italic; font-size: 12px; }
+.comment--system .comment__avatar { background: var(--c-border); color: var(--c-muted); }
+
+/* ── Encuesta satisfacción ─────────────────────────────────────────────────── */
+.survey {
+  background:    var(--c-card);
+  border:        2px solid var(--c-success);
+  border-radius: var(--r-xl);
+  padding:       var(--sp-8);
+  text-align:    center;
+  max-width:     480px;
+  margin:        var(--sp-8) auto;
+}
+
+.survey__title { font-size: 18px; font-weight: 800; margin-bottom: var(--sp-2); }
+.survey__sub   { color: var(--c-muted); font-size: 13px; margin-bottom: var(--sp-6); }
+
+.survey__stars {
+  display:         flex;
+  justify-content: center;
+  gap:             var(--sp-3);
+  margin-bottom:   var(--sp-5);
+}
+
+.survey__star {
+  font-size:  36px;
+  cursor:     pointer;
+  transition: transform var(--t-fast), filter var(--t-fast);
+  filter:     grayscale(1) opacity(.4);
+  user-select: none;
+}
+
+.survey__star:hover,
+.survey__star.active {
+  filter:    none;
+  transform: scale(1.15);
+}

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catálogo de Servicios</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+:root,[data-theme="light"]{
+    --bg:#f0f4f8;--card:#fff;--hdr:#f8fafc;--border:#e2e8f0;
+    --text:#1e293b;--muted:#64748b;--primary:#3b82f6;--success:#10b981;
+    --warning:#f59e0b;--info:#06b6d4;--danger:#ef4444;--purple:#8b5cf6;
+    --hover:#f1f5f9;--sh-sm:0 1px 3px rgba(0,0,0,.06);--sh-md:0 4px 12px rgba(0,0,0,.08);
+}
+[data-theme="dark"]{
+    --bg:#0f172a;--card:#1e293b;--hdr:#162032;--border:#2d3f55;
+    --text:#e2e8f0;--muted:#94a3b8;--primary:#60a5fa;--success:#34d399;
+    --warning:#fbbf24;--info:#22d3ee;--danger:#f87171;--purple:#a78bfa;
+    --hover:#243348;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'DM Sans',-apple-system,sans-serif;}
+.pg{max-width:1700px;margin:0 auto;padding:24px 20px;}
+.page-hdr{display:flex;align-items:center;gap:16px;margin-bottom:28px;}
+.page-hdr-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;box-shadow:var(--sh-md);}
+.page-hdr h1{font-size:22px;font-weight:800;margin:0;}
+.page-hdr p{margin:3px 0 0;font-size:13px;color:var(--muted);}
+.page-hdr-right{margin-left:auto;display:flex;gap:8px;align-items:center;}
+.two-col{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start;}
+@media(max-width:900px){.two-col{grid-template-columns:1fr;}}
+.cat-list{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh-sm);overflow:hidden;}
+.cat-list-head{padding:13px 16px;background:var(--hdr);border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.cat-item{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s;font-size:13px;font-weight:600;}
+.cat-item:last-child{border-bottom:none;}
+.cat-item:hover,.cat-item.active{background:var(--hover);}
+.cat-item.active{color:var(--primary);border-left:3px solid var(--primary);}
+.cat-item .cat-icon{font-size:18px;width:28px;text-align:center;}
+.cat-item .cat-count{margin-left:auto;background:var(--border);color:var(--muted);padding:1px 7px;border-radius:10px;font-size:11px;}
+.card-ui{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh-sm);overflow:hidden;margin-bottom:20px;}
+.card-head{padding:13px 18px;background:var(--hdr);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.card-head .title{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;padding:16px;}
+.svc-card{border:1px solid var(--border);border-radius:12px;padding:16px;background:var(--card);transition:all .2s;cursor:pointer;position:relative;}
+.svc-card:hover{border-color:var(--primary);box-shadow:0 4px 16px rgba(59,130,246,.12);transform:translateY(-1px);}
+.svc-name{font-size:14px;font-weight:700;margin-bottom:5px;}
+.svc-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px;}
+.svc-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.svc-sla{background:#dbeafe;color:#2563eb;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;}
+.svc-approval{background:#fef3c7;color:#d97706;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;}
+.svc-btn{position:absolute;top:12px;right:12px;background:var(--primary);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;opacity:0;transition:opacity .2s;}
+.svc-card:hover .svc-btn{opacity:1;}
+.btn-sm{padding:6px 14px;font-size:12px;font-weight:600;border-radius:8px;border:none;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{opacity:.88;}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--muted);}
+.btn-outline:hover{background:var(--hover);}
+.form-ctrl{width:100%;border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;background:var(--card);color:var(--text);outline:none;transition:border .15s;}
+.form-ctrl:focus{border-color:var(--primary);}
+.form-group{margin-bottom:14px;}
+.form-lbl{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px;display:block;}
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal-box{background:var(--card);border-radius:20px;width:560px;max-width:95vw;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.25);transform:translateY(20px);transition:transform .2s;}
+.modal-overlay.open .modal-box{transform:translateY(0);}
+.modal-hdr{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-hdr h3{margin:0;font-size:16px;font-weight:800;}
+.modal-body{padding:20px 24px;overflow-y:auto;flex:1;}
+.modal-ftr{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+.search-input{height:36px;border:1px solid var(--border);border-radius:8px;padding:0 12px;font-size:13px;background:var(--card);color:var(--text);outline:none;width:220px;}
+.theme-toggle{background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--text);font-size:16px;}
+</style>
+</head>
+<body>
+<div class="pg">
+  <div class="page-hdr">
+    <div class="page-hdr-icon" style="background:linear-gradient(135deg,#06b6d4,#0891b2);">
+      <i class="bi bi-grid-3x3-gap" style="color:#fff;"></i>
+    </div>
+    <div>
+      <h1>Catálogo de Servicios</h1>
+      <p>Solicita servicios de TI de forma rápida y estructurada</p>
+    </div>
+    <div class="page-hdr-right">
+      <button class="theme-toggle" onclick="toggleTheme()"><i class="bi bi-moon-stars-fill"></i></button>
+      <input type="text" class="search-input" id="searchInput" placeholder="Buscar servicio..." oninput="filterServices()">
+      <button class="btn-sm btn-primary" onclick="openModalAdd()">
+        <i class="bi bi-plus-lg"></i> Agregar Servicio
+      </button>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <!-- Sidebar categorías -->
+    <div class="cat-list">
+      <div class="cat-list-head">Categorías</div>
+      <div id="catList">
+        <div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">
+          <i class="bi bi-arrow-clockwise"></i> Cargando...
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid de servicios -->
+    <div class="card-ui">
+      <div class="card-head">
+        <span class="title" id="catTitle"><i class="bi bi-grid-3x3-gap"></i> Todos los servicios</span>
+        <span id="svcCount" style="font-size:12px;color:var(--muted);">0 servicios</span>
+      </div>
+      <div class="svc-grid" id="svcGrid">
+        <div class="empty-state" style="grid-column:1/-1;"><i class="bi bi-arrow-clockwise"></i> Cargando...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SOLICITAR SERVICIO -->
+<div class="modal-overlay" id="modalSolicitar">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <h3><i class="bi bi-send" style="color:var(--primary)"></i> <span id="modalSvcName">Solicitar</span></h3>
+      <button class="btn-sm btn-outline" onclick="closeModal('modalSolicitar')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="modalSvcDesc" style="font-size:13px;color:var(--muted);margin-bottom:14px;"></p>
+      <div id="modalSvcMeta" style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap;"></div>
+      <div class="form-group">
+        <label class="form-lbl">Descripción de la solicitud *</label>
+        <textarea id="solDesc" class="form-ctrl" rows="3" placeholder="¿Qué necesitas específicamente?"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label class="form-lbl">Prioridad</label>
+          <select id="solPriority" class="form-ctrl">
+            <option value="baja">Baja</option>
+            <option value="media" selected>Media</option>
+            <option value="alta">Alta</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-lbl">Fecha requerida</label>
+          <input type="date" id="solDue" class="form-ctrl">
+        </div>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn-sm btn-outline" onclick="closeModal('modalSolicitar')">Cancelar</button>
+      <button class="btn-sm btn-primary" onclick="enviarSolicitud()">
+        <i class="bi bi-send"></i> Enviar Solicitud
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AGREGAR SERVICIO -->
+<div class="modal-overlay" id="modalAdd">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <h3><i class="bi bi-plus-circle" style="color:var(--success)"></i> Agregar Servicio al Catálogo</h3>
+      <button class="btn-sm btn-outline" onclick="closeModal('modalAdd')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-lbl">Categoría *</label>
+        <select id="addCatId" class="form-ctrl"><option value="">— Seleccionar —</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-lbl">Nombre del servicio *</label>
+        <input type="text" id="addName" class="form-ctrl" placeholder="Ej: Instalación de software">
+      </div>
+      <div class="form-group">
+        <label class="form-lbl">Descripción</label>
+        <textarea id="addDesc" class="form-ctrl" rows="2"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label class="form-lbl">SLA (horas)</label>
+          <input type="number" id="addSla" class="form-ctrl" value="8" min="1">
+        </div>
+        <div class="form-group">
+          <label class="form-lbl">¿Requiere aprobación?</label>
+          <select id="addApproval" class="form-ctrl">
+            <option value="0">No</option>
+            <option value="1">Sí</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn-sm btn-outline" onclick="closeModal('modalAdd')">Cancelar</button>
+      <button class="btn-sm btn-primary" onclick="agregarServicio()">
+        <i class="bi bi-save"></i> Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+let allServices = [];
+let allCats = [];
+let activeCatId = '';
+let activeSvcId = '';
+
+async function loadCatalog() {
+    const [catRes, svcRes] = await Promise.all([
+        fetch('/api/catalog/categories'),
+        fetch('/api/catalog'),
+    ]);
+    allCats = (await catRes.json()).data || [];
+    allServices = (await svcRes.json()).data || [];
+    renderCats();
+    renderServices(allServices);
+}
+
+function renderCats() {
+    const list = document.getElementById('catList');
+    const counts = {};
+    allServices.forEach(s => { counts[s.categoryId] = (counts[s.categoryId] || 0) + 1; });
+
+    list.innerHTML = `
+      <div class="cat-item ${!activeCatId ? 'active' : ''}" onclick="selectCat('')">
+        <span class="cat-icon"><i class="bi bi-grid-3x3-gap"></i></span>
+        Todos
+        <span class="cat-count">${allServices.length}</span>
+      </div>` +
+      allCats.map(c => `
+        <div class="cat-item ${activeCatId === c.id ? 'active' : ''}" onclick="selectCat('${c.id}')">
+          <span class="cat-icon"><i class="bi bi-${esc(c.icon || 'folder')}"></i></span>
+          ${esc(c.name)}
+          <span class="cat-count">${counts[c.id] || 0}</span>
+        </div>`).join('');
+}
+
+function selectCat(id) {
+    activeCatId = id;
+    renderCats();
+    const filtered = id ? allServices.filter(s => s.categoryId === id) : allServices;
+    const cat = allCats.find(c => c.id === id);
+    document.getElementById('catTitle').innerHTML = `<i class="bi bi-${esc(cat?.icon || 'grid-3x3-gap')}"></i> ${esc(cat?.name || 'Todos los servicios')}`;
+    renderServices(filtered);
+}
+
+function filterServices() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const src = activeCatId ? allServices.filter(s => s.categoryId === activeCatId) : allServices;
+    renderServices(q ? src.filter(s => s.name.toLowerCase().includes(q) || (s.description||'').toLowerCase().includes(q)) : src);
+}
+
+function renderServices(svcs) {
+    document.getElementById('svcCount').textContent = `${svcs.length} servicio${svcs.length !== 1 ? 's' : ''}`;
+    const grid = document.getElementById('svcGrid');
+    if (!svcs.length) {
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="bi bi-inbox"></i> Sin servicios</div>';
+        return;
+    }
+    grid.innerHTML = svcs.map(s => `
+        <div class="svc-card" onclick="openSolicitar('${s.id}')">
+          <button class="svc-btn" onclick="event.stopPropagation();openSolicitar('${s.id}')">
+            <i class="bi bi-send"></i> Solicitar
+          </button>
+          <div class="svc-name"><i class="bi bi-${esc(s.categoria?.icon || 'box')}"></i> ${esc(s.name)}</div>
+          <div class="svc-desc">${esc(s.description || 'Sin descripción')}</div>
+          <div class="svc-meta">
+            <span class="svc-sla"><i class="bi bi-clock"></i> SLA ${s.slaHours}h</span>
+            ${s.approvalRequired ? '<span class="svc-approval"><i class="bi bi-person-check"></i> Req. aprobación</span>' : ''}
+          </div>
+        </div>`).join('');
+}
+
+function openSolicitar(id) {
+    activeSvcId = id;
+    const svc = allServices.find(s => s.id === id);
+    document.getElementById('modalSvcName').textContent = svc?.name || 'Solicitar';
+    document.getElementById('modalSvcDesc').textContent = svc?.description || '';
+    document.getElementById('modalSvcMeta').innerHTML = svc
+        ? `<span class="svc-sla">SLA ${svc.slaHours}h</span>
+           ${svc.approvalRequired ? '<span class="svc-approval">Requiere aprobación</span>' : ''}`
+        : '';
+    document.getElementById('modalSolicitar').classList.add('open');
+}
+
+async function enviarSolicitud() {
+    const desc = document.getElementById('solDesc').value.trim();
+    if (!desc) return alert('Por favor describe lo que necesitas');
+    const svc  = allServices.find(s => s.id === activeSvcId);
+    const res  = await fetch('/api/service-requests', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            title:       `Solicitud: ${svc?.name || activeSvcId}`,
+            description: desc,
+            serviceId:   activeSvcId,
+            priority:    document.getElementById('solPriority').value,
+            dueDate:     document.getElementById('solDue').value || null,
+        }),
+    });
+    const d = await res.json();
+    if (!d.success) return alert(d.error);
+    closeModal('modalSolicitar');
+    alert('✅ Solicitud enviada correctamente');
+}
+
+function openModalAdd() {
+    const sel = document.getElementById('addCatId');
+    sel.innerHTML = '<option value="">— Seleccionar —</option>' +
+        allCats.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+    document.getElementById('modalAdd').classList.add('open');
+}
+
+async function agregarServicio() {
+    const catId = document.getElementById('addCatId').value;
+    const name  = document.getElementById('addName').value.trim();
+    if (!catId || !name) return alert('Categoría y nombre son requeridos');
+    const res = await fetch('/api/catalog', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            categoryId:       catId,
+            name,
+            description:      document.getElementById('addDesc').value,
+            slaHours:         parseInt(document.getElementById('addSla').value) || 8,
+            approvalRequired: document.getElementById('addApproval').value === '1',
+        }),
+    });
+    const d = await res.json();
+    if (!d.success) return alert(d.error);
+    closeModal('modalAdd');
+    loadCatalog();
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function esc(t) { return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function toggleTheme() {
+    const h = document.documentElement;
+    h.setAttribute('data-theme', h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+
+loadCatalog();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

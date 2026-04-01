@@ -1,0 +1,15 @@
+<%
+const body = `
+<div class="header" style="background:linear-gradient(135deg,#f59e0b,#d97706);">
+  <h1>⚠️ SLA en Riesgo</h1>
+  <p>Un ticket bajo tu responsabilidad está próximo a vencer</p>
+</div>
+<div class="body">
+  <div class="field"><div class="field-label">Ticket</div><div class="field-val">${ticket.ticketNumber || ticket.id}</div></div>
+  <div class="field"><div class="field-label">Título</div><div class="field-val">${ticket.title}</div></div>
+  <div class="field"><div class="field-label">Prioridad</div><div class="field-val"><span class="badge badge-${ticket.priority}">${ticket.priority?.toUpperCase()}</span></div></div>
+  <div class="field"><div class="field-label">⏰ SLA Vence</div><div class="field-val" style="color:#d97706;font-weight:800;">${ticket.slaDueAt ? new Date(ticket.slaDueAt).toLocaleString('es') : '—'}</div></div>
+  <div class="cta"><a href="${process.env.APP_URL}/incidencias" style="background:#f59e0b;">Atender Ahora</a></div>
+</div>`;
+%>
+<%- include('_base', { body }) %>

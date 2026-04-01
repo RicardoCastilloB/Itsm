@@ -1,0 +1,98 @@
+<%
+/*
+  Partial: flash-messages.ejs
+  Muestra mensajes flash de connect-flash.
+  Incluir después de <body> en cualquier vista.
+
+  Uso en ruta:
+    req.flash('success', 'Ticket creado correctamente');
+    req.flash('error', 'No se pudo guardar');
+    req.flash('warning', 'SLA próximo a vencer');
+    req.flash('info', 'Cambio pendiente de aprobación');
+
+  Tipos soportados: success, error, warning, info
+*/
+const _fTypes = ['success', 'error', 'warning', 'info'];
+const _fMessages = {};
+_fTypes.forEach(t => {
+  const msgs = (typeof flash === 'function') ? flash(t) : (locals[t + 'Messages'] || []);
+  if (msgs && msgs.length) _fMessages[t] = msgs;
+});
+const _hasFlash = Object.keys(_fMessages).length > 0;
+%>
+
+<% if (_hasFlash) { %>
+<div class="flash-container" id="flashContainer" aria-live="polite">
+  <% Object.entries(_fMessages).forEach(([type, msgs]) => { %>
+    <% msgs.forEach(msg => { %>
+      <div class="flash flash--<%= type %>" role="alert">
+        <span class="flash__icon">
+          <% if (type === 'success') { %><i class="bi bi-check-circle-fill"></i>
+          <% } else if (type === 'error') { %><i class="bi bi-x-circle-fill"></i>
+          <% } else if (type === 'warning') { %><i class="bi bi-exclamation-triangle-fill"></i>
+          <% } else { %><i class="bi bi-info-circle-fill"></i><% } %>
+        </span>
+        <span class="flash__msg"><%- msg %></span>
+        <button class="flash__close" onclick="this.parentElement.remove()" aria-label="Cerrar">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    <% }) %>
+  <% }) %>
+</div>
+<% } %>
+
+<style>
+.flash-container{
+  position:fixed;top:72px;right:20px;z-index:9990;
+  display:flex;flex-direction:column;gap:8px;
+  max-width:380px;width:calc(100% - 40px);
+  pointer-events:none;
+}
+.flash{
+  display:flex;align-items:flex-start;gap:10px;
+  background:var(--card,#fff);border-radius:12px;
+  padding:14px 16px;box-shadow:0 4px 16px rgba(0,0,0,.12);
+  border-left:4px solid transparent;
+  pointer-events:all;animation:flash-in .3s ease;
+  font-size:13px;line-height:1.5;
+}
+@keyframes flash-in{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+.flash--success{border-color:#10b981;background:#f0fdf4;}
+.flash--error  {border-color:#ef4444;background:#fef2f2;}
+.flash--warning{border-color:#f59e0b;background:#fffbeb;}
+.flash--info   {border-color:#3b82f6;background:#eff6ff;}
+[data-theme="dark"] .flash--success{background:#064e3b;color:#d1fae5;}
+[data-theme="dark"] .flash--error  {background:#450a0a;color:#fee2e2;}
+[data-theme="dark"] .flash--warning{background:#451a03;color:#fef3c7;}
+[data-theme="dark"] .flash--info   {background:#1e3a5f;color:#dbeafe;}
+.flash__icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.flash--success .flash__icon{color:#10b981;}
+.flash--error   .flash__icon{color:#ef4444;}
+.flash--warning .flash__icon{color:#f59e0b;}
+.flash--info    .flash__icon{color:#3b82f6;}
+.flash__msg{flex:1;color:inherit;}
+.flash__close{
+  background:none;border:none;cursor:pointer;padding:2px;
+  opacity:.5;font-size:14px;flex-shrink:0;
+  transition:opacity .15s;line-height:1;color:inherit;
+}
+.flash__close:hover{opacity:1;}
+</style>
+
+<script>
+/* Auto-dismiss flash messages after 5s */
+(function(){
+  const container = document.getElementById('flashContainer');
+  if(!container) return;
+  const items = container.querySelectorAll('.flash');
+  items.forEach((el, i) => {
+    setTimeout(() => {
+      el.style.transition = 'opacity .4s ease, transform .4s ease';
+      el.style.opacity    = '0';
+      el.style.transform  = 'translateX(40px)';
+      setTimeout(() => el.remove(), 400);
+    }, 4000 + i * 500);
+  });
+})();
+</script>

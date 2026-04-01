@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Base de Conocimiento</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+:root,[data-theme="light"]{
+  --bg:#f0f4f8;--card:#fff;--hdr:#f8fafc;--border:#e2e8f0;
+  --text:#1e293b;--muted:#64748b;--primary:#3b82f6;--success:#10b981;
+  --warning:#f59e0b;--danger:#ef4444;--purple:#8b5cf6;
+  --hover:#f1f5f9;--sh-sm:0 1px 3px rgba(0,0,0,.06);--sh-md:0 4px 12px rgba(0,0,0,.08);
+}
+[data-theme="dark"]{
+  --bg:#0f172a;--card:#1e293b;--hdr:#162032;--border:#2d3f55;
+  --text:#e2e8f0;--muted:#94a3b8;--primary:#60a5fa;--success:#34d399;
+  --warning:#fbbf24;--danger:#f87171;--purple:#a78bfa;--hover:#243348;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'DM Sans',-apple-system,sans-serif;}
+.pg{max-width:1700px;margin:0 auto;padding:24px 20px;}
+.page-hdr{display:flex;align-items:center;gap:16px;margin-bottom:28px;}
+.page-hdr-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;box-shadow:var(--sh-md);}
+.page-hdr h1{font-size:22px;font-weight:800;margin:0;}
+.page-hdr p{margin:3px 0 0;font-size:13px;color:var(--muted);}
+.page-hdr-right{margin-left:auto;display:flex;gap:8px;align-items:center;}
+.search-hero{background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:16px;padding:32px;text-align:center;margin-bottom:24px;color:#fff;}
+.search-hero h2{font-size:24px;font-weight:800;margin-bottom:8px;}
+.search-hero p{font-size:14px;opacity:.85;margin-bottom:20px;}
+.search-box{display:flex;max-width:560px;margin:0 auto;gap:0;}
+.search-box input{flex:1;border:none;border-radius:10px 0 0 10px;padding:12px 18px;font-size:14px;outline:none;}
+.search-box button{background:#fff;color:var(--primary);border:none;border-radius:0 10px 10px 0;padding:12px 20px;font-size:16px;cursor:pointer;font-weight:700;}
+.search-results{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;display:none;}
+.search-result-item{padding:14px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;}
+.search-result-item:last-child{border-bottom:none;}
+.search-result-item:hover{background:var(--hover);}
+.search-result-item .sr-title{font-weight:700;margin-bottom:3px;}
+.search-result-item .sr-excerpt{font-size:12px;color:var(--muted);}
+.three-col{display:grid;grid-template-columns:260px 1fr 300px;gap:16px;}
+@media(max-width:1200px){.three-col{grid-template-columns:1fr 1fr;}}
+@media(max-width:800px){.three-col{grid-template-columns:1fr;}}
+.card-ui{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh-sm);overflow:hidden;margin-bottom:16px;}
+.card-head{padding:13px 18px;background:var(--hdr);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-head .title{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
+.cat-item{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;font-size:13px;font-weight:600;}
+.cat-item:last-child{border-bottom:none;}
+.cat-item:hover,.cat-item.active{background:var(--hover);}
+.cat-item.active{color:var(--primary);border-left:3px solid var(--primary);}
+.cat-icon{font-size:16px;width:24px;text-align:center;}
+.art-item{padding:14px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;}
+.art-item:last-child{border-bottom:none;}
+.art-item:hover{background:var(--hover);}
+.art-title{font-weight:700;font-size:14px;margin-bottom:4px;}
+.art-excerpt{font-size:12px;color:var(--muted);line-height:1.5;}
+.art-meta{display:flex;gap:10px;align-items:center;margin-top:6px;font-size:11px;color:var(--muted);}
+.art-views{display:flex;align-items:center;gap:3px;}
+.pop-item{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px;}
+.pop-item:last-child{border-bottom:none;}
+.pop-item:hover{background:var(--hover);}
+.pop-rank{width:22px;height:22px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+/* Artículo detalle */
+.article-view{display:none;}
+.article-view.open{display:block;}
+.article-content{padding:24px 28px;line-height:1.8;font-size:14px;}
+.article-content h2,.article-content h3{font-weight:700;margin:20px 0 10px;}
+.article-content pre{background:var(--hdr);border-radius:8px;padding:12px;overflow:auto;font-size:12px;}
+.helpful-bar{padding:16px 28px;border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;background:var(--hdr);}
+.btn-sm{padding:6px 14px;font-size:12px;font-weight:600;border-radius:8px;border:none;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{opacity:.88;}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--muted);}
+.btn-outline:hover{background:var(--hover);}
+.btn-success{background:var(--success);color:#fff;}
+.form-ctrl{width:100%;border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;background:var(--card);color:var(--text);outline:none;}
+.form-ctrl:focus{border-color:var(--primary);}
+.form-group{margin-bottom:14px;}
+.form-lbl{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px;display:block;}
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal-box{background:var(--card);border-radius:20px;width:720px;max-width:95vw;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.25);transform:translateY(20px);transition:transform .2s;}
+.modal-overlay.open .modal-box{transform:translateY(0);}
+.modal-hdr{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-hdr h3{margin:0;font-size:16px;font-weight:800;}
+.modal-body{padding:20px 24px;overflow-y:auto;flex:1;}
+.modal-ftr{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+.theme-toggle{background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--text);font-size:16px;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="pg">
+  <div class="page-hdr">
+    <div class="page-hdr-icon" style="background:linear-gradient(135deg,#06b6d4,#0891b2);">
+      <i class="bi bi-book-half" style="color:#fff;"></i>
+    </div>
+    <div>
+      <h1>Base de Conocimiento</h1>
+      <p>Artículos, guías y soluciones del equipo de soporte</p>
+    </div>
+    <div class="page-hdr-right">
+      <button class="theme-toggle" onclick="toggleTheme()"><i class="bi bi-moon-stars-fill"></i></button>
+      <button class="btn-sm btn-primary" onclick="openModal()">
+        <i class="bi bi-plus-lg"></i> Nuevo Artículo
+      </button>
+    </div>
+  </div>
+
+  <!-- Hero buscador -->
+  <div class="search-hero">
+    <h2><i class="bi bi-search"></i> ¿Qué necesitas saber?</h2>
+    <p>Busca en cientos de artículos, guías y soluciones conocidas</p>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Buscar artículos..." oninput="debounceSearch()">
+      <button onclick="doSearch()"><i class="bi bi-search"></i></button>
+    </div>
+  </div>
+
+  <!-- Resultados de búsqueda -->
+  <div class="search-results" id="searchResults"></div>
+
+  <!-- Vista artículo individual -->
+  <div class="article-view card-ui" id="articleView">
+    <div class="card-head" id="articleHead">
+      <span class="title" id="articleTitle">Artículo</span>
+      <button class="btn-sm btn-outline" onclick="closeArticle()"><i class="bi bi-arrow-left"></i> Volver</button>
+    </div>
+    <div class="article-content" id="articleContent"></div>
+    <div class="helpful-bar">
+      <span style="font-size:13px;color:var(--muted);">¿Fue útil este artículo?</span>
+      <button class="btn-sm btn-success" onclick="vote('yes')"><i class="bi bi-hand-thumbs-up"></i> Sí</button>
+      <button class="btn-sm btn-outline" onclick="vote('no')"><i class="bi bi-hand-thumbs-down"></i> No</button>
+      <button class="btn-sm btn-outline" id="linkTicketBtn" style="margin-left:auto;">
+        <i class="bi bi-link-45deg"></i> Vincular a ticket
+      </button>
+    </div>
+  </div>
+
+  <!-- Layout 3 columnas -->
+  <div class="three-col" id="mainLayout">
+    <!-- Categorías -->
+    <div class="card-ui">
+      <div class="card-head"><span class="title"><i class="bi bi-grid"></i> Categorías</span></div>
+      <div id="catList">
+        <div style="padding:16px;text-align:center;color:var(--muted);font-size:13px;">Cargando...</div>
+      </div>
+    </div>
+
+    <!-- Artículos -->
+    <div class="card-ui">
+      <div class="card-head">
+        <span class="title" id="artListTitle"><i class="bi bi-file-text"></i> Artículos</span>
+        <span id="artCount" style="font-size:12px;color:var(--muted);">—</span>
+      </div>
+      <div id="artList">
+        <div class="empty-state"><i class="bi bi-arrow-clockwise"></i> Cargando...</div>
+      </div>
+    </div>
+
+    <!-- Panel derecho -->
+    <div>
+      <div class="card-ui">
+        <div class="card-head"><span class="title"><i class="bi bi-fire"></i> Más Populares</span></div>
+        <div id="popList"><div class="empty-state"><i class="bi bi-arrow-clockwise"></i></div></div>
+      </div>
+      <div class="card-ui">
+        <div class="card-head"><span class="title"><i class="bi bi-question-circle"></i> Búsquedas sin respuesta</span></div>
+        <div id="noResultsList"><div class="empty-state" style="padding:20px;"><i class="bi bi-arrow-clockwise"></i></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO ARTÍCULO -->
+<div class="modal-overlay" id="modalArt">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <h3><i class="bi bi-file-earmark-plus" style="color:var(--primary)"></i> Nuevo Artículo</h3>
+      <button class="btn-sm btn-outline" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-lbl">Categoría</label>
+        <select id="artCatId" class="form-ctrl"><option value="">Sin categoría</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-lbl">Título *</label>
+        <input type="text" id="artTitle" class="form-ctrl" placeholder="Ej: Cómo restablecer contraseña en Active Directory">
+      </div>
+      <div class="form-group">
+        <label class="form-lbl">Tags (separados por coma)</label>
+        <input type="text" id="artTags" class="form-ctrl" placeholder="contraseña, AD, usuario, acceso">
+      </div>
+      <div class="form-group">
+        <label class="form-lbl">Contenido *</label>
+        <textarea id="artContent" class="form-ctrl" rows="8" placeholder="Redacta el artículo (HTML permitido)..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-lbl">Estado</label>
+        <select id="artStatus" class="form-ctrl">
+          <option value="borrador">Borrador</option>
+          <option value="publicado">Publicado</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn-sm btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn-sm btn-primary" onclick="crearArticulo()">
+        <i class="bi bi-save"></i> Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+let allCats = [];
+let activeCatId = '';
+let activeArticleId = '';
+let searchTimer = null;
+
+async function init() {
+    await Promise.all([loadCats(), loadArticles(), loadPopular(), loadNoResults()]);
+}
+
+async function loadCats() {
+    const res  = await fetch('/api/kb/categories');
+    const d    = await res.json();
+    allCats    = d.data || [];
+    const list = document.getElementById('catList');
+    const sel  = document.getElementById('artCatId');
+    sel.innerHTML = '<option value="">Sin categoría</option>' +
+        allCats.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+    list.innerHTML = `
+      <div class="cat-item ${!activeCatId ? 'active' : ''}" onclick="selectCat('')">
+        <span class="cat-icon"><i class="bi bi-grid-3x3-gap"></i></span> Todos
+      </div>` +
+      allCats.map(c => `
+        <div class="cat-item ${activeCatId === c.id ? 'active' : ''}" onclick="selectCat('${c.id}')">
+          <span class="cat-icon"><i class="bi bi-${esc(c.icon||'folder')}"></i></span>
+          ${esc(c.name)}
+          <span style="margin-left:auto;font-size:11px;color:var(--muted);">${c.articulos?.length || 0}</span>
+        </div>`).join('');
+}
+
+async function loadArticles(catId = '') {
+    activeCatId = catId;
+    const params = new URLSearchParams({ status: 'publicado', limit: 50 });
+    if (catId) params.set('categoryId', catId);
+    const res  = await fetch(`/api/kb?${params}`);
+    const d    = await res.json();
+    const rows = d.data || [];
+    document.getElementById('artCount').textContent = `${rows.length} artículo${rows.length !== 1 ? 's' : ''}`;
+    const list = document.getElementById('artList');
+    if (!rows.length) {
+        list.innerHTML = '<div class="empty-state"><i class="bi bi-inbox"></i>Sin artículos</div>';
+        return;
+    }
+    list.innerHTML = rows.map(a => `
+        <div class="art-item" onclick="openArticle('${a.id}')">
+          <div class="art-title">${esc(a.title)}</div>
+          <div class="art-excerpt">${esc(a.excerpt || '')}</div>
+          <div class="art-meta">
+            <span class="art-views"><i class="bi bi-eye"></i> ${a.views}</span>
+            <span><i class="bi bi-hand-thumbs-up"></i> ${a.helpfulYes}</span>
+            ${a.tags ? `<span><i class="bi bi-tags"></i> ${esc(a.tags.split(',').slice(0,3).join(', '))}</span>` : ''}
+          </div>
+        </div>`).join('');
+}
+
+async function loadPopular() {
+    const res  = await fetch('/api/kb/popular');
+    const d    = await res.json();
+    const rows = d.data || [];
+    const list = document.getElementById('popList');
+    if (!rows.length) { list.innerHTML = '<div class="empty-state">Sin datos</div>'; return; }
+    list.innerHTML = rows.map((a, i) => `
+        <div class="pop-item" onclick="openArticle('${a.id}')">
+          <div class="pop-rank">${i+1}</div>
+          <div style="flex:1;font-size:13px;font-weight:600;">${esc(a.title)}</div>
+          <span style="font-size:11px;color:var(--muted);">${a.views} vistas</span>
+        </div>`).join('');
+}
+
+async function loadNoResults() {
+    const res  = await fetch('/api/kb/no-results');
+    const d    = await res.json();
+    const rows = d.data || [];
+    const list = document.getElementById('noResultsList');
+    if (!rows.length) { list.innerHTML = '<div class="empty-state" style="padding:16px;">Sin búsquedas sin resultado</div>'; return; }
+    list.innerHTML = rows.slice(0, 6).map(r => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--border);font-size:12px;">
+          <span style="color:var(--text);">"${esc(r.query)}"</span>
+          <span style="color:var(--danger);font-weight:700;">${r.searches}x</span>
+        </div>`).join('');
+}
+
+function selectCat(id) {
+    loadCats().then(() => {});
+    loadArticles(id);
+}
+
+async function openArticle(id) {
+    const res = await fetch(`/api/kb/${id}`);
+    const d   = await res.json();
+    if (!d.success) return alert('Error cargando artículo');
+    activeArticleId = id;
+    const a = d.data;
+    document.getElementById('articleTitle').textContent = a.title;
+    document.getElementById('articleContent').innerHTML =
+        a.content + (a.tags ? `<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+            <strong>Tags:</strong> ${a.tags.split(',').map(t => `<span style="background:var(--hover);padding:2px 8px;border-radius:12px;font-size:12px;margin-right:4px;">${esc(t.trim())}</span>`).join('')}</div>` : '');
+    document.getElementById('articleView').classList.add('open');
+    document.getElementById('mainLayout').style.display = 'none';
+    document.getElementById('searchResults').style.display = 'none';
+}
+
+function closeArticle() {
+    document.getElementById('articleView').classList.remove('open');
+    document.getElementById('mainLayout').style.display = 'grid';
+    activeArticleId = '';
+}
+
+async function vote(v) {
+    if (!activeArticleId) return;
+    await fetch(`/api/kb/${activeArticleId}/helpful`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ vote: v }),
+    });
+    alert(v === 'yes' ? '¡Gracias por tu feedback! 👍' : 'Gracias. Mejoraremos este artículo.');
+}
+
+function debounceSearch() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(doSearch, 400);
+}
+
+async function doSearch() {
+    const q = document.getElementById('searchInput').value.trim();
+    if (!q) { document.getElementById('searchResults').style.display = 'none'; return; }
+    const res  = await fetch(`/api/kb/search?q=${encodeURIComponent(q)}`);
+    const d    = await res.json();
+    const rows = d.data || [];
+    const box  = document.getElementById('searchResults');
+    box.style.display = 'block';
+    if (!rows.length) {
+        box.innerHTML = `<div class="empty-state"><i class="bi bi-search"></i><br>Sin resultados para "<strong>${esc(q)}</strong>"</div>`;
+        return;
+    }
+    box.innerHTML = `<div style="padding:10px 18px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;">
+        ${rows.length} resultado${rows.length !== 1 ? 's' : ''} para "${esc(q)}"</div>` +
+        rows.map(a => `
+          <div class="search-result-item" onclick="openArticle('${a.id}')">
+            <div class="sr-title">${esc(a.title)}</div>
+            <div class="sr-excerpt">${esc(a.excerpt || '')}</div>
+          </div>`).join('');
+}
+
+async function crearArticulo() {
+    const title   = document.getElementById('artTitle').value.trim();
+    const content = document.getElementById('artContent').value.trim();
+    if (!title || !content) return alert('Título y contenido son requeridos');
+    const res = await fetch('/api/kb', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            title, content,
+            kbCategoryId: document.getElementById('artCatId').value || null,
+            tags:         document.getElementById('artTags').value,
+            status:       document.getElementById('artStatus').value,
+        }),
+    });
+    const d = await res.json();
+    if (!d.success) return alert(d.error);
+    closeModal();
+    init();
+}
+
+function openModal() { document.getElementById('modalArt').classList.add('open'); }
+function closeModal() { document.getElementById('modalArt').classList.remove('open'); }
+function esc(t) { return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function toggleTheme() {
+    const h = document.documentElement;
+    h.setAttribute('data-theme', h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+
+init();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reportes ITSM</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+:root,[data-theme="light"]{
+  --bg:#f0f4f8;--card:#fff;--hdr:#f8fafc;--border:#e2e8f0;
+  --text:#1e293b;--muted:#64748b;--primary:#3b82f6;--success:#10b981;
+  --warning:#f59e0b;--danger:#ef4444;--purple:#8b5cf6;
+  --hover:#f1f5f9;--sh-sm:0 1px 3px rgba(0,0,0,.06);--sh-md:0 4px 12px rgba(0,0,0,.08);
+}
+[data-theme="dark"]{
+  --bg:#0f172a;--card:#1e293b;--hdr:#162032;--border:#2d3f55;
+  --text:#e2e8f0;--muted:#94a3b8;--primary:#60a5fa;--success:#34d399;
+  --warning:#fbbf24;--danger:#f87171;--purple:#a78bfa;--hover:#243348;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'DM Sans',-apple-system,sans-serif;}
+.pg{max-width:1700px;margin:0 auto;padding:24px 20px;}
+.page-hdr{display:flex;align-items:center;gap:16px;margin-bottom:28px;}
+.page-hdr-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;box-shadow:var(--sh-md);}
+.page-hdr h1{font-size:22px;font-weight:800;margin:0;}
+.page-hdr p{margin:3px 0 0;font-size:13px;color:var(--muted);}
+.page-hdr-right{margin-left:auto;display:flex;gap:8px;align-items:center;}
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;}
+.tab-btn{padding:11px 20px;font-size:13px;font-weight:700;color:var(--muted);background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;margin-bottom:-2px;}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{color:var(--primary);border-bottom-color:var(--primary);}
+.tab-pane{display:none;}
+.tab-pane.active{display:block;}
+.card-ui{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh-sm);overflow:hidden;margin-bottom:20px;}
+.card-head{padding:13px 18px;background:var(--hdr);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.card-head .title{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:900px){.two-col{grid-template-columns:1fr;}}
+.filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:14px 18px;background:var(--hdr);border-bottom:1px solid var(--border);}
+.form-ctrl{border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;background:var(--card);color:var(--text);outline:none;}
+.form-ctrl:focus{border-color:var(--primary);}
+.tbl-wrap{overflow:auto;max-height:420px;}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl thead th{background:var(--hdr);color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:10px 14px;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:5;}
+.tbl tbody tr{border-bottom:1px solid var(--border);transition:background .15s;}
+.tbl tbody tr:hover{background:var(--hover);}
+.tbl td{padding:10px 14px;vertical-align:middle;}
+.sla-bar{height:8px;border-radius:4px;background:var(--border);overflow:hidden;}
+.sla-bar-fill{height:100%;border-radius:4px;}
+.btn-sm{padding:6px 14px;font-size:12px;font-weight:600;border-radius:8px;border:none;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{opacity:.88;}
+.btn-success{background:var(--success);color:#fff;}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--muted);}
+.btn-outline:hover{background:var(--hover);}
+.export-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px;}
+.export-card{border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;}
+.export-card:hover{border-color:var(--primary);background:rgba(59,130,246,.04);}
+.export-card i{font-size:36px;display:block;margin-bottom:10px;}
+.export-card .exp-name{font-size:14px;font-weight:700;margin-bottom:4px;}
+.export-card .exp-desc{font-size:12px;color:var(--muted);}
+.job-item{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border);font-size:13px;}
+.job-item:last-child{border-bottom:none;}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.st-done{background:#d1fae5;color:#059669;}
+.st-pending{background:#fef3c7;color:#d97706;}
+.st-failed{background:#fee2e2;color:#dc2626;}
+.st-processing{background:#dbeafe;color:#2563eb;}
+.theme-toggle{background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--text);font-size:16px;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="pg">
+  <div class="page-hdr">
+    <div class="page-hdr-icon" style="background:linear-gradient(135deg,#10b981,#059669);">
+      <i class="bi bi-graph-up-arrow" style="color:#fff;"></i>
+    </div>
+    <div>
+      <h1>Reportes ITSM</h1>
+      <p>Cumplimiento de SLA, tendencias, carga por agente y exportaciones</p>
+    </div>
+    <div class="page-hdr-right">
+      <button class="theme-toggle" onclick="toggleTheme()"><i class="bi bi-moon-stars-fill"></i></button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('trends')"><i class="bi bi-graph-up"></i> Tendencias</button>
+    <button class="tab-btn" onclick="switchTab('sla')"><i class="bi bi-shield-check"></i> SLA</button>
+    <button class="tab-btn" onclick="switchTab('agents')"><i class="bi bi-people"></i> Carga Agentes</button>
+    <button class="tab-btn" onclick="switchTab('export')"><i class="bi bi-download"></i> Exportar</button>
+  </div>
+
+  <!-- TAB: Tendencias -->
+  <div class="tab-pane active" id="tabTrends">
+    <div class="filter-bar">
+      <span style="font-size:12px;font-weight:700;color:var(--muted);">Período:</span>
+      <button class="btn-sm btn-outline" onclick="loadTrends()">Últimos 30 días</button>
+    </div>
+    <div class="two-col">
+      <div class="card-ui">
+        <div class="card-head"><span class="title"><i class="bi bi-bar-chart"></i> Tickets creados vs resueltos</span></div>
+        <div style="padding:16px;"><canvas id="chartDaily" height="200"></canvas></div>
+      </div>
+      <div class="card-ui">
+        <div class="card-head"><span class="title"><i class="bi bi-pie-chart"></i> Por Estado</span></div>
+        <div style="padding:16px;"><canvas id="chartStatus" height="200"></canvas></div>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="card-ui">
+        <div class="card-head"><span class="title"><i class="bi bi-lightning"></i> Por Prioridad</span></div>
+        <div style="padding:16px;"><canvas id="chartPriority" height="200"></canvas></div>
+      </div>
+      <div class="card-ui">
+        <div class="card-head"><span class="title"><i class="bi bi-folder"></i> Por Categoría (Top 8)</span></div>
+        <div style="padding:16px;"><canvas id="chartCat" height="200"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: SLA -->
+  <div class="tab-pane" id="tabSla">
+    <div class="filter-bar">
+      <label style="font-size:12px;font-weight:700;color:var(--muted);">Desde</label>
+      <input type="date" id="slaStart" class="form-ctrl">
+      <label style="font-size:12px;font-weight:700;color:var(--muted);">Hasta</label>
+      <input type="date" id="slaEnd" class="form-ctrl">
+      <button class="btn-sm btn-primary" onclick="loadSla()"><i class="bi bi-funnel"></i> Aplicar</button>
+    </div>
+    <div class="two-col">
+      <div class="card-ui">
+        <div class="card-head"><span class="title"><i class="bi bi-shield-check"></i> Cumplimiento por Prioridad</span></div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>Prioridad</th><th>Total</th><th>Cumplidos</th><th>Vencidos</th><th>% Cumplimiento</th></tr></thead>
+            <tbody id="slaPriBody"><tr><td colspan="5"><div class="empty-state">Cargando...</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-ui">
+        <div class="card-head"><span class="title"><i class="bi bi-person-check"></i> Cumplimiento por Agente</span></div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>Agente</th><th>Total</th><th>Cumplidos</th><th>% SLA</th></tr></thead>
+            <tbody id="slaAgentBody"><tr><td colspan="4"><div class="empty-state">Cargando...</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Carga Agentes -->
+  <div class="tab-pane" id="tabAgents">
+    <div class="card-ui">
+      <div class="card-head">
+        <span class="title"><i class="bi bi-people"></i> Carga actual por agente</span>
+        <button class="btn-sm btn-outline" onclick="loadAgents()"><i class="bi bi-arrow-clockwise"></i></button>
+      </div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th>Agente</th><th>Abiertos</th><th>Críticos</th><th>Altos</th><th>En Riesgo/Vencido</th><th>Prom. horas</th></tr></thead>
+          <tbody id="agentsBody"><tr><td colspan="6"><div class="empty-state">Cargando...</div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Exportar -->
+  <div class="tab-pane" id="tabExport">
+    <div class="card-ui">
+      <div class="card-head"><span class="title"><i class="bi bi-download"></i> Generar Reporte</span></div>
+      <div style="padding:16px 18px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;">
+          <div>
+            <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:5px;">Desde</label>
+            <input type="date" id="expStart" class="form-ctrl" style="width:100%;">
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:5px;">Hasta</label>
+            <input type="date" id="expEnd" class="form-ctrl" style="width:100%;">
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:5px;">Estado</label>
+            <select id="expStatus" class="form-ctrl" style="width:100%;">
+              <option value="">Todos</option>
+              <option value="abierto">Abierto</option>
+              <option value="resuelto">Resuelto</option>
+              <option value="cerrado">Cerrado</option>
+            </select>
+          </div>
+        </div>
+        <div class="export-grid">
+          <div class="export-card" onclick="exportar('csv')">
+            <i class="bi bi-filetype-csv" style="color:var(--success);"></i>
+            <div class="exp-name">CSV</div>
+            <div class="exp-desc">Ligero, compatible con Excel</div>
+          </div>
+          <div class="export-card" onclick="exportar('excel')">
+            <i class="bi bi-file-earmark-spreadsheet" style="color:#059669;"></i>
+            <div class="exp-name">Excel (.xlsx)</div>
+            <div class="exp-desc">Con formato y columnas</div>
+          </div>
+          <div class="export-card" onclick="exportar('pdf')">
+            <i class="bi bi-file-earmark-pdf" style="color:var(--danger);"></i>
+            <div class="exp-name">PDF</div>
+            <div class="exp-desc">Hasta 200 tickets por página</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-ui">
+      <div class="card-head">
+        <span class="title"><i class="bi bi-clock-history"></i> Mis últimos reportes</span>
+        <button class="btn-sm btn-outline" onclick="loadJobs()"><i class="bi bi-arrow-clockwise"></i></button>
+      </div>
+      <div id="jobsList"><div class="empty-state">Cargando...</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const socket = io();
+socket.emit('join', '<%= user.id %>');
+socket.on('report-ready', (data) => {
+    alert('✅ Reporte listo. Recargando lista...');
+    loadJobs();
+});
+
+let charts = {};
+
+function switchTab(name) {
+    document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    const idx = ['trends','sla','agents','export'].indexOf(name);
+    document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+    document.getElementById('tab' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
+    if (name === 'trends')  loadTrends();
+    if (name === 'sla')     loadSla();
+    if (name === 'agents')  loadAgents();
+    if (name === 'export')  loadJobs();
+}
+
+async function loadTrends() {
+    try {
+        const res = await fetch('/api/reports-itsm/trends');
+        const d   = await res.json();
+        if (!d.success) return;
+        const { daily, byStatus, byPriority, byCat } = d.data;
+
+        mkChart('chartDaily', 'line', {
+            labels:   daily.map(r => r.fecha),
+            datasets: [
+                { label:'Creados',  data: daily.map(r => r.creados),   borderColor:'#3b82f6', tension:.3, fill:false },
+                { label:'Resueltos',data: daily.map(r => r.resueltos), borderColor:'#10b981', tension:.3, fill:false },
+            ],
+        });
+
+        mkChart('chartStatus', 'doughnut', {
+            labels:   byStatus.map(r => r.status),
+            datasets: [{ data: byStatus.map(r => r.total),
+                backgroundColor:['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4'], borderWidth:0 }],
+        });
+
+        mkChart('chartPriority', 'bar', {
+            labels:   byPriority.map(r => r.priority),
+            datasets: [{ label:'Tickets', data: byPriority.map(r => r.total),
+                backgroundColor:['#be185d','#dc2626','#d97706','#059669'] }],
+        }, { plugins:{ legend:{display:false} }, scales:{y:{beginAtZero:true}} });
+
+        mkChart('chartCat', 'bar', {
+            labels:   byCat.map(r => r.categoria || 'Sin categoría'),
+            datasets: [{ label:'Tickets', data: byCat.map(r => r.total),
+                backgroundColor:'#3b82f6', borderRadius:4 }],
+        }, { indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true}} });
+
+    } catch (e) { console.error(e); }
+}
+
+function mkChart(id, type, data, extraOpts = {}) {
+    if (charts[id]) charts[id].destroy();
+    const ctx = document.getElementById(id).getContext('2d');
+    charts[id] = new Chart(ctx, { type, data, options: { responsive:true, ...extraOpts } });
+}
+
+async function loadSla() {
+    const start = document.getElementById('slaStart').value;
+    const end   = document.getElementById('slaEnd').value;
+    const params = new URLSearchParams();
+    if (start) params.set('startDate', start);
+    if (end)   params.set('endDate',   end);
+
+    const res = await fetch(`/api/reports-itsm/sla-compliance?${params}`);
+    const d   = await res.json();
+    if (!d.success) return;
+
+    const priBody = document.getElementById('slaPriBody');
+    const priColors = { critica:'#be185d', alta:'#dc2626', media:'#d97706', baja:'#059669' };
+    priBody.innerHTML = (d.data.byPriority||[]).map(r => `
+        <tr>
+          <td><span style="font-weight:700;color:${priColors[r.priority]||'#64748b'}">${r.priority}</span></td>
+          <td>${r.total}</td><td>${r.cumplidos}</td><td style="color:var(--danger)">${r.vencidos}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="sla-bar" style="flex:1;"><div class="sla-bar-fill" style="width:${r.pct_cumplimiento||0}%;background:${(r.pct_cumplimiento||0)>=90?'var(--success)':'var(--warning)'};"></div></div>
+              <span style="font-size:12px;font-weight:700;">${r.pct_cumplimiento||0}%</span>
+            </div>
+          </td>
+        </tr>`).join('') || '<tr><td colspan="5"><div class="empty-state">Sin datos</div></td></tr>';
+
+    const agBody = document.getElementById('slaAgentBody');
+    agBody.innerHTML = (d.data.byAgent||[]).map(a => `
+        <tr>
+          <td><strong>${esc(a.agente)}</strong><div style="font-size:11px;color:var(--muted)">${esc(a.email||'')}</div></td>
+          <td>${a.total}</td><td>${a.cumplidos}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="sla-bar" style="width:80px;"><div class="sla-bar-fill" style="width:${a.pct||0}%;background:${(a.pct||0)>=90?'var(--success)':'var(--warning)'};"></div></div>
+              <span style="font-weight:700;">${a.pct||0}%</span>
+            </div>
+          </td>
+        </tr>`).join('') || '<tr><td colspan="4"><div class="empty-state">Sin datos</div></td></tr>';
+}
+
+async function loadAgents() {
+    const res  = await fetch('/api/reports-itsm/agent-load');
+    const d    = await res.json();
+    const rows = d.data || [];
+    const body = document.getElementById('agentsBody');
+    if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="6"><div class="empty-state">Sin datos</div></td></tr>';
+        return;
+    }
+    body.innerHTML = rows.map(r => `
+        <tr>
+          <td><strong>${esc(r.agente)}</strong><div style="font-size:11px;color:var(--muted)">${esc(r.email||'')}</div></td>
+          <td style="font-weight:700;">${r.total_abiertos}</td>
+          <td style="color:var(--danger);font-weight:700;">${r.criticos||0}</td>
+          <td style="color:#d97706;font-weight:700;">${r.altos||0}</td>
+          <td>${r.en_riesgo > 0 ? `<span style="color:var(--danger);font-weight:700;">${r.en_riesgo}</span>` : '0'}</td>
+          <td>${r.avg_horas ? Math.round(r.avg_horas) + 'h' : '—'}</td>
+        </tr>`).join('');
+}
+
+async function exportar(type) {
+    const filters = {
+        startDate: document.getElementById('expStart').value || null,
+        endDate:   document.getElementById('expEnd').value   || null,
+        status:    document.getElementById('expStatus').value || null,
+    };
+    const res = await fetch('/api/reports-itsm/export', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, filters }),
+    });
+    const d = await res.json();
+    if (!d.success) return alert('Error: ' + d.error);
+    alert(`✅ ${d.message}`);
+    setTimeout(loadJobs, 1500);
+}
+
+async function loadJobs() {
+    const res  = await fetch('/api/reports-itsm/jobs');
+    const d    = await res.json();
+    const rows = d.data || [];
+    const list = document.getElementById('jobsList');
+    if (!rows.length) {
+        list.innerHTML = '<div class="empty-state">Sin reportes generados</div>';
+        return;
+    }
+    list.innerHTML = rows.map(j => `
+        <div class="job-item">
+          <i class="bi bi-file-earmark-${j.type==='csv'?'csv':j.type==='excel'?'spreadsheet':'pdf'}" style="font-size:22px;color:${j.type==='pdf'?'var(--danger)':j.type==='excel'?'var(--success)':'var(--primary)'};flex-shrink:0;"></i>
+          <div style="flex:1;">
+            <div style="font-weight:600;">${j.type.toUpperCase()} — ${j.rowCount ? j.rowCount + ' filas' : 'pendiente'}</div>
+            <div style="font-size:11px;color:var(--muted);">${fmtDate(j.requestedAt)}</div>
+          </div>
+          <span class="badge st-${j.status}">${j.status}</span>
+          ${j.fileUrl ? `<a href="${esc(j.fileUrl)}" target="_blank" class="btn-sm btn-success" style="margin-left:8px;"><i class="bi bi-download"></i></a>` : ''}
+        </div>`).join('');
+}
+
+function fmtDate(d) { return d ? new Date(d).toLocaleString('es', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—'; }
+function esc(t) { return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function toggleTheme() {
+    const h = document.documentElement;
+    h.setAttribute('data-theme', h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+
+// Inicializar con tendencias
+loadTrends();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

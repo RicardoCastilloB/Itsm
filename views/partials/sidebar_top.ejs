@@ -70,12 +70,33 @@
     </div>
 
     <div class="menu-item">
-        <a href="<%= APP_URL %>/tickets" class="menu-header">
+        <div class="menu-header" onclick="toggleSubmenu(this)">
             <div class="menu-title">
-                <i class="fas fa-ticket-alt"></i>
-                <span>Tickets</span>
+                <i class="fas fa-headset"></i>
+                <span>ITSM</span>
             </div>
-        </a>
+            <i class="fas fa-chevron-down collapse-indicator"></i>
+        </div>
+        <div class="submenu">
+            <a href="<%= APP_URL %>/incidencias" class="submenu-item">
+                <i class="fa-solid fa-ticket-alt"></i> Incidencias
+            </a>
+            <a href="<%= APP_URL %>/solicitudes" class="submenu-item">
+                <i class="fa-solid fa-file-alt"></i> Solicitudes
+            </a>
+            <a href="<%= APP_URL %>/cambios" class="submenu-item">
+                <i class="fa-solid fa-arrows-rotate"></i> Cambios
+            </a>
+            <a href="<%= APP_URL %>/problemas" class="submenu-item">
+                <i class="fa-solid fa-bug"></i> Problemas
+            </a>
+            <a href="<%= APP_URL %>/catalogo" class="submenu-item">
+                <i class="fa-solid fa-th-large"></i> Catálogo
+            </a>
+            <a href="<%= APP_URL %>/cmdb" class="submenu-item">
+                <i class="fa-solid fa-diagram-project"></i> CMDB
+            </a>
+        </div>
     </div>
 
     <div class="menu-item">
@@ -114,7 +135,52 @@
         </a>
     </div>
 
-    <div class="menu-item"> 
+    <div class="menu-item">
+        <div class="menu-header" onclick="toggleSubmenu(this)">
+            <div class="menu-title">
+                <i class="fas fa-chart-line"></i>
+                <span>Reportes & KB</span>
+            </div>
+            <i class="fas fa-chevron-down collapse-indicator"></i>
+        </div>
+        <div class="submenu">
+            <a href="<%= APP_URL %>/admin-dashboard" class="submenu-item">
+                <i class="fa-solid fa-shield-halved"></i> Dashboard Admin
+            </a>
+            <a href="<%= APP_URL %>/agent-dashboard" class="submenu-item">
+                <i class="fa-solid fa-gauge-high"></i> Mi Dashboard
+            </a>
+            <a href="<%= APP_URL %>/reports-itsm" class="submenu-item">
+                <i class="fa-solid fa-file-chart-pie"></i> Reportes ITSM
+            </a>
+            <a href="<%= APP_URL %>/knowledge-base" class="submenu-item">
+                <i class="fa-solid fa-book-open"></i> Base de Conocimiento
+            </a>
+            <a href="<%= APP_URL %>/csi" class="submenu-item">
+                <i class="fa-solid fa-arrow-trend-up"></i> Mejora Continua
+            </a>
+        </div>
+    </div>
+
+    <div class="menu-item">
+        <a href="<%= APP_URL %>/portal" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-user-circle"></i>
+                <span>Portal Usuario</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item">
+        <a href="<%= APP_URL %>/admin/reglas" class="menu-header">
+            <div class="menu-title">
+                <i class="fas fa-cogs"></i>
+                <span>Motor de Reglas</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item">
         <a href="<%= APP_URL %>/logout" class="menu-header">
             <div class="menu-title">
                 <i class="fas fa-sign-out-alt"></i>

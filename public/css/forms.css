@@ -1,0 +1,259 @@
+/* ============================================================================
+   forms.css — Componentes de formulario con metodología BEM
+   Requiere: base.css
+   ============================================================================ */
+
+/* ── Grupo de campo (BEM: form__group) ─────────────────────────────────────── */
+.form__group {
+  display:       flex;
+  flex-direction: column;
+  gap:           var(--sp-1);
+  margin-bottom: var(--sp-5);
+}
+
+.form__label {
+  font-size:      12px;
+  font-weight:    600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color:          var(--c-muted);
+}
+
+.form__label--required::after {
+  content: ' *';
+  color:   var(--c-danger);
+}
+
+/* ── Inputs ────────────────────────────────────────────────────────────────── */
+.form__input,
+.form__select,
+.form__textarea {
+  width:         100%;
+  padding:       10px 14px;
+  background:    var(--c-input-bg);
+  border:        1px solid var(--c-input-border);
+  border-radius: var(--r-md);
+  color:         var(--c-text);
+  font-family:   var(--font-body);
+  font-size:     14px;
+  transition:    border-color var(--t-fast), box-shadow var(--t-fast), background var(--t-slow);
+  outline:       none;
+  -webkit-appearance: none;
+  appearance:    none;
+}
+
+.form__input:focus,
+.form__select:focus,
+.form__textarea:focus {
+  border-color: var(--c-input-focus);
+  box-shadow:   0 0 0 3px rgba(59, 130, 246, .15);
+}
+
+.form__input::placeholder,
+.form__textarea::placeholder { color: var(--c-muted); opacity: .7; }
+
+.form__textarea {
+  resize:     vertical;
+  min-height: 100px;
+}
+
+/* Select con flecha propia */
+.form__select {
+  background-image:    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2364748b' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat:   no-repeat;
+  background-position: right 12px center;
+  padding-right:       36px;
+  cursor:              pointer;
+}
+
+/* Estado error */
+.form__input--error,
+.form__select--error,
+.form__textarea--error {
+  border-color: var(--c-danger);
+  box-shadow:   0 0 0 3px rgba(239, 68, 68, .12);
+}
+
+.form__error {
+  font-size:  11px;
+  color:      var(--c-danger);
+  font-weight: 600;
+}
+
+/* Estado success */
+.form__input--success { border-color: var(--c-success); }
+
+/* ── File upload ────────────────────────────────────────────────────────────── */
+.form__file-zone {
+  border:        2px dashed var(--c-border);
+  border-radius: var(--r-lg);
+  padding:       var(--sp-8) var(--sp-5);
+  text-align:    center;
+  cursor:        pointer;
+  transition:    border-color var(--t-mid), background var(--t-mid);
+}
+
+.form__file-zone:hover,
+.form__file-zone--active {
+  border-color: var(--c-primary);
+  background:   rgba(59, 130, 246, .04);
+}
+
+.form__file-zone input[type="file"] {
+  position: absolute;
+  inset:    0;
+  opacity:  0;
+  cursor:   pointer;
+  width:    100%;
+  height:   100%;
+}
+
+.form__file-icon { font-size: 32px; margin-bottom: var(--sp-3); opacity: .5; }
+.form__file-text { font-size: 13px; color: var(--c-muted); }
+.form__file-hint { font-size: 11px; color: var(--c-muted); margin-top: var(--sp-1); }
+
+/* ── Botones ────────────────────────────────────────────────────────────────── */
+.btn {
+  display:       inline-flex;
+  align-items:   center;
+  justify-content: center;
+  gap:           var(--sp-2);
+  padding:       10px 20px;
+  border-radius: var(--r-md);
+  font-family:   var(--font-body);
+  font-size:     13px;
+  font-weight:   600;
+  border:        none;
+  cursor:        pointer;
+  white-space:   nowrap;
+  transition:    background var(--t-fast), transform var(--t-fast), box-shadow var(--t-fast), opacity var(--t-fast);
+  text-decoration: none;
+  line-height:   1;
+}
+
+.btn:hover   { transform: translateY(-1px); }
+.btn:active  { transform: translateY(0); }
+.btn:disabled, .btn--loading { opacity: .6; cursor: not-allowed; pointer-events: none; }
+
+.btn--primary { background: var(--c-primary); color: #fff; }
+.btn--primary:hover { background: var(--c-primary-dk); box-shadow: var(--sh-md); }
+
+.btn--success { background: var(--c-success); color: #fff; }
+.btn--success:hover { background: #059669; box-shadow: var(--sh-md); }
+
+.btn--danger  { background: var(--c-danger); color: #fff; }
+.btn--danger:hover { background: #dc2626; box-shadow: var(--sh-md); }
+
+.btn--ghost {
+  background: transparent;
+  border:     1px solid var(--c-border);
+  color:      var(--c-text);
+}
+.btn--ghost:hover { background: var(--c-hover); border-color: var(--c-muted); }
+
+.btn--sm { padding: 6px 14px; font-size: 12px; }
+.btn--lg { padding: 14px 28px; font-size: 15px; }
+.btn--block { width: 100%; }
+
+/* Spinner loading */
+.btn__spinner {
+  width:            14px;
+  height:           14px;
+  border:           2px solid rgba(255, 255, 255, .3);
+  border-top-color: #fff;
+  border-radius:    50%;
+  animation:        btn-spin .6s linear infinite;
+}
+@keyframes btn-spin { to { transform: rotate(360deg); } }
+
+/* ── Formulario card ────────────────────────────────────────────────────────── */
+.form-card {
+  background:    var(--c-card);
+  border:        1px solid var(--c-border);
+  border-radius: var(--r-xl);
+  padding:       var(--sp-8);
+  box-shadow:    var(--sh-md);
+}
+
+.form-card__title {
+  font-size:     18px;
+  font-weight:   800;
+  margin-bottom: var(--sp-6);
+  display:       flex;
+  align-items:   center;
+  gap:           var(--sp-3);
+}
+
+/* ── Grid de formulario 2 columnas ─────────────────────────────────────────── */
+.form-grid {
+  display:               grid;
+  grid-template-columns: 1fr 1fr;
+  gap:                   0 var(--sp-5);
+}
+
+.form-grid--full { grid-column: 1 / -1; }
+
+@media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+
+/* ── Checkbox / Radio customizados ─────────────────────────────────────────── */
+.form__check {
+  display:     flex;
+  align-items: center;
+  gap:         var(--sp-2);
+  cursor:      pointer;
+  font-size:   13px;
+}
+
+.form__check input[type="checkbox"],
+.form__check input[type="radio"] {
+  width:         16px;
+  height:        16px;
+  accent-color:  var(--c-primary);
+  cursor:        pointer;
+}
+
+/* ── KB search bar ─────────────────────────────────────────────────────────── */
+.search-bar {
+  position:      relative;
+  display:       flex;
+  align-items:   center;
+}
+
+.search-bar__icon {
+  position:  absolute;
+  left:      14px;
+  color:     var(--c-muted);
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.search-bar__input {
+  width:         100%;
+  padding:       12px 14px 12px 44px;
+  background:    var(--c-input-bg);
+  border:        1px solid var(--c-input-border);
+  border-radius: var(--r-full);
+  font-size:     14px;
+  color:         var(--c-text);
+  font-family:   var(--font-body);
+  outline:       none;
+  transition:    border-color var(--t-fast), box-shadow var(--t-fast);
+}
+
+.search-bar__input:focus {
+  border-color: var(--c-input-focus);
+  box-shadow:   0 0 0 3px rgba(59, 130, 246, .15);
+}
+
+.search-bar__clear {
+  position:  absolute;
+  right:     14px;
+  background: none;
+  border:    none;
+  color:     var(--c-muted);
+  cursor:    pointer;
+  padding:   4px;
+  display:   none;
+}
+
+.search-bar__input:not(:placeholder-shown) ~ .search-bar__clear { display: flex; }

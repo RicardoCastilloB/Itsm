@@ -1,0 +1,213 @@
+<style>
+/* ═══════════════════════════════════════════════════
+   Sidebar + Navbar — sistema de variables moderno
+   Compatible con DM Sans / token --c-* y --bg/--card
+═══════════════════════════════════════════════════ */
+
+/* Normalizar nombres de variables por si la vista usa --bg o --c-bg */
+:root,[data-theme="light"]{
+  --bg:var(--c-bg,#f0f4f8);--card:var(--c-card,#fff);--border:var(--c-border,#e2e8f0);
+  --text:var(--c-text,#1e293b);--muted:var(--c-muted,#64748b);
+  --primary:var(--c-primary,#3b82f6);--hover:var(--c-hover,#f1f5f9);
+  --sh-sm:0 1px 3px rgba(0,0,0,.06);--sh-md:0 4px 12px rgba(0,0,0,.08);
+}
+[data-theme="dark"]{
+  --bg:#0f172a;--card:#1e293b;--border:#2d3f55;--text:#e2e8f0;
+  --muted:#94a3b8;--primary:#60a5fa;--hover:#243348;
+  --sh-sm:0 1px 3px rgba(0,0,0,.3);--sh-md:0 4px 12px rgba(0,0,0,.4);
+}
+
+/* ── Overlay ───────────────────────────────────── */
+.sidebar-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);
+  z-index:998;opacity:0;visibility:hidden;
+  transition:opacity .3s ease,visibility .3s ease;
+  backdrop-filter:blur(2px);
+}
+.sidebar-overlay.active{opacity:1;visibility:visible;}
+
+/* ── Sidebar ───────────────────────────────────── */
+.sidebar{
+  position:fixed;top:0;left:0;height:100vh;width:280px;
+  background:var(--card);border-right:1px solid var(--border);
+  box-shadow:4px 0 24px rgba(0,0,0,.08);
+  z-index:999;transform:translateX(-100%);
+  transition:transform .35s cubic-bezier(.4,0,.2,1);
+  overflow-y:auto;overflow-x:hidden;
+  display:flex;flex-direction:column;
+}
+.sidebar.active{transform:translateX(0);}
+
+.sidebar-header{
+  padding:16px 20px;
+  background:linear-gradient(135deg,#3b82f6,#6366f1);
+  display:flex;justify-content:space-between;align-items:center;
+  flex-shrink:0;min-height:60px;
+}
+.sidebar-header .brand{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.3px;}
+
+.close-sidebar{
+  background:none;border:none;color:rgba(255,255,255,.8);
+  font-size:18px;cursor:pointer;padding:6px;border-radius:6px;
+  transition:background .15s,color .15s;line-height:1;
+}
+.close-sidebar:hover{background:rgba(255,255,255,.15);color:#fff;}
+
+/* ── Menu items ────────────────────────────────── */
+.menu-item{border-bottom:1px solid var(--border);}
+.menu-item:last-child{border-bottom:none;}
+
+.menu-header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 20px;background:var(--card);color:var(--text);
+  cursor:pointer;transition:background .15s,color .15s,padding-left .15s;
+  text-decoration:none;font-weight:500;font-size:13px;
+}
+.menu-header:hover{background:var(--hover);color:var(--primary);padding-left:24px;}
+.menu-header.active{background:rgba(59,130,246,.08);color:var(--primary);border-left:3px solid var(--primary);}
+
+.menu-title{display:flex;align-items:center;gap:10px;}
+.menu-title i{width:18px;text-align:center;font-size:15px;opacity:.8;}
+
+.collapse-indicator{transition:transform .3s ease;font-size:11px;opacity:.5;}
+.collapse-indicator.rotated{transform:rotate(180deg);}
+
+/* ── Submenú ───────────────────────────────────── */
+.submenu{
+  background:var(--hover);max-height:0;overflow:hidden;
+  transition:max-height .35s cubic-bezier(.4,0,.2,1);
+}
+.submenu.expanded{max-height:600px;}
+
+.submenu-item{
+  display:block;padding:10px 20px 10px 48px;
+  color:var(--muted);text-decoration:none;
+  font-size:12px;font-weight:500;
+  transition:background .15s,color .15s,padding-left .15s;
+  border-bottom:1px solid var(--border);
+}
+.submenu-item:last-child{border-bottom:none;}
+.submenu-item:hover{background:var(--card);color:var(--primary);padding-left:54px;}
+.submenu-item.active{color:var(--primary);font-weight:600;}
+
+/* ── Navbar ────────────────────────────────────── */
+.navbar{
+  position:fixed;top:0;left:0;right:0;z-index:997;
+  background:var(--card);border-bottom:1px solid var(--border);
+  box-shadow:var(--sh-sm);padding:0 20px;height:60px;
+  display:flex;align-items:center;
+}
+.toggler-btn{
+  background:none;border:1.5px solid var(--border);color:var(--text);
+  padding:7px 10px;border-radius:8px;cursor:pointer;font-size:15px;
+  transition:background .15s,border-color .15s,color .15s;line-height:1;
+}
+.toggler-btn:hover{background:var(--hover);border-color:var(--primary);color:var(--primary);}
+
+/* Theme toggle */
+.theme-toggle-wrap{
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+  padding:6px 10px;border-radius:8px;transition:background .15s;
+  user-select:none;
+}
+.theme-toggle-wrap:hover{background:var(--hover);}
+.theme-toggle-icon{font-size:16px;}
+.theme-toggle-label{font-size:12px;font-weight:600;color:var(--muted);}
+.theme-switch{
+  width:40px;height:22px;border-radius:11px;background:var(--border);
+  position:relative;transition:background .2s;flex-shrink:0;
+}
+[data-theme="dark"] .theme-switch{background:var(--primary);}
+.theme-switch-knob{
+  position:absolute;top:2px;left:2px;width:18px;height:18px;
+  border-radius:50%;background:#fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.2);
+  transition:transform .2s ease;
+}
+[data-theme="dark"] .theme-switch-knob{transform:translateX(18px);}
+
+/* ── Contenido principal ───────────────────────── */
+.main-content{
+  padding-top:60px;
+  min-height:100vh;
+  transition:padding-left .3s ease;
+}
+
+/* ── Responsive ────────────────────────────────── */
+@media(max-width:768px){
+  .sidebar{width:100%;max-width:300px;}
+}
+</style>
+
+<script>
+(function(){
+  /* Restaurar tema antes de renderizar */
+  const t = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', t);
+  const ic = document.getElementById('toggleIcon');
+  const lb = document.getElementById('toggleLabel');
+  const kn = document.getElementById('switchKnob');
+  if(t === 'dark'){
+    if(ic) ic.textContent = '☀️';
+    if(lb) lb.textContent = 'Claro';
+  }
+})();
+
+function toggleTheme(){
+  const cur  = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  const ic = document.getElementById('toggleIcon');
+  const lb = document.getElementById('toggleLabel');
+  if(ic) ic.textContent = next === 'dark' ? '☀️' : '🌙';
+  if(lb) lb.textContent = next === 'dark' ? 'Claro' : 'Oscuro';
+}
+
+function toggleSubmenu(header){
+  const submenu = header.nextElementSibling;
+  const icon    = header.querySelector('.collapse-indicator');
+  const isOpen  = submenu.classList.contains('expanded');
+  /* Cerrar todos los demás */
+  document.querySelectorAll('.submenu.expanded').forEach(s => {
+    s.classList.remove('expanded');
+    const i = s.previousElementSibling?.querySelector('.collapse-indicator');
+    if(i) i.classList.remove('rotated');
+  });
+  if(!isOpen){
+    submenu.classList.add('expanded');
+    if(icon) icon.classList.add('rotated');
+  }
+}
+
+/* Sidebar toggle */
+document.addEventListener('DOMContentLoaded', () => {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const mainBtn = document.getElementById('mainToggleSidebar');
+  const closeBtn = document.getElementById('closeSidebar');
+
+  function openSidebar()  { sidebar?.classList.add('active'); overlay?.classList.add('active'); }
+  function closeSidebar() { sidebar?.classList.remove('active'); overlay?.classList.remove('active'); }
+
+  mainBtn?.addEventListener('click', openSidebar);
+  closeBtn?.addEventListener('click', closeSidebar);
+  overlay?.addEventListener('click', closeSidebar);
+
+  /* Marcar item activo */
+  const path = window.location.pathname;
+  document.querySelectorAll('.menu-header[href], .submenu-item').forEach(el => {
+    const href = el.getAttribute('href') || '';
+    if(href && path.startsWith(href) && href !== '/'){
+      el.classList.add('active');
+      /* Expandir padre */
+      const sub = el.closest('.submenu');
+      if(sub){
+        sub.classList.add('expanded');
+        const icon = sub.previousElementSibling?.querySelector('.collapse-indicator');
+        if(icon) icon.classList.add('rotated');
+      }
+    }
+  });
+});
+</script>

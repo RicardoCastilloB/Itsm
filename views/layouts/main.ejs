@@ -1,0 +1,112 @@
+<%
+/*
+  Layout maestro: views/layouts/main.ejs
+  ─────────────────────────────────────────────────────────────
+  USO (en una vista hija):
+    <%- include('../layouts/main', {
+      title: 'Título de la página',
+      pageIcon: '🎫',
+      pageTitle: 'Mis Tickets',
+      pageSubtitle: 'Portal de autoservicio',
+      crumbs: [{ label: 'Portal', href: APP_URL + '/portal' }, { label: 'Mis Tickets' }],
+      extraHead: '',       // HTML extra para <head>
+      content: bodyHTML    // Si se usa como wrapper — normalmente se usa <%- include() %> directo
+    }) %>
+
+  O más comúnmente: cada vista incluye este layout en su
+  propia estructura. El layout sirve como referencia de
+  qué partials debe incluir cada página.
+
+  Partials requeridos en cada vista:
+    <%- include('partials/sidebar_top')  %>   — sidebar + navbar
+    <%- include('partials/styles_sidebar') %> — CSS + JS del sidebar
+    <%- include('partials/flash-messages') %> — mensajes flash (opcional)
+    <%- include('partials/breadcrumb', { crumbs: [...] }) %> — migajas de pan
+  ─────────────────────────────────────────────────────────────
+*/
+%><!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= locals.title || 'Sistema ITSM' %> — ITSM</title>
+  <meta name="description" content="Sistema de gestión de tickets e incidencias">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- CSS modular propio -->
+  <link rel="stylesheet" href="<%= APP_URL %>/css/base.css">
+  <link rel="stylesheet" href="<%= APP_URL %>/css/ticket.css">
+  <link rel="stylesheet" href="<%= APP_URL %>/css/forms.css">
+  <link rel="stylesheet" href="<%= APP_URL %>/css/dashboard.css">
+
+  <!-- Chart.js (incluir solo si se usa) -->
+  <% if (locals.useCharts) { %>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <% } %>
+
+  <!-- Socket.io (incluir solo si se usa) -->
+  <% if (locals.useSocket) { %>
+  <script src="/socket.io/socket.io.js"></script>
+  <% } %>
+
+  <%- locals.extraHead || '' %>
+</head>
+<body>
+
+<!-- ── Sidebar + Navbar ─────────────────────────────────────────── -->
+<%- include('../partials/sidebar_top') %>
+<%- include('../partials/styles_sidebar') %>
+
+<!-- ── Flash messages ───────────────────────────────────────────── -->
+<%- include('../partials/flash-messages') %>
+
+<!-- ── Contenido principal ──────────────────────────────────────── -->
+<main class="main-content">
+  <div class="container-page page-top">
+
+    <!-- Breadcrumb -->
+    <% if (locals.crumbs && locals.crumbs.length) { %>
+    <%- include('../partials/breadcrumb', { crumbs: locals.crumbs }) %>
+    <% } %>
+
+    <!-- Page header -->
+    <% if (locals.pageTitle) { %>
+    <div class="page-hdr">
+      <% if (locals.pageIcon) { %>
+      <div class="page-hdr__icon" style="background:linear-gradient(135deg,var(--c-primary),var(--c-purple))">
+        <%= locals.pageIcon %>
+      </div>
+      <% } %>
+      <div>
+        <h1 class="page-hdr__title"><%= locals.pageTitle %></h1>
+        <% if (locals.pageSubtitle) { %>
+        <p class="page-hdr__sub"><%= locals.pageSubtitle %></p>
+        <% } %>
+      </div>
+      <% if (locals.pageActions) { %>
+      <div class="page-hdr__actions"><%- locals.pageActions %></div>
+      <% } %>
+    </div>
+    <% } %>
+
+    <!-- Cuerpo de la vista hija -->
+    <%- locals.body || '' %>
+
+  </div>
+</main>
+
+<!-- ── Scripts ──────────────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<%- locals.extraScripts || '' %>
+
+</body>
+</html>

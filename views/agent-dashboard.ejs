@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+:root,[data-theme="light"]{
+  --bg:#f0f4f8;--card:#fff;--hdr:#f8fafc;--border:#e2e8f0;
+  --text:#1e293b;--muted:#64748b;--primary:#3b82f6;--success:#10b981;
+  --warning:#f59e0b;--danger:#ef4444;--purple:#8b5cf6;--info:#06b6d4;
+  --hover:#f1f5f9;--sh-sm:0 1px 3px rgba(0,0,0,.06);--sh-md:0 4px 12px rgba(0,0,0,.08);
+}
+[data-theme="dark"]{
+  --bg:#0f172a;--card:#1e293b;--hdr:#162032;--border:#2d3f55;
+  --text:#e2e8f0;--muted:#94a3b8;--primary:#60a5fa;--success:#34d399;
+  --warning:#fbbf24;--danger:#f87171;--purple:#a78bfa;--info:#22d3ee;
+  --hover:#243348;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'DM Sans',-apple-system,sans-serif;}
+.pg{max-width:1700px;margin:0 auto;padding:24px 20px;}
+.page-hdr{display:flex;align-items:center;gap:16px;margin-bottom:28px;}
+.page-hdr-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;box-shadow:var(--sh-md);}
+.page-hdr h1{font-size:22px;font-weight:800;margin:0;}
+.page-hdr p{margin:3px 0 0;font-size:13px;color:var(--muted);}
+.page-hdr-right{margin-left:auto;display:flex;gap:8px;align-items:center;}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--sh-sm);position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;inset:0;background:var(--kc);opacity:.04;}
+.kpi-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:5px;}
+.kpi-val{font-size:28px;font-weight:800;line-height:1;color:var(--kc);}
+.kpi-icon{font-size:32px;opacity:.18;color:var(--kc);}
+.two-col{display:grid;grid-template-columns:1fr 340px;gap:16px;}
+@media(max-width:1100px){.two-col{grid-template-columns:1fr;}}
+.card-ui{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh-sm);overflow:hidden;margin-bottom:16px;}
+.card-head{padding:13px 18px;background:var(--hdr);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-head .title{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
+.tbl-wrap{overflow:auto;max-height:460px;}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl thead th{background:var(--hdr);color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:10px 14px;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:5;}
+.tbl tbody tr{border-bottom:1px solid var(--border);transition:background .15s;}
+.tbl tbody tr:hover{background:var(--hover);}
+.tbl td{padding:10px 14px;vertical-align:middle;}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.sla-ok{background:#d1fae5;color:#059669;}
+.sla-riesgo{background:#fef3c7;color:#d97706;}
+.sla-vencido{background:#fee2e2;color:#dc2626;}
+.pri-critica{background:#fce7f3;color:#be185d;}
+.pri-alta{background:#fee2e2;color:#dc2626;}
+.pri-media{background:#fef3c7;color:#d97706;}
+.pri-baja{background:#d1fae5;color:#059669;}
+.notif-item{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;transition:background .15s;cursor:pointer;}
+.notif-item:last-child{border-bottom:none;}
+.notif-item:hover{background:var(--hover);}
+.notif-item.unread{background:rgba(59,130,246,.04);}
+.notif-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.notif-title{font-weight:600;margin-bottom:2px;}
+.notif-time{font-size:11px;color:var(--muted);}
+.notif-dot{width:8px;height:8px;background:var(--primary);border-radius:50%;flex-shrink:0;margin-top:5px;}
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;box-shadow:0 8px 24px rgba(0,0,0,.15);min-width:280px;animation:slideIn .3s ease;}
+.toast.success{border-left:4px solid var(--success);}
+.toast.warning{border-left:4px solid var(--warning);}
+@keyframes slideIn{from{transform:translateX(120%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+.theme-toggle{background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--text);font-size:16px;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="pg">
+  <div class="page-hdr">
+    <div class="page-hdr-icon" style="background:linear-gradient(135deg,#3b82f6,#6d28d9);">
+      <i class="bi bi-speedometer2" style="color:#fff;"></i>
+    </div>
+    <div>
+      <h1>Mi Dashboard</h1>
+      <p id="welcomeMsg">Bienvenido — cargando datos...</p>
+    </div>
+    <div class="page-hdr-right">
+      <button class="theme-toggle" onclick="toggleTheme()"><i class="bi bi-moon-stars-fill"></i></button>
+      <button style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;" onclick="loadAll()">
+        <i class="bi bi-arrow-clockwise"></i> Actualizar
+      </button>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi" style="--kc:var(--primary)">
+      <div><div class="kpi-label">Mis tickets abiertos</div><div class="kpi-val" id="kpiAbiertos">—</div></div>
+      <i class="bi bi-ticket kpi-icon"></i>
+    </div>
+    <div class="kpi" style="--kc:var(--warning)">
+      <div><div class="kpi-label">SLA en riesgo</div><div class="kpi-val" id="kpiRiesgo">—</div></div>
+      <i class="bi bi-exclamation-triangle kpi-icon"></i>
+    </div>
+    <div class="kpi" style="--kc:var(--danger)">
+      <div><div class="kpi-label">SLA vencido</div><div class="kpi-val" id="kpiVencido">—</div></div>
+      <i class="bi bi-clock-history kpi-icon"></i>
+    </div>
+    <div class="kpi" style="--kc:var(--success)">
+      <div><div class="kpi-label">Resueltos hoy</div><div class="kpi-val" id="kpiHoy">—</div></div>
+      <i class="bi bi-check-circle kpi-icon"></i>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <!-- Mis tickets -->
+    <div class="card-ui">
+      <div class="card-head">
+        <span class="title"><i class="bi bi-list-check"></i> Mis Tickets Asignados</span>
+        <span id="ticketCount" style="font-size:12px;color:var(--muted);">—</span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Ticket</th><th>Título</th><th>Prioridad</th>
+              <th>SLA</th><th>Categoría</th><th>Desde</th>
+            </tr>
+          </thead>
+          <tbody id="ticketsBody">
+            <tr><td colspan="6"><div class="empty-state"><i class="bi bi-arrow-clockwise"></i> Cargando...</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Panel derecho: notificaciones -->
+    <div>
+      <div class="card-ui">
+        <div class="card-head">
+          <span class="title"><i class="bi bi-bell"></i> Notificaciones</span>
+          <button style="background:none;border:none;font-size:12px;color:var(--primary);cursor:pointer;" onclick="markAllRead()">
+            Marcar leídas
+          </button>
+        </div>
+        <div id="notifList" style="max-height:420px;overflow-y:auto;">
+          <div class="empty-state"><i class="bi bi-bell-slash"></i><br>Sin notificaciones</div>
+        </div>
+      </div>
+
+      <!-- Mini gráfico mis tickets por prioridad -->
+      <div class="card-ui">
+        <div class="card-head">
+          <span class="title"><i class="bi bi-pie-chart"></i> Por Prioridad</span>
+        </div>
+        <div style="padding:16px;">
+          <canvas id="chartPriority" height="180"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const userId = '<%= user.id %>';
+let chartPri = null;
+
+// ── Socket.io ──────────────────────────────────────────────────────────────
+const socket = io();
+socket.emit('join', userId);
+socket.on('notification', (notif) => {
+    showToast(notif.title, notif.type === 'sla' ? 'warning' : 'success');
+    loadNotifications();
+});
+socket.on('report-ready', (data) => {
+    showToast('Reporte listo — haz clic para descargar', 'success');
+});
+
+async function loadAll() {
+    await Promise.all([loadDashboard(), loadNotifications()]);
+}
+
+async function loadDashboard() {
+    try {
+        const res = await fetch('/api/reports-itsm/agent-dashboard');
+        const d   = await res.json();
+        if (!d.success) return;
+
+        const k = d.data.kpis || {};
+        document.getElementById('kpiAbiertos').textContent = k.mis_abiertos ?? '—';
+        document.getElementById('kpiRiesgo').textContent   = k.en_riesgo     ?? '—';
+        document.getElementById('kpiVencido').textContent  = k.vencidos       ?? '—';
+        document.getElementById('kpiHoy').textContent      = k.resueltos_hoy  ?? '—';
+        document.getElementById('welcomeMsg').textContent  =
+            `<%= user.full_name || user.username %> — ${new Date().toLocaleDateString('es', {weekday:'long', day:'numeric', month:'long'})}`;
+
+        const tickets = d.data.tickets || [];
+        document.getElementById('ticketCount').textContent = `${tickets.length} ticket${tickets.length !== 1 ? 's' : ''}`;
+
+        const tbody = document.getElementById('ticketsBody');
+        if (!tickets.length) {
+            tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="bi bi-inbox"></i>Sin tickets asignados</div></td></tr>';
+        } else {
+            tbody.innerHTML = tickets.map(t => `
+              <tr>
+                <td><span style="font-family:monospace;font-size:11px;color:var(--primary)">${esc(t.ticket_number||t.id.substring(0,8))}</span></td>
+                <td style="max-width:220px;"><span style="font-weight:600;">${esc(t.title)}</span></td>
+                <td><span class="badge pri-${t.priority}">${t.priority}</span></td>
+                <td><span class="badge sla-${t.sla_status}">${t.sla_status}</span></td>
+                <td>${esc(t.category_name||'—')}</td>
+                <td style="font-size:12px;color:var(--muted);">${fmtDate(t.created_at)}</td>
+              </tr>`).join('');
+        }
+
+        // Gráfico
+        const counts = { critica: 0, alta: 0, media: 0, baja: 0 };
+        tickets.forEach(t => { counts[t.priority] = (counts[t.priority]||0) + 1; });
+        renderChart(counts);
+    } catch (e) { console.error(e); }
+}
+
+async function loadNotifications() {
+    try {
+        const res = await fetch('/api/notifications?limit=20');
+        const d   = await res.json();
+        const list = document.getElementById('notifList');
+        const notifs = d.data || [];
+        if (!notifs.length) {
+            list.innerHTML = '<div class="empty-state"><i class="bi bi-bell-slash"></i><br>Sin notificaciones</div>';
+            return;
+        }
+        list.innerHTML = notifs.map(n => `
+            <div class="notif-item ${n.isRead ? '' : 'unread'}" onclick="readNotif('${n.id}', this)">
+              <div class="notif-icon" style="background:${n.type==='sla'?'#fef3c7':'#dbeafe'};">
+                <i class="bi bi-${n.type==='sla'?'clock-history':'bell'}" style="color:${n.type==='sla'?'#d97706':'#2563eb'};"></i>
+              </div>
+              <div style="flex:1;">
+                <div class="notif-title">${esc(n.title)}</div>
+                ${n.body ? `<div style="font-size:12px;color:var(--muted);">${esc(n.body)}</div>` : ''}
+                <div class="notif-time">${fmtDate(n.createdAt)}</div>
+              </div>
+              ${!n.isRead ? '<div class="notif-dot"></div>' : ''}
+            </div>`).join('');
+    } catch (e) {}
+}
+
+async function readNotif(id, el) {
+    await fetch(`/api/notifications/${id}/read`, { method: 'PATCH' });
+    el.classList.remove('unread');
+    el.querySelector('.notif-dot')?.remove();
+}
+
+async function markAllRead() {
+    await fetch('/api/notifications/read-all', { method: 'PATCH' });
+    loadNotifications();
+}
+
+function renderChart(counts) {
+    const ctx = document.getElementById('chartPriority').getContext('2d');
+    if (chartPri) chartPri.destroy();
+    chartPri = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Crítica', 'Alta', 'Media', 'Baja'],
+            datasets: [{ data: [counts.critica, counts.alta, counts.media, counts.baja],
+                backgroundColor: ['#be185d','#dc2626','#d97706','#059669'],
+                borderWidth: 0 }],
+        },
+        options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } }, cutout: '65%' },
+    });
+}
+
+function showToast(msg, type = 'success') {
+    const c = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerHTML = `<strong>${msg}</strong>`;
+    c.appendChild(t);
+    setTimeout(() => t.remove(), 5000);
+}
+
+function fmtDate(d) { return d ? new Date(d).toLocaleDateString('es', { day:'2-digit', month:'short' }) : '—'; }
+function esc(t) { return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function toggleTheme() {
+    const h = document.documentElement;
+    h.setAttribute('data-theme', h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+
+loadAll();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
