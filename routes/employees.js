@@ -5,7 +5,7 @@ const router = express.Router();
 const { body, param, query, validationResult } = require('express-validator');
 const { equipmentPool, callStoredProcedure, executeQuery } = require('../config/database');
 
-const { authenticateToken, logActivity } = require('../middleware/auth');
+const { authenticateToken, optionalAuth, logActivity } = require('../middleware/auth');
 const { checkPermission, checkMethodPermission, adminOnly, canEdit } = require('../middleware/permissions');
 
 const validate = (req, res, next) => {
@@ -58,15 +58,38 @@ router.put('/:id',
             }
 
             if (!is_active) {
-                // 1️⃣ Crear recuperos automáticamente
+                // 1️⃣ Crear recuperos directamente (sin depender del SP)
                 try {
-                    await executeQuery(equipmentPool, 'CALL sp_create_recovery_on_baja(?)', [id]);
+                    const assignments = await executeQuery(equipmentPool, `
+                        SELECT a.id AS assignment_id, a.equipment_id
+                        FROM assignments a
+                        WHERE a.employee_id = ? AND a.return_date IS NULL AND a.status = 'activo'
+                    `, [id]);
+
+                    for (const asgn of assignments) {
+                        const existing = await executeQuery(equipmentPool,
+                            `SELECT id FROM equipment_recoveries WHERE equipment_id=? AND status != 'recuperado' LIMIT 1`,
+                            [asgn.equipment_id]
+                        );
+                        if (existing.length) continue;
+
+                        const recResult = await executeQuery(equipmentPool, `
+                            INSERT INTO equipment_recoveries
+                                (assignment_id, equipment_id, employee_id, recovery_method, notes)
+                            VALUES (?, ?, ?, 'pendiente', 'Generado automáticamente al dar de baja')
+                        `, [asgn.assignment_id, asgn.equipment_id, id]);
+
+                        await executeQuery(equipmentPool,
+                            `INSERT INTO equipment_recovery_logs (recovery_id, new_status, note) VALUES (?, 'por_recuperar', 'Empleado dado de baja')`,
+                            [recResult.insertId]
+                        ).catch(() => {});
+                    }
                     console.log(`♻️  Recuperos creados para empleado ID: ${id}`);
                 } catch (spErr) {
-                    console.error('⚠️  Error en SP de recupero:', spErr.message);
+                    console.error('⚠️  Error creando recuperos:', spErr.message);
                 }
 
-                // 2️⃣ Poner equipos asignados en "En Reparación"
+                // 2️⃣ Poner equipos asignados en "En Mantenimiento"
                 try {
                     await executeQuery(equipmentPool, `
                         UPDATE equipment eq
@@ -76,7 +99,7 @@ router.put('/:id',
                           AND a.status = 'activo'
                           AND eq.status = 'Asignado'
                     `, [id]);
-                    console.log(`🔧 Equipos del empleado ID ${id} → En Reparación`);
+                    console.log(`🔧 Equipos del empleado ID ${id} → En Mantenimiento`);
                 } catch (eqErr) {
                     console.error('⚠️  Error actualizando estado de equipos:', eqErr.message);
                 }
@@ -100,7 +123,7 @@ router.put('/:id',
 );
 
 // ── GET /search-emails ────────────────────────────────────────────────────
-router.get('/search-emails', authenticateToken, async (req, res, next) => {
+router.get('/search-emails', optionalAuth, async (req, res, next) => {
     try {
         const { q } = req.query;
         if (!q || q.length < 2) return res.json({ success: true, data: [] });
@@ -108,9 +131,9 @@ router.get('/search-emails', authenticateToken, async (req, res, next) => {
         const results = await executeQuery(equipmentPool, `
             SELECT DISTINCT email, full_name, cip, position_name
             FROM employees
-            WHERE email LIKE ? AND is_active = 1
-            ORDER BY email ASC LIMIT 10
-        `, [`%${q}%`]);
+            WHERE (email LIKE ? OR full_name LIKE ?) AND is_active = 1
+            ORDER BY full_name ASC LIMIT 10
+        `, [`%${q}%`, `%${q}%`]);
 
         res.json({ success: true, data: results });
     } catch (error) {

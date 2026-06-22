@@ -27,7 +27,44 @@ router.get('/', authenticateToken, requireVerified, (req, res) => {
 // ============================================================================
 // VISTAS SIMPLES — Sin lógica de BD (render directo)
 // ============================================================================
-router.get('/home',       (req, res) => res.render('home'));
+router.get('/requerimientos', authenticateToken, (req, res) => {
+    res.render('requerimientos', { title: 'Requerimientos', user: req.user || null });
+});
+
+router.get('/anuncios', (req, res) => {
+    let user = null;
+    try {
+        const jwt = require('jsonwebtoken');
+        const token = req.cookies?.accessToken || req.cookies?.token;
+        if (token) user = jwt.verify(token, process.env.JWT_SECRET || 'fallback_jwt_secret_dev_only');
+    } catch(e) {}
+    res.render('anuncios', {
+        title: 'Anuncios Corporativos',
+        user,
+        reporterEmail: req.query.reporter || '',
+        reporterName:  req.query.name    || '',
+    });
+});
+
+router.get('/preguntas-frecuentes', (req, res) => {
+    let user = null;
+    try {
+        const jwt = require('jsonwebtoken');
+        const token = req.cookies?.accessToken || req.cookies?.token;
+        if (token) user = jwt.verify(token, process.env.JWT_SECRET || 'fallback_jwt_secret_dev_only');
+    } catch(e) {}
+    res.render('faq', { title: 'Preguntas Frecuentes', user, reporterEmail: req.query.reporter || '', reporterName: req.query.name || '' });
+});
+
+router.get('/autogestion', (req, res) => {
+    let user = null;
+    try {
+        const jwt = require('jsonwebtoken');
+        const token = req.cookies?.accessToken || req.cookies?.token;
+        if (token) user = jwt.verify(token, process.env.JWT_SECRET || 'fallback_jwt_secret_dev_only');
+    } catch(e) {}
+    res.render('autogestion', { user });
+});
 router.get('/sccm',       (req, res) => res.render('sccm'));
 
 router.get('/import-csv', authenticateToken, (req, res) => {
@@ -349,7 +386,7 @@ router.get('/equipment/:id',
 // IMPORTANTE: /employees/perfil va ANTES de /employees/:id
 // para que no sea capturada como id = "perfil"
 // ============================================================================
-router.get('/employees',
+router.get('/colaboradores',
     authenticateToken,
     logActivity('VIEW_EMPLOYEES', 'Usuario accedió a lista de empleados'),
     async (req, res) => {
@@ -374,7 +411,7 @@ router.get('/employees',
                 executeQuery(equipmentPool, 'SELECT COUNT(*) AS total FROM employees WHERE is_active = TRUE'),
             ]);
 
-            res.render('employees', {
+            res.render('colaboradores', {
                 title:       'Empleados',
                 user:        req.user,
                 employees,
@@ -426,8 +463,8 @@ router.get('/incidencias', authenticateToken, requireVerified, (req, res) => {
 // ============================================================================
 // ITSM EXTENDIDO
 // ============================================================================
-router.get('/solicitudes', authenticateToken, requireVerified, (req, res) => {
-    res.render('solicitudes', { title: 'Solicitudes de Servicio', user: req.user });
+router.get('/solicitudes', authenticateToken, requireVerified, (_req, res) => {
+    res.redirect('/catalogo');
 });
 
 router.get('/cambios', authenticateToken, requireVerified, (req, res) => {
@@ -457,12 +494,38 @@ router.get('/admin-dashboard', authenticateToken, requireRole('administrador'), 
     res.render('admin-dashboard', { title: 'Dashboard Administrador', user: req.user });
 });
 
-router.get('/knowledge-base', authenticateToken, requireVerified, (req, res) => {
-    res.render('knowledge-base', { title: 'Base de Conocimiento', user: req.user });
+router.get('/knowledge-base', (req, res) => {
+    let user = null;
+    try {
+        const jwt = require('jsonwebtoken');
+        const token = req.cookies?.accessToken || req.cookies?.token;
+        if (token) user = jwt.verify(token, process.env.JWT_SECRET || 'fallback_jwt_secret_dev_only');
+    } catch(e) {}
+    res.render('knowledge-base', {
+        title: 'Base de Conocimiento',
+        user,
+        reporterEmail: req.query.reporter || '',
+        reporterName:  req.query.name    || '',
+    });
 });
 
 router.get('/csi', authenticateToken, requireVerified, (req, res) => {
     res.render('csi', { title: 'Mejora Continua (CSI)', user: req.user });
+});
+
+router.get('/devolucion', (req, res) => {
+    let user = null;
+    try {
+        const jwt = require('jsonwebtoken');
+        const token = req.cookies?.accessToken || req.cookies?.token;
+        if (token) user = jwt.verify(token, process.env.JWT_SECRET || 'fallback_jwt_secret_dev_only');
+    } catch(e) {}
+    res.render('devolucion', {
+        title: 'Devolución de Equipos',
+        user,
+        reporterEmail: req.query.reporter || '',
+        reporterName:  req.query.name    || '',
+    });
 });
 
 router.get('/reports-itsm', authenticateToken, requireVerified, (req, res) => {
@@ -489,6 +552,20 @@ router.get('/portal/ticket/:id', authenticateToken, requireVerified, (req, res) 
 // Admin: motor de reglas
 router.get('/admin/reglas', authenticateToken, requireRole('administrador'), (req, res) => {
     res.render('admin/reglas', { title: 'Motor de Reglas', user: req.user });
+});
+
+// ============================================================================
+// TV DASHBOARD — pantalla de cola de tickets (sin sidebar, auto-refresh)
+// ============================================================================
+router.get('/tickets/tv', authenticateToken, requireVerified, (req, res) => {
+    res.render('tickets-tv', { title: 'Dashboard TV — Cola de Tickets', user: req.user });
+});
+
+// ============================================================================
+// PORTAL DE LICENCIAMIENTO M365
+// ============================================================================
+router.get('/licencias', authenticateToken, requireVerified, (req, res) => {
+    res.render('licencias', { title: 'Portal de Licenciamiento M365', user: req.user });
 });
 
 // ============================================================================

@@ -63,6 +63,10 @@ TicketAttachment.belongsTo(Ticket,  { foreignKey: 'ticketId', as: 'ticket' });
 ServiceRequest.hasMany(ApprovalFlow,  { foreignKey: 'serviceRequestId', as: 'approvals' });
 ApprovalFlow.belongsTo(ServiceRequest,{ foreignKey: 'serviceRequestId', as: 'solicitud' });
 
+// ServiceRequest ↔ Service (N:1)
+ServiceRequest.belongsTo(Service,   { foreignKey: 'serviceId', as: 'service' });
+Service.hasMany(ServiceRequest,     { foreignKey: 'serviceId', as: 'solicitudes' });
+
 // ServiceCategory ↔ Service (1:N)
 ServiceCategory.hasMany(Service,    { foreignKey: 'categoryId', as: 'servicios' });
 Service.belongsTo(ServiceCategory,  { foreignKey: 'categoryId', as: 'categoria' });

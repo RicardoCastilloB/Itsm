@@ -18,6 +18,45 @@ router.get('/categories', authenticateToken, async (req, res) => {
     }
 });
 
+// POST /api/catalog/categories  (admin)
+router.post('/categories', authenticateToken, requireRole('administrador'), async (req, res) => {
+    try {
+        const { name, description, icon } = req.body;
+        if (!name) return res.status(400).json({ success: false, error: 'Nombre requerido' });
+        const cat = await ServiceCategory.create({ id: uuidv4(), name: name.trim(), description: description || null, icon: icon || null });
+        res.status(201).json({ success: true, data: cat });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// PATCH /api/catalog/categories/:id  (admin)
+router.patch('/categories/:id', authenticateToken, requireRole('administrador'), async (req, res) => {
+    try {
+        const cat = await ServiceCategory.findByPk(req.params.id);
+        if (!cat) return res.status(404).json({ success: false, error: 'Categoría no encontrada' });
+        const allowed = ['name','description','icon','isActive'];
+        const updates = {};
+        for (const key of allowed) { if (req.body[key] !== undefined) updates[key] = req.body[key]; }
+        await cat.update(updates);
+        res.json({ success: true, data: cat });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// DELETE /api/catalog/categories/:id  (admin) — soft-delete via isActive=false
+router.delete('/categories/:id', authenticateToken, requireRole('administrador'), async (req, res) => {
+    try {
+        const cat = await ServiceCategory.findByPk(req.params.id);
+        if (!cat) return res.status(404).json({ success: false, error: 'Categoría no encontrada' });
+        await cat.update({ isActive: false });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // GET /api/catalog
 router.get('/', authenticateToken, async (req, res) => {
     try {

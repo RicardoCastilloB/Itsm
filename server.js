@@ -1,426 +1,244 @@
 // ============================================================================
-// app.js — Servidor principal
+// server.js — Servidor principal
 // Equipment Management System
 // ============================================================================
 
 const express        = require('express');
-const cors           = require('cors');
-const helmet         = require('helmet');
-const morgan         = require('morgan');
-const compression    = require('compression');
-const rateLimit      = require('express-rate-limit');
-const cookieParser   = require('cookie-parser');
-const session        = require('express-session');
 const path           = require('path');
 const methodOverride = require('method-override');
 const http           = require('http');
+const https          = require('https');
+const fs             = require('fs');
 const { Server: SocketIO } = require('socket.io');
-const { RedisStore } = require('connect-redis');
 require('dotenv').config();
-const passport     = require('./middleware/passport');
-const { initCasbin } = require('./middleware/casbin');
 
-const app    = express();
-const server = http.createServer(app);
-const io     = new SocketIO(server, {
+const { initCasbin } = require('./middleware/casbin');
+const configureApp   = require('./middleware/app-setup');
+const setupErrorHandlers = require('./middleware/error-handler');
+const setupBullBoard = require('./config/bull-board');
+const logger         = require('./utils/logger');
+const { logout }     = require('./middleware/auth');
+
+const app = express();
+app.set('trust proxy', 1); // necesario para X-Forwarded-Proto con proxies
+
+// ── SSL: si existen los archivos usa HTTPS, sino HTTP ─────────────────────────
+const SSL_KEY  = path.join(__dirname, 'ssl', 'portal.key');
+const SSL_CERT = path.join(__dirname, 'ssl', 'portal.crt');
+const useHttps = fs.existsSync(SSL_KEY) && fs.existsSync(SSL_CERT);
+
+const server = useHttps
+    ? https.createServer({ key: fs.readFileSync(SSL_KEY), cert: fs.readFileSync(SSL_CERT) }, app)
+    : http.createServer(app);
+
+const io = new SocketIO(server, {
     cors: { origin: process.env.ALLOWED_ORIGINS?.split(',') || '*', credentials: true },
 });
 app.set('io', io);
-const PORT = process.env.PORT || 3000;
-const logger = require('./utils/logger');
+const PORT = process.env.PORT || (useHttps ? 443 : 3000);
 
 // ============================================================================
 // MOTOR DE VISTAS — EJS
 // ============================================================================
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+app.set('view cache', false);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(methodOverride('_method'));
-
-// ============================================================================
-// BULL BOARD — Monitor de colas /admin/queues
-// ============================================================================
-const { createBullBoard }       = require('@bull-board/api');
-const { BullAdapter }           = require('@bull-board/api/bullAdapter');
-const { ExpressAdapter }        = require('@bull-board/express');
-const { emailQueue, slaQueue, reportsQueue } = require('./src/queues/index');
-const bullBoardAdapter = new ExpressAdapter();
-bullBoardAdapter.setBasePath('/admin/queues');
-createBullBoard({
-    queues:  [new BullAdapter(emailQueue), new BullAdapter(slaQueue), new BullAdapter(reportsQueue)],
-    serverAdapter: bullBoardAdapter,
-});
-app.use('/admin/queues', bullBoardAdapter.getRouter());
 
 // Middleware para exponer APP_URL a todas las vistas
 app.use((req, res, next) => {
     res.locals.APP_URL = process.env.APP_URL;
     next();
 });
+
 // ============================================================================
-// MIDDLEWARES GLOBALES
+// CONFIGURACIÓN DE MIDDLEWARES Y BULL BOARD
 // ============================================================================
+setupBullBoard(app);
+configureApp(app);
 
-// Cookies y sesión
-// Cookies y sesión
-app.use(cookieParser());
-const { createClient } = require('redis');
+const { tenantMiddleware }  = require('./src/middlewares');
+const responseHelper        = require('./src/middlewares/responseHelper');
+const requestLogger         = require('./src/middlewares/requestLogger');
+const httpMetrics            = require('./src/middlewares/metrics/httpMetrics');
+const rateLimitByTenant     = require('./src/middlewares/tenant/rateLimitByTenant');
+const envConfig             = require('./config/env');
 
-const redisClient = createClient({
-    socket: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: process.env.REDIS_PORT || 6379,
-    }
-});
-redisClient.connect().catch(console.error);
+app.use(tenantMiddleware);
+app.use(requestLogger);
+app.use(httpMetrics);
+app.use(responseHelper);
 
-app.use(session({
-    store: new RedisStore({ client: redisClient }),
-    secret:            process.env.SESSION_SECRET || 'cambiar_este_secreto',
-    resave:            false,
-    saveUninitialized: false,
-    cookie: {
-        secure:   process.env.NODE_ENV === 'production',
-        httpOnly: true,
-        maxAge:   8 * 60 * 60 * 1000,
-    },
-}));
-
-// Passport (inicializar después de session)
-app.use(passport.initialize());
-app.use(passport.session());
-
-// Seguridad
-app.use(helmet({ contentSecurityPolicy: false }));
-
-
-const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
-    : [`http://localhost:${PORT}`];
-
-app.use(cors({
-    origin: function(origin, callback) {
-        // Permite requests sin origin (Postman, curl, server-to-server)
-        if (!origin) return callback(null, true);
-        if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
-        callback(new Error(`Origen no permitido por CORS: ${origin}`));
-    },
-    credentials: true,
-}));
-
-// Body parsing
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(compression());
-
-// Logging HTTP
-if (process.env.NODE_ENV === 'development') {
-    app.use(morgan('dev'));
-} else {
-    app.use(morgan('combined'));
+// Per-tenant rate limit — reads req.tenant set by tenantMiddleware above
+if (envConfig.rateLimitEnabled) {
+    app.use('/api/', rateLimitByTenant());
 }
 
-
 // ============================================================================
-// RATE LIMITING
-// ============================================================================
-
-// Límite general para todas las rutas /api/
-const apiLimiter = rateLimit({
-    windowMs:        parseInt(process.env.RATE_LIMIT_WINDOW) || 15 * 60 * 1000, // 15 minutos
-    max:             parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 300,
-    message:         'Demasiadas peticiones desde esta IP, intenta de nuevo más tarde',
-    standardHeaders: true,
-    legacyHeaders:   false,
-});
-app.use('/api/', apiLimiter);
-
-// Límite estricto solo para login (5 intentos por 15 min)
-const loginLimiter = rateLimit({
-    windowMs:        15 * 60 * 1000,
-    max:             5,
-    message:         'Demasiados intentos de login. Intenta de nuevo en 15 minutos.',
-    standardHeaders: true,
-    legacyHeaders:   false,
-});
-
-
-// ============================================================================
-// MIDDLEWARES DE AUTENTICACIÓN Y PERMISOS
-// ============================================================================
-const { authenticateToken, optionalAuth, logout } = require('./middleware/auth');
-const { adminOnly } = require('./middleware/permissions');
-
-
-// ============================================================================
-// IMPORTS DE RUTAS — VISTAS
+// REGISTRO DE RUTAS
 // ============================================================================
 const viewsRoutes = require('./routes/views');
-// ⚠️  views.js maneja TODAS las rutas de vistas del sistema.
-//     No agregar rutas de vistas aquí en app.js para evitar conflictos
-//     con las rutas comodín (/employees/:id, /equipment/:id).
+const apiRoutes   = require('./routes/api');
+const jiraRoutes  = require('./routes/jira');
 
-
-// ============================================================================
-// IMPORTS DE RUTAS — APIs
-// ============================================================================
-const authRoutes            = require('./routes/auth');
-const permissionsRoutes     = require('./routes/permissions');
-const employeesRoutes       = require('./routes/employees');
-const equipmentRoutes       = require('./routes/equipment');
-const assignmentsRoutes     = require('./routes/assignments');
-const dashboardRoutes       = require('./routes/dashboard');
-const dashboardStatsRouter  = require('./routes/dashboard-stats');
-const dashboardGraphsRouter = require('./routes/dashboard-graphs');
-const locationsRoutes       = require('./routes/locations');
-const departmentsRoutes     = require('./routes/departments');
-const indicatorsRouter      = require('./routes/indicators');
-const warrantyRouter        = require('./routes/warranty');
-const jiraRoutes            = require('./routes/jira');
-const outlookSyncRouter     = require('./routes/outlook-sync');
-const recoveriesRouter      = require('./routes/recoveries');
-const adRouter              = require('./routes/ad');
-const soporteRouter    = require('./routes/soporte');
-const almacenRouter    = require('./routes/almacen');
-const itsmRouter            = require('./routes/itsm');
-const serviceRequestsRouter = require('./routes/service-requests');
-const changesRouter         = require('./routes/changes');
-const problemsRouter        = require('./routes/problems');
-const catalogRouter         = require('./routes/catalog');
-const cmdbRouter            = require('./routes/cmdb');
-// Phase 4
-const notificationsRouter   = require('./routes/notifications');
-const knowledgeBaseRouter   = require('./routes/knowledge-base');
-const csiRouter             = require('./routes/csi');
-const reportsItsmRouter     = require('./routes/reports-itsm');
-// Phase 5-6
-const portalRouter          = require('./routes/portal');
-const businessRulesRouter   = require('./routes/business-rules');
-
-
-
-// ============================================================================
-// REGISTRO DE RUTAS — AUTENTICACIÓN (pública, con rate limit de login)
-// ============================================================================
-app.use('/api/auth', loginLimiter, authRoutes);
-
-
-// ============================================================================
-// REGISTRO DE RUTAS — VISTAS
-// Debe ir antes que las APIs para que las rutas de página se resuelvan primero.
-// TODAS las vistas están centralizadas en routes/views.js
-// ============================================================================
+// Las vistas deben registrarse antes para que capturen rutas específicas
 app.use('/', viewsRoutes);
+app.use('/api', apiRoutes);
 
+// Admin: feature flags, custom fields y branding por tenant
+app.use('/api/admin/tenants', require('./src/modules/tenant/routes'));
 
-// ============================================================================
-// RUTAS UTILITARIAS
-// ============================================================================
-const printQueue = require('./routes/print-queue');
-app.use('/api/print-queue', printQueue);
-// Logout
+// Workflow engine: templates, instancias, aprobaciones
+app.use('/api/workflow', require('./src/modules/workflow/routes'));
+
+// IA: clasificación, KB semántica, chatbot ARIA
+app.use('/api/ai', require('./src/modules/ai/routes'));
+
+// Utilidades y rutas adicionales montadas en raíz
 app.get('/logout', logout);
+app.use('/api/events', require('./routes/events'));
+app.use('/tickets', jiraRoutes);
+app.use('/uploads/tickets', express.static(path.join(__dirname, 'uploads/tickets')));
+app.use('/public/reports', express.static(path.join(__dirname, 'public/reports')));
 
-// Health check — monitoreo del servidor
-app.get('/health', (req, res) => {
-    res.json({
-        status:      'OK',
+// ── Prometheus metrics scrape endpoint ───────────────────────────────────────
+const { registry } = require('./src/core/metrics/MetricsRegistry');
+
+app.get('/metrics', async (req, res) => {
+    // Protección opcional: si METRICS_TOKEN está definido, exigirlo
+    const token = process.env.METRICS_TOKEN;
+    if (token) {
+        const auth = req.headers.authorization || '';
+        if (auth !== `Bearer ${token}`) {
+            return res.status(401).send('Unauthorized');
+        }
+    }
+    res.set('Content-Type', registry.contentType);
+    res.end(await registry.metrics());
+});
+
+// Kubernetes liveness probe — solo verifica que el proceso responde
+app.get('/health/live', (req, res) => res.json({ alive: true, ts: new Date().toISOString() }));
+
+// Kubernetes readiness probe — verifica que la app puede atender requests
+app.get('/health/ready', async (req, res) => {
+    try {
+        const { equipmentPool, executeQuery } = require('./config/database');
+        await executeQuery(equipmentPool, 'SELECT 1');
+        res.json({ ready: true, ts: new Date().toISOString() });
+    } catch {
+        res.status(503).json({ ready: false, ts: new Date().toISOString() });
+    }
+});
+
+app.get('/health', async (req, res) => {
+    const checks = { db: 'ok' };
+    let healthy   = true;
+
+    // DB check
+    try {
+        const { equipmentPool, executeQuery } = require('./config/database');
+        await executeQuery(equipmentPool, 'SELECT 1');
+    } catch {
+        checks.db = 'error';
+        healthy   = false;
+    }
+
+    res.status(healthy ? 200 : 503).json({
+        status:      healthy ? 'OK' : 'DEGRADED',
         timestamp:   new Date().toISOString(),
-        uptime:      process.uptime(),
+        uptime:      Math.round(process.uptime()),
         environment: process.env.NODE_ENV || 'development',
+        checks,
     });
 });
-
-// Info general de la API
-app.get('/api', optionalAuth, (req, res) => {
-    res.json({
-        message:       'API REST - Equipment Management System',
-        version:       '1.0.0',
-        authenticated: !!req.user,
-        endpoints: {
-            auth:        '/api/auth',
-            employees:   '/api/employees',
-            equipment:   '/api/equipment',
-            assignments: '/api/assignments',
-            dashboard:   '/api/dashboard',
-            locations:   '/api/locations',
-            departments: '/api/departments',
-            recoveries:  '/api/recoveries',
-            almacen:     '/api/almacen',
-            ad:          '/api/ad',
-            soporte:      '/api/soporte',
-            sccm:        '/api/outlook-sync',
-        },
-    });
-});
-
-// Configuración del cliente
-app.get('/api/config', (req, res) => {
-    res.json({
-        apiUrl:   process.env.API_BASE_URL || `http://localhost:${PORT}`,
-        version:  '1.0.0',
-        features: { authentication: true, roleBasedAccess: true, auditLog: true },
-    });
-});
-
-
-// ============================================================================
-// REGISTRO DE RUTAS — APIs DE DATOS
-// ============================================================================
-// Import (junto a los otros requires de rutas)
-const reportsRouter = require('./routes/reports');
-const reportListsRouter = require('./routes/report-lists');
-app.use('/api/report-lists', reportListsRouter);
-// Registro (junto a los app.use de las APIs)
-app.use('/api/reports', reportsRouter);   // GET /api/reports/:id
-app.use('/api/mailer',  reportsRouter);   // POST /api/mailer/send
-// Permisos de usuario
-app.use('/api/permissions',  permissionsRoutes);
-
-// Entidades principales
-app.use('/api/employees',    employeesRoutes);
-app.use('/api/equipment',    equipmentRoutes);
-app.use('/api/locations',    locationsRoutes);
-app.use('/api/departments',  departmentsRoutes);
-app.use('/api/assignments',  assignmentsRoutes);
-
-// Dashboard (tres routers separados, todos bajo /api/dashboard)
-app.use('/api/dashboard',    dashboardRoutes);
-app.use('/api/dashboard',    dashboardStatsRouter);
-app.use('/api/dashboard',    dashboardGraphsRouter);
-
-// Módulos adicionales
-app.use('/api/indicators',   indicatorsRouter);
-app.use('/api/warranty',     warrantyRouter);
-app.use('/api/recoveries',   recoveriesRouter);
-app.use('/api/almacen',      almacenRouter);
-app.use('/api/ad',           adRouter);
-app.use('/api/soporte',           soporteRouter);
-
-// Integraciones externas
-app.use('/api/jira',         jiraRoutes);
-app.use('/tickets',          jiraRoutes);
-app.use('/api/outlook-sync', outlookSyncRouter);
-app.use('/api/itsm',             itsmRouter);
-app.use('/api/service-requests', serviceRequestsRouter);
-app.use('/api/changes',          changesRouter);
-app.use('/api/problems',         problemsRouter);
-app.use('/api/catalog',          catalogRouter);
-app.use('/api/cmdb',             cmdbRouter);
-// Phase 4
-app.use('/api/notifications',    notificationsRouter);
-app.use('/api/kb',               knowledgeBaseRouter);
-app.use('/api/csi',              csiRouter);
-app.use('/api/reports-itsm',     reportsItsmRouter);
-app.use('/public/reports', require('express').static(require('path').join(__dirname, 'public/reports')));
-// Phase 5-6
-app.use('/api/portal',           portalRouter);
-app.use('/api/business-rules',   businessRulesRouter);
-// Servir uploads de tickets
-app.use('/uploads/tickets', require('express').static(require('path').join(__dirname, 'uploads/tickets')));
-
 
 // ============================================================================
 // MANEJO DE ERRORES — SIEMPRE AL FINAL
 // ============================================================================
-
-// 404 — Ruta no encontrada
-app.use((req, res) => {
-    // APIs devuelven JSON
-    if (req.path.startsWith('/api/')) {
-        return res.status(404).json({
-            success:            false,
-            error:              'Endpoint no encontrado',
-            path:               req.originalUrl,
-            availableEndpoints: '/api',
-        });
-    }
-    // Vistas devuelven HTML
-    res.status(404).render('error', {
-        title: '404 - Página no encontrada',
-        error: 'La página que buscas no existe',
-        user:  req.user || null,
-    });
-});
-
-// 500 — Error global (4 parámetros obligatorios para que Express lo reconozca)
-app.use((err, req, res, next) => {
-    console.error('❌ Error global:', err);
-    const statusCode = err.statusCode || 500;
-    const message    = err.message    || 'Error interno del servidor';
-
-    if (req.path.startsWith('/api/')) {
-        return res.status(statusCode).json({
-            success: false,
-            error:   message,
-            ...(process.env.NODE_ENV === 'development' && { stack: err.stack, details: err }),
-        });
-    }
-    res.status(statusCode).render('error', {
-        title: 'Error del servidor',
-        error: message,
-        user:  req.user || null,
-        ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
-    });
-});
-
+setupErrorHandlers(app);
 
 // ============================================================================
 // INICIAR SERVIDOR
 // ============================================================================
-// SLA job — iniciar después de que los modelos están listos
-require('./services/slaJob');
+// SLA job
+require('./src/services/service-management/slaJob');
 
-// ── Workers de colas ────────────────────────────────────────────────────────
+// Workers de colas
 require('./src/queues/emailWorker');
 require('./src/queues/slaWorker');
 require('./src/queues/reportsWorker');
 
-// ── Jobs programados (node-cron) ─────────────────────────────────────────────
+// Event Bus — registrar listeners antes de los jobs
+const { registerListeners } = require('./src/core/events');
+registerListeners();
+
+// Jobs programados
 const { startJobs } = require('./src/jobs/index');
 startJobs();
 
-// ── Socket.io — Notificaciones en tiempo real ───────────────────────────────
+// Socket.io
 io.on('connection', (socket) => {
-    // El cliente debe emitir 'join' con su userId al conectarse
     socket.on('join', (userId) => {
         if (userId) socket.join(`user:${userId}`);
+    });
+    // Room para todos los agentes ITSM y para el dashboard TV
+    socket.on('joinAgents', () => {
+        socket.join('jira:agents');
+        socket.join('tv:dashboard');
     });
     socket.on('disconnect', () => {});
 });
 
-server.listen(PORT, async () => {
+server.listen(PORT, '0.0.0.0', async () => {
     await initCasbin();
+    // Abrir puerto en Windows Firewall para acceso en red
+    if (process.platform === 'win32') {
+        const { exec } = require('child_process');
+        exec(`netsh advfirewall firewall add rule name="ITSM-App-${PORT}" dir=in action=allow protocol=TCP localport=${PORT}`, () => {});
+    }
+    const proto = useHttps ? 'https' : 'http';
+    const appUrl = process.env.APP_URL || `${proto}://localhost:${PORT}`;
     console.log('═'.repeat(75));
     console.log('🚀 EQUIPMENT MANAGEMENT SYSTEM — SERVER STARTED');
     console.log('═'.repeat(75));
     console.log(`📡 Entorno:   ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🌐 Servidor:  http://localhost:${PORT}`);
-    console.log(`📊 Health:    http://localhost:${PORT}/health`);
-    console.log(`📚 API:       http://localhost:${PORT}/api`);
-    console.log(`♻️  Recuperos: http://localhost:${PORT}/recoveries`);
-    console.log(`📦 Almacén:   http://localhost:${PORT}/almacen`);
-    console.log(`🔷 AD:        http://localhost:${PORT}/ad`);
-        console.log(`🔷 SOPORTE:        http://localhost:${PORT}/soporte`);
+    console.log(`🔒 Protocolo: ${useHttps ? 'HTTPS (SSL activo)' : 'HTTP'}`);
+    console.log(`🌐 Servidor:  ${appUrl}`);
+    console.log(`📊 Health:    ${appUrl}/health`);
+    console.log(`📚 API:       ${appUrl}/api`);
+    if (useHttps) {
+        console.log(`🔑 Callback:  ${appUrl}/api/auth/microsoft/callback`);
+    }
     console.log('═'.repeat(75));
-   logger.info('✅ Servidor listo');
+    logger.info('✅ Servidor listo');
 });
 
+// ============================================================================
+// MANEJO DE SEÑALES
+// ============================================================================
+function gracefulShutdown(signal) {
+    logger.info(`shutdown_initiated`, { signal });
+    server.close(() => {
+        logger.info('shutdown_complete', { signal });
+        process.exit(0);
+    });
+    // Force exit if connections don't drain in 10 s
+    setTimeout(() => {
+        logger.error('shutdown_timeout', { signal });
+        process.exit(1);
+    }, 10_000).unref();
+}
 
-// ============================================================================
-// MANEJO DE SEÑALES — Cierre limpio del proceso
-// ============================================================================
-process.on('SIGTERM', () => {
-    server.close(() => { console.log('✅ Servidor cerrado (SIGTERM)'); process.exit(0); });
-});
-process.on('SIGINT', () => {
-    server.close(() => { console.log('✅ Servidor cerrado (SIGINT)');  process.exit(0); });
-});
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT',  () => gracefulShutdown('SIGINT'));
+
 process.on('unhandledRejection', (reason) => {
-    console.error('❌ Unhandled Rejection:', reason);
+    logger.error('unhandled_rejection', { reason: String(reason) });
 });
 process.on('uncaughtException', (error) => {
-    console.error('❌ Uncaught Exception:', error);
+    logger.error('uncaught_exception', { message: error.message, stack: error.stack });
     process.exit(1);
 });
 

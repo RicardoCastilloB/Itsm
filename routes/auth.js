@@ -5,6 +5,34 @@ const { equipmentPool, executeQuery } = require('../config/database');
 const { User } = require('../src/models');
 // bcrypt ya no se usa directamente — User.verificarPassword() lo encapsula
 const router = express.Router();
+const { authenticateToken: requireAuth } = require('../middleware/auth');
+
+// ── Auto-crear tablas auxiliares si no existen ───────────────────────────────
+;(async () => {
+    try {
+        await executeQuery(equipmentPool, `
+            CREATE TABLE IF NOT EXISTS login_attempts (
+                id         INT AUTO_INCREMENT PRIMARY KEY,
+                user_id    VARCHAR(100),
+                ip_address VARCHAR(100),
+                status     ENUM('success','failed') NOT NULL,
+                created_at DATETIME DEFAULT NOW(),
+                INDEX idx_user (user_id),
+                INDEX idx_ip   (ip_address)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        `);
+        await executeQuery(equipmentPool, `
+            CREATE TABLE IF NOT EXISTS refresh_tokens (
+                id         INT AUTO_INCREMENT PRIMARY KEY,
+                user_id    VARCHAR(100) NOT NULL,
+                token      TEXT NOT NULL,
+                expires_at DATETIME NOT NULL,
+                created_at DATETIME DEFAULT NOW(),
+                INDEX idx_user (user_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        `);
+    } catch(e) { console.error('auth tables migration:', e.message); }
+})();
 
 // Verificar variables de entorno
 console.log('🔍 Verificando variables de entorno en auth.js:');
@@ -95,48 +123,37 @@ router.post('/login', async (req, res) => {
         // Comparar contraseña con el hash almacenado
         const isPasswordValid = await userData.verificarPassword(password);
         
+        const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+
         if (!isPasswordValid) {
             console.log(`❌ Contraseña inválida para: ${userData.username}`);
-            
-            // Registrar intento fallido
-            await executeQuery(
-                equipmentPool,
+            // fire-and-forget — no bloquea la respuesta
+            executeQuery(equipmentPool,
                 'INSERT INTO login_attempts (user_id, ip_address, status) VALUES (?, ?, ?)',
-                [userData.id, req.ip || req.connection.remoteAddress || 'unknown', 'failed']
-            );
+                [userData.id, ip, 'failed']
+            ).catch(() => {});
 
-            return res.status(401).json({
-                success: false,
-                error: 'Credenciales inválidas'
-            });
+            return res.status(401).json({ success: false, error: 'Credenciales inválidas' });
         }
 
         console.log(`✅ Contraseña válida para: ${userData.username}`);
 
-        // Actualizar último login
-        await executeQuery(
-            equipmentPool,
-            'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
-            [userData.id]
-        );
-
-        // Registrar intento exitoso
-        await executeQuery(
-            equipmentPool,
-            'INSERT INTO login_attempts (user_id, ip_address, status) VALUES (?, ?, ?)',
-            [userData.id, req.ip || req.connection.remoteAddress || 'unknown', 'success']
-        );
-
-        // Generar tokens
-        const accessToken = generateAccessToken(userData);
+        // Generar tokens primero para no demorar la respuesta
+        const accessToken  = generateAccessToken(userData);
         const refreshToken = generateRefreshToken(userData);
 
-        // Guardar refresh token en la base de datos
-        await executeQuery(
-            equipmentPool,
-            'INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL ? SECOND))',
-            [userData.id, refreshToken, jwtRefreshExpirySeconds]
-        );
+        // Escrituras auxiliares en paralelo — fire-and-forget
+        Promise.all([
+            executeQuery(equipmentPool,
+                'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
+                [userData.id]),
+            executeQuery(equipmentPool,
+                'INSERT INTO login_attempts (user_id, ip_address, status) VALUES (?, ?, ?)',
+                [userData.id, ip, 'success']),
+            executeQuery(equipmentPool,
+                'INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL ? SECOND))',
+                [userData.id, refreshToken, jwtRefreshExpirySeconds]),
+        ]).catch(() => {});
 
         // Configurar cookies con los tokens
         res.cookie('accessToken', accessToken, {
@@ -157,11 +174,11 @@ router.post('/login', async (req, res) => {
 
         // Almacenar información en la sesión (si usas express-session)
         if (req.session) {
-            req.session.loggedin = true;
-            req.session.userId = userData.id;
-            req.session.username = userData.username;
-            req.session.full_name = userData.full_name;
-            req.session.role = userData.role;
+            req.session.loggedin  = true;
+            req.session.userId    = userData.id;
+            req.session.username  = userData.username;
+            req.session.full_name = userData.nombre   || userData.full_name || '';
+            req.session.role      = userData.rol      || userData.role      || '';
         }
 
         // Respuesta exitosa con datos del usuario (sin información sensible)
@@ -171,13 +188,13 @@ router.post('/login', async (req, res) => {
             accessToken,
             refreshToken,
             user: {
-                id: userData.id,
-                username: userData.username,
-                email: userData.email,
-                full_name: userData.full_name,
-                role: userData.role,
-                employee_cip: userData.employee_cip,
-                is_verified: userData.is_verified
+                id:           userData.id,
+                username:     userData.username,
+                email:        userData.email,
+                full_name:    userData.nombre      || userData.full_name  || '',
+                role:         userData.rol         || userData.role       || '',
+                employee_cip: userData.employeeCip || userData.employee_cip || null,
+                is_verified:  userData.isVerified  ?? userData.is_verified ?? false,
             }
         });
 
@@ -248,6 +265,66 @@ router.get('/perfil', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('❌ Error en GET /perfil:', error);
         return res.status(500).json({ success: false, error: 'Error al obtener perfil' });
+    }
+});
+
+// ============================================================================
+// GET /api/auth/users — Listar todos los usuarios del sistema
+// ============================================================================
+router.get('/users', requireAuth, async (req, res) => {
+    try {
+        const rows = await executeQuery(equipmentPool,
+            `SELECT id, username, full_name, email, role, is_active, created_at FROM users ORDER BY full_name ASC`
+        );
+        res.json({ success: true, data: rows });
+    } catch(err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ============================================================================
+// POST /api/auth/register — Crear nuevo usuario (solo admin)
+// ============================================================================
+router.post('/register', requireAuth, async (req, res) => {
+    try {
+        const { full_name, username, email, role = 'usuario', password } = req.body;
+        if (!full_name || !email || !password)
+            return res.status(400).json({ success: false, error: 'Faltan campos obligatorios' });
+
+        const bcrypt = require('bcryptjs');
+        const hash   = await bcrypt.hash(password, 10);
+        const uname  = username || email.split('@')[0];
+
+        const result = await executeQuery(equipmentPool,
+            `INSERT INTO users (full_name, username, email, role, password_hash, is_active, is_verified, created_at)
+             VALUES (?, ?, ?, ?, ?, 1, 1, NOW())`,
+            [full_name, uname, email.toLowerCase(), role, hash]
+        );
+        res.status(201).json({ success: true, userId: result.insertId, message: 'Usuario creado' });
+    } catch(err) {
+        if (err.code === 'ER_DUP_ENTRY')
+            return res.status(409).json({ success: false, error: 'El email o usuario ya existe' });
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ============================================================================
+// PATCH /api/auth/users/:id/role — Cambiar rol de un usuario
+// ============================================================================
+router.patch('/users/:id/role', requireAuth, async (req, res) => {
+    try {
+        const { role } = req.body;
+        const validRoles = ['usuario', 'visor', 'tecnico', 'agente', 'especialista', 'administrador'];
+        if (!validRoles.includes(role))
+            return res.status(400).json({ success: false, error: 'Rol no válido' });
+
+        await executeQuery(equipmentPool,
+            `UPDATE users SET role = ? WHERE id = ?`,
+            [role, req.params.id]
+        );
+        res.json({ success: true, message: 'Rol actualizado' });
+    } catch(err) {
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 

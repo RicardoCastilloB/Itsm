@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Base de Conocimiento</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 <style>
@@ -22,26 +22,47 @@
 *{box-sizing:border-box;}
 body{margin:0;background:var(--bg);color:var(--text);font-family:'DM Sans',-apple-system,sans-serif;}
 .pg{max-width:1700px;margin:0 auto;padding:24px 20px;}
-.page-hdr{display:flex;align-items:center;gap:16px;margin-bottom:28px;}
+
+/* HEADER */
+.page-hdr{display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
 .page-hdr-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;box-shadow:var(--sh-md);}
 .page-hdr h1{font-size:22px;font-weight:800;margin:0;}
 .page-hdr p{margin:3px 0 0;font-size:13px;color:var(--muted);}
-.page-hdr-right{margin-left:auto;display:flex;gap:8px;align-items:center;}
-.search-hero{background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:16px;padding:32px;text-align:center;margin-bottom:24px;color:#fff;}
-.search-hero h2{font-size:24px;font-weight:800;margin-bottom:8px;}
-.search-hero p{font-size:14px;opacity:.85;margin-bottom:20px;}
+.page-hdr-right{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.user-chip{background:var(--hover);border:1px solid var(--border);border-radius:20px;padding:5px 12px 5px 8px;display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--text);}
+.user-chip-av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;}
+
+/* TABS */
+.kb-tabs{display:flex;gap:6px;margin-bottom:20px;border-bottom:2px solid var(--border);padding-bottom:0;}
+.kb-tab{padding:10px 20px;font-size:13px;font-weight:700;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;border-radius:8px 8px 0 0;display:flex;align-items:center;gap:7px;}
+.kb-tab:hover{color:var(--text);background:var(--hover);}
+.kb-tab.active{color:var(--primary);border-bottom-color:var(--primary);background:transparent;}
+
+/* SEARCH HERO */
+.search-hero{background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:16px;padding:28px 32px;text-align:center;margin-bottom:20px;color:#fff;}
+.search-hero h2{font-size:22px;font-weight:800;margin-bottom:6px;}
+.search-hero p{font-size:13px;opacity:.85;margin-bottom:18px;}
 .search-box{display:flex;max-width:560px;margin:0 auto;gap:0;}
-.search-box input{flex:1;border:none;border-radius:10px 0 0 10px;padding:12px 18px;font-size:14px;outline:none;}
+.search-box input{flex:1;border:none;border-radius:10px 0 0 10px;padding:12px 18px;font-size:14px;outline:none;color:#1e293b;}
 .search-box button{background:#fff;color:var(--primary);border:none;border-radius:0 10px 10px 0;padding:12px 20px;font-size:16px;cursor:pointer;font-weight:700;}
+.search-not-found-bar{margin-top:14px;font-size:13px;opacity:.9;}
+.search-not-found-bar button{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:8px;padding:6px 16px;font-size:12px;font-weight:700;cursor:pointer;margin-left:8px;}
+.search-not-found-bar button:hover{background:rgba(255,255,255,.35);}
+
+/* SEARCH RESULTS */
 .search-results{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;display:none;}
 .search-result-item{padding:14px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;}
 .search-result-item:last-child{border-bottom:none;}
 .search-result-item:hover{background:var(--hover);}
 .search-result-item .sr-title{font-weight:700;margin-bottom:3px;}
 .search-result-item .sr-excerpt{font-size:12px;color:var(--muted);}
+
+/* LAYOUT ARTÍCULOS */
 .three-col{display:grid;grid-template-columns:260px 1fr 300px;gap:16px;}
 @media(max-width:1200px){.three-col{grid-template-columns:1fr 1fr;}}
 @media(max-width:800px){.three-col{grid-template-columns:1fr;}}
+
+/* CARDS */
 .card-ui{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh-sm);overflow:hidden;margin-bottom:16px;}
 .card-head{padding:13px 18px;background:var(--hdr);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .card-head .title{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
@@ -56,72 +77,138 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:'DM Sans',-appl
 .art-title{font-weight:700;font-size:14px;margin-bottom:4px;}
 .art-excerpt{font-size:12px;color:var(--muted);line-height:1.5;}
 .art-meta{display:flex;gap:10px;align-items:center;margin-top:6px;font-size:11px;color:var(--muted);}
-.art-views{display:flex;align-items:center;gap:3px;}
 .pop-item{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px;}
 .pop-item:last-child{border-bottom:none;}
 .pop-item:hover{background:var(--hover);}
 .pop-rank{width:22px;height:22px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
-/* Artículo detalle */
+
+/* ARTÍCULO DETALLE */
 .article-view{display:none;}
 .article-view.open{display:block;}
 .article-content{padding:24px 28px;line-height:1.8;font-size:14px;}
 .article-content h2,.article-content h3{font-weight:700;margin:20px 0 10px;}
 .article-content pre{background:var(--hdr);border-radius:8px;padding:12px;overflow:auto;font-size:12px;}
 .helpful-bar{padding:16px 28px;border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;background:var(--hdr);}
+
+/* BOTONES */
 .btn-sm{padding:6px 14px;font-size:12px;font-weight:600;border-radius:8px;border:none;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
 .btn-primary{background:var(--primary);color:#fff;}
 .btn-primary:hover{opacity:.88;}
 .btn-outline{background:transparent;border:1px solid var(--border);color:var(--muted);}
 .btn-outline:hover{background:var(--hover);}
 .btn-success{background:var(--success);color:#fff;}
+.btn-warning{background:var(--warning);color:#fff;}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-purple{background:var(--purple);color:#fff;}
+
+/* FORMULARIOS */
 .form-ctrl{width:100%;border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;background:var(--card);color:var(--text);outline:none;}
 .form-ctrl:focus{border-color:var(--primary);}
 .form-group{margin-bottom:14px;}
 .form-lbl{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px;display:block;}
+
+/* PROCEDIMIENTOS */
+.proc-cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.proc-cat-btn{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;border:1.5px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;transition:all .2s;}
+.proc-cat-btn:hover,.proc-cat-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.proc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+.proc-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;box-shadow:var(--sh-sm);transition:box-shadow .2s;display:flex;flex-direction:column;gap:10px;}
+.proc-card:hover{box-shadow:var(--sh-md);}
+.proc-card-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.proc-card-title{font-size:15px;font-weight:800;color:var(--text);margin:0;}
+.proc-card-desc{font-size:12px;color:var(--muted);line-height:1.5;flex:1;}
+.proc-card-meta{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--muted);}
+.proc-type-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;}
+.proc-type-pdf{background:#fee2e2;color:#dc2626;}
+.proc-type-image{background:#d1fae5;color:#059669;}
+.proc-type-ppt{background:#fef3c7;color:#d97706;}
+.proc-type-text{background:#dbeafe;color:#1d4ed8;}
+
+/* SOLICITUDES TABLA */
+.req-table{width:100%;border-collapse:collapse;font-size:13px;}
+.req-table th{background:var(--hdr);padding:10px 14px;font-weight:700;font-size:11px;text-transform:uppercase;color:var(--muted);border-bottom:2px solid var(--border);text-align:left;}
+.req-table td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.req-table tr:hover td{background:var(--hover);}
+.status-badge{padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700;}
+.status-pendiente{background:#fef3c7;color:#92400e;}
+.status-en_progreso{background:#dbeafe;color:#1e40af;}
+.status-resuelto{background:#d1fae5;color:#065f46;}
+
+/* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
 .modal-overlay.open{opacity:1;pointer-events:all;}
 .modal-box{background:var(--card);border-radius:20px;width:720px;max-width:95vw;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.25);transform:translateY(20px);transition:transform .2s;}
 .modal-overlay.open .modal-box{transform:translateY(0);}
-.modal-hdr{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-hdr{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .modal-hdr h3{margin:0;font-size:16px;font-weight:800;}
 .modal-body{padding:20px 24px;overflow-y:auto;flex:1;}
-.modal-ftr{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+.modal-ftr{padding:14px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+
+/* VISOR PROCEDIMIENTO */
+.proc-viewer-embed{width:100%;height:500px;border:none;border-radius:8px;background:#000;}
+.proc-viewer-img{max-width:100%;border-radius:8px;}
+.proc-viewer-text{line-height:1.8;font-size:14px;}
+.proc-viewer-text h2,.proc-viewer-text h3{font-weight:700;margin:16px 0 8px;}
+
+/* NO RESULTS ADMIN */
+.no-res-item{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--border);font-size:12px;}
+.no-res-item:last-child{border-bottom:none;}
+
 .theme-toggle{background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--text);font-size:16px;}
-.empty-state{text-align:center;padding:40px 20px;color:var(--muted);}
+.empty-state{text-align:center;padding:32px 20px;color:var(--muted);}
+.section-tab{display:none;}
+.section-tab.active{display:block;}
 </style>
 </head>
 <body>
 <div class="pg">
+
+  <!-- HEADER -->
   <div class="page-hdr">
     <div class="page-hdr-icon" style="background:linear-gradient(135deg,#06b6d4,#0891b2);">
       <i class="bi bi-book-half" style="color:#fff;"></i>
     </div>
     <div>
       <h1>Base de Conocimiento</h1>
-      <p>Artículos, guías y soluciones del equipo de soporte</p>
+      <p>Artículos, guías, procedimientos y soluciones del equipo de soporte</p>
     </div>
     <div class="page-hdr-right">
+      <!-- Chip de usuario -->
+      <div class="user-chip">
+        <div class="user-chip-av" id="userAvatar">?</div>
+        <span>Bienvenido/a, <strong id="userNameChip" style="margin-left:3px;">...</strong></span>
+      </div>
       <button class="theme-toggle" onclick="toggleTheme()"><i class="bi bi-moon-stars-fill"></i></button>
-      <button class="btn-sm btn-primary" onclick="openModal()">
+      <!-- Botón solo admin -->
+      <% if (['administrador','especialista'].includes(user.role)) { %>
+      <button class="btn-sm btn-primary" onclick="openModal('modalArt')">
         <i class="bi bi-plus-lg"></i> Nuevo Artículo
       </button>
+      <% } %>
     </div>
   </div>
 
-  <!-- Hero buscador -->
+  <!-- HERO BUSCADOR -->
   <div class="search-hero">
     <h2><i class="bi bi-search"></i> ¿Qué necesitas saber?</h2>
-    <p>Busca en cientos de artículos, guías y soluciones conocidas</p>
+    <p>Busca artículos técnicos, guías y procedimientos de gestión</p>
     <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Buscar artículos..." oninput="debounceSearch()">
+      <input type="text" id="searchInput" placeholder="Buscar..." oninput="debounceSearch()">
       <button onclick="doSearch()"><i class="bi bi-search"></i></button>
     </div>
+    <!-- Botón solicitar procedimiento (solo usuarios no admin) -->
+    <% if (!['administrador','especialista'].includes(user.role)) { %>
+    <div class="search-not-found-bar">
+      ¿No encontraste lo que buscabas?
+      <button onclick="openModal('modalRequest')"><i class="bi bi-send"></i> Solicitar procedimiento</button>
+    </div>
+    <% } %>
   </div>
 
-  <!-- Resultados de búsqueda -->
+  <!-- RESULTADOS DE BÚSQUEDA -->
   <div class="search-results" id="searchResults"></div>
 
-  <!-- Vista artículo individual -->
+  <!-- ARTÍCULO DETALLE -->
   <div class="article-view card-ui" id="articleView">
     <div class="card-head" id="articleHead">
       <span class="title" id="articleTitle">Artículo</span>
@@ -132,53 +219,124 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:'DM Sans',-appl
       <span style="font-size:13px;color:var(--muted);">¿Fue útil este artículo?</span>
       <button class="btn-sm btn-success" onclick="vote('yes')"><i class="bi bi-hand-thumbs-up"></i> Sí</button>
       <button class="btn-sm btn-outline" onclick="vote('no')"><i class="bi bi-hand-thumbs-down"></i> No</button>
-      <button class="btn-sm btn-outline" id="linkTicketBtn" style="margin-left:auto;">
-        <i class="bi bi-link-45deg"></i> Vincular a ticket
-      </button>
     </div>
   </div>
 
-  <!-- Layout 3 columnas -->
-  <div class="three-col" id="mainLayout">
-    <!-- Categorías -->
-    <div class="card-ui">
-      <div class="card-head"><span class="title"><i class="bi bi-grid"></i> Categorías</span></div>
-      <div id="catList">
-        <div style="padding:16px;text-align:center;color:var(--muted);font-size:13px;">Cargando...</div>
+  <!-- TABS PRINCIPALES -->
+  <div class="kb-tabs" id="mainTabs">
+    <button class="kb-tab active" id="tabBtnArticulos" onclick="switchTab('articulos')">
+      <i class="bi bi-file-text"></i> Artículos Técnicos
+    </button>
+    <button class="kb-tab" id="tabBtnProc" onclick="switchTab('procedimientos')">
+      <i class="bi bi-diagram-3"></i> Gestión de Procedimientos
+    </button>
+    <% if (['administrador','especialista'].includes(user.role)) { %>
+    <button class="kb-tab" id="tabBtnSolicitudes" onclick="switchTab('solicitudes')">
+      <i class="bi bi-inbox"></i> Solicitudes <span id="solBadge" style="display:none;background:var(--danger);color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-left:4px;"></span>
+    </button>
+    <% } %>
+  </div>
+
+  <!-- ─── TAB: ARTÍCULOS ─────────────────────────────────────────────────── -->
+  <div class="section-tab active" id="tabArticulos">
+    <div class="three-col" id="mainLayout">
+      <!-- Categorías -->
+      <div class="card-ui">
+        <div class="card-head"><span class="title"><i class="bi bi-grid"></i> Categorías</span></div>
+        <div id="catList"><div style="padding:16px;text-align:center;color:var(--muted);font-size:13px;">Cargando...</div></div>
+      </div>
+
+      <!-- Lista artículos -->
+      <div class="card-ui">
+        <div class="card-head">
+          <span class="title" id="artListTitle"><i class="bi bi-file-text"></i> Artículos</span>
+          <span id="artCount" style="font-size:12px;color:var(--muted);">—</span>
+        </div>
+        <div id="artList"><div class="empty-state"><i class="bi bi-arrow-clockwise"></i> Cargando...</div></div>
+      </div>
+
+      <!-- Panel derecho -->
+      <div>
+        <div class="card-ui">
+          <div class="card-head"><span class="title"><i class="bi bi-fire"></i> Más Populares</span></div>
+          <div id="popList"><div class="empty-state"><i class="bi bi-arrow-clockwise"></i></div></div>
+        </div>
+
+        <!-- Búsquedas sin resultado — SOLO ADMIN -->
+        <% if (['administrador','especialista'].includes(user.role)) { %>
+        <div class="card-ui">
+          <div class="card-head"><span class="title"><i class="bi bi-question-circle"></i> Búsquedas sin respuesta</span></div>
+          <div id="noResultsList"><div class="empty-state" style="padding:20px;"><i class="bi bi-arrow-clockwise"></i></div></div>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── TAB: PROCEDIMIENTOS ───────────────────────────────────────────── -->
+  <div class="section-tab" id="tabProcedimientos">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div class="proc-cats" id="procCatFilter">
+        <button class="proc-cat-btn active" onclick="filterProcs('')">Todos</button>
+        <button class="proc-cat-btn" onclick="filterProcs('acceso_seguridad')"><i class="bi bi-shield-lock"></i> Acceso y Seguridad</button>
+        <button class="proc-cat-btn" onclick="filterProcs('microsoft365')"><i class="bi bi-microsoft"></i> Microsoft 365</button>
+        <button class="proc-cat-btn" onclick="filterProcs('onboarding')"><i class="bi bi-person-plus"></i> Onboarding / RRHH</button>
+        <button class="proc-cat-btn" onclick="filterProcs('equipos')"><i class="bi bi-laptop"></i> Equipos</button>
+        <button class="proc-cat-btn" onclick="filterProcs('general')"><i class="bi bi-folder"></i> General</button>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <% if (!['administrador','especialista'].includes(user.role)) { %>
+        <button class="btn-sm btn-purple" onclick="openModal('modalRequest')">
+          <i class="bi bi-send"></i> Solicitar procedimiento
+        </button>
+        <% } else { %>
+        <button class="btn-sm btn-primary" onclick="openModal('modalProc')">
+          <i class="bi bi-plus-lg"></i> Agregar procedimiento
+        </button>
+        <% } %>
       </div>
     </div>
 
-    <!-- Artículos -->
+    <!-- Procedimientos predefinidos destacados (solo si no hay filtro activo o es general) -->
+    <div id="procDefaultCards" style="margin-bottom:20px;"></div>
+
+    <div class="proc-grid" id="procGrid">
+      <div class="empty-state" style="grid-column:1/-1;padding:40px;"><i class="bi bi-arrow-clockwise" style="font-size:24px;"></i><br>Cargando procedimientos...</div>
+    </div>
+  </div>
+
+  <!-- ─── TAB: SOLICITUDES (solo admin) ─────────────────────────────────── -->
+  <% if (['administrador','especialista'].includes(user.role)) { %>
+  <div class="section-tab" id="tabSolicitudes">
     <div class="card-ui">
       <div class="card-head">
-        <span class="title" id="artListTitle"><i class="bi bi-file-text"></i> Artículos</span>
-        <span id="artCount" style="font-size:12px;color:var(--muted);">—</span>
+        <span class="title"><i class="bi bi-inbox"></i> Solicitudes de Procedimientos</span>
+        <button class="btn-sm btn-outline" onclick="loadProcRequests()"><i class="bi bi-arrow-clockwise"></i> Actualizar</button>
       </div>
-      <div id="artList">
-        <div class="empty-state"><i class="bi bi-arrow-clockwise"></i> Cargando...</div>
-      </div>
-    </div>
-
-    <!-- Panel derecho -->
-    <div>
-      <div class="card-ui">
-        <div class="card-head"><span class="title"><i class="bi bi-fire"></i> Más Populares</span></div>
-        <div id="popList"><div class="empty-state"><i class="bi bi-arrow-clockwise"></i></div></div>
-      </div>
-      <div class="card-ui">
-        <div class="card-head"><span class="title"><i class="bi bi-question-circle"></i> Búsquedas sin respuesta</span></div>
-        <div id="noResultsList"><div class="empty-state" style="padding:20px;"><i class="bi bi-arrow-clockwise"></i></div></div>
+      <div style="overflow-x:auto;">
+        <table class="req-table" id="reqTable">
+          <thead>
+            <tr>
+              <th>#</th><th>Usuario</th><th>Correo</th><th>Solicitud</th><th>Descripción</th><th>Fecha</th><th>Estado</th><th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="reqTableBody">
+            <tr><td colspan="8" class="empty-state">Cargando...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
-</div>
+  <% } %>
 
-<!-- MODAL NUEVO ARTÍCULO -->
+</div><!-- /.pg -->
+
+<!-- ═══════ MODAL: NUEVO ARTÍCULO (admin) ═══════════════════════════════════ -->
 <div class="modal-overlay" id="modalArt">
   <div class="modal-box">
     <div class="modal-hdr">
       <h3><i class="bi bi-file-earmark-plus" style="color:var(--primary)"></i> Nuevo Artículo</h3>
-      <button class="btn-sm btn-outline" onclick="closeModal()">✕</button>
+      <button class="btn-sm btn-outline" onclick="closeModal('modalArt')">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
@@ -194,8 +352,8 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:'DM Sans',-appl
         <input type="text" id="artTags" class="form-ctrl" placeholder="contraseña, AD, usuario, acceso">
       </div>
       <div class="form-group">
-        <label class="form-lbl">Contenido *</label>
-        <textarea id="artContent" class="form-ctrl" rows="8" placeholder="Redacta el artículo (HTML permitido)..."></textarea>
+        <label class="form-lbl">Contenido * (HTML permitido)</label>
+        <textarea id="artContent" class="form-ctrl" rows="9" placeholder="Redacta el artículo..."></textarea>
       </div>
       <div class="form-group">
         <label class="form-lbl">Estado</label>
@@ -206,183 +364,605 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:'DM Sans',-appl
       </div>
     </div>
     <div class="modal-ftr">
-      <button class="btn-sm btn-outline" onclick="closeModal()">Cancelar</button>
-      <button class="btn-sm btn-primary" onclick="crearArticulo()">
-        <i class="bi bi-save"></i> Guardar
-      </button>
+      <button class="btn-sm btn-outline" onclick="closeModal('modalArt')">Cancelar</button>
+      <button class="btn-sm btn-primary" onclick="crearArticulo()"><i class="bi bi-save"></i> Guardar</button>
     </div>
   </div>
 </div>
 
-<script>
-let allCats = [];
-let activeCatId = '';
-let activeArticleId = '';
-let searchTimer = null;
+<!-- ═══════ MODAL: AGREGAR PROCEDIMIENTO (admin) ═══════════════════════════ -->
+<div class="modal-overlay" id="modalProc">
+  <div class="modal-box" style="width:760px;">
+    <div class="modal-hdr">
+      <h3><i class="bi bi-diagram-3" style="color:var(--purple)"></i> Agregar Procedimiento</h3>
+      <button class="btn-sm btn-outline" onclick="closeModal('modalProc')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label class="form-lbl">Título *</label>
+          <input type="text" id="procTitle" class="form-ctrl" placeholder="Ej: Cómo solicitar acceso VPN">
+        </div>
+        <div class="form-group">
+          <label class="form-lbl">Categoría</label>
+          <select id="procCategory" class="form-ctrl">
+            <option value="acceso_seguridad">Acceso y Seguridad</option>
+            <option value="microsoft365">Microsoft 365</option>
+            <option value="onboarding">Onboarding / RRHH</option>
+            <option value="equipos">Equipos</option>
+            <option value="general">General</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-lbl">Descripción breve</label>
+        <input type="text" id="procDesc" class="form-ctrl" placeholder="Describe brevemente el procedimiento">
+      </div>
+      <div class="form-group">
+        <label class="form-lbl">Tipo de contenido</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;padding:8px 14px;border:1.5px solid var(--border);border-radius:8px;">
+            <input type="radio" name="procType" value="text" checked onchange="onProcTypeChange(this.value)"> <i class="bi bi-file-text"></i> Texto/HTML
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;padding:8px 14px;border:1.5px solid var(--border);border-radius:8px;">
+            <input type="radio" name="procType" value="pdf" onchange="onProcTypeChange(this.value)"> <i class="bi bi-file-pdf" style="color:#dc2626;"></i> PDF
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;padding:8px 14px;border:1.5px solid var(--border);border-radius:8px;">
+            <input type="radio" name="procType" value="image" onchange="onProcTypeChange(this.value)"> <i class="bi bi-image" style="color:#059669;"></i> Imagen
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;padding:8px 14px;border:1.5px solid var(--border);border-radius:8px;">
+            <input type="radio" name="procType" value="ppt" onchange="onProcTypeChange(this.value)"> <i class="bi bi-file-earmark-ppt" style="color:#d97706;"></i> PPT/PPTX
+          </label>
+        </div>
+      </div>
+      <!-- Contenido texto -->
+      <div id="procTextArea" class="form-group">
+        <label class="form-lbl">Contenido (HTML permitido)</label>
+        <textarea id="procContent" class="form-ctrl" rows="8" placeholder="Redacta el procedimiento paso a paso..."></textarea>
+      </div>
+      <!-- Upload archivo -->
+      <div id="procFileArea" class="form-group" style="display:none;">
+        <label class="form-lbl">Archivo <span id="procFileHint" style="color:var(--muted);font-weight:400;">(PDF, imagen o PPT — máx. 8MB)</span></label>
+        <input type="file" id="procFile" class="form-ctrl" onchange="onProcFileChange(this)" accept="">
+        <div id="procFilePreview" style="margin-top:10px;display:none;"></div>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn-sm btn-outline" onclick="closeModal('modalProc')">Cancelar</button>
+      <button class="btn-sm btn-purple" onclick="guardarProcedimiento()"><i class="bi bi-save"></i> Guardar procedimiento</button>
+    </div>
+  </div>
+</div>
 
-async function init() {
-    await Promise.all([loadCats(), loadArticles(), loadPopular(), loadNoResults()]);
+<!-- ═══════ MODAL: SOLICITAR PROCEDIMIENTO (usuario) ════════════════════════ -->
+<div class="modal-overlay" id="modalRequest">
+  <div class="modal-box" style="width:500px;">
+    <div class="modal-hdr">
+      <h3><i class="bi bi-send" style="color:var(--purple)"></i> Solicitar un procedimiento</h3>
+      <button class="btn-sm btn-outline" onclick="closeModal('modalRequest')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
+        Describe qué procedimiento necesitas. El equipo de soporte lo creará y te notificará cuando esté disponible.
+      </p>
+      <div class="form-group">
+        <label class="form-lbl">¿Qué procedimiento necesitas? *</label>
+        <input type="text" id="reqQuery" class="form-ctrl" placeholder="Ej: Cómo solicitar acceso a buzón genérico de área">
+      </div>
+      <div class="form-group">
+        <label class="form-lbl">Descripción adicional (opcional)</label>
+        <textarea id="reqDesc" class="form-ctrl" rows="4" placeholder="Agrega contexto adicional sobre lo que necesitas..."></textarea>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn-sm btn-outline" onclick="closeModal('modalRequest')">Cancelar</button>
+      <button class="btn-sm btn-purple" onclick="enviarSolicitud()"><i class="bi bi-send"></i> Enviar solicitud</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MODAL: VER PROCEDIMIENTO ════════════════════════════════════════ -->
+<div class="modal-overlay" id="modalViewProc">
+  <div class="modal-box" style="width:860px;">
+    <div class="modal-hdr">
+      <h3 id="viewProcTitle">Procedimiento</h3>
+      <div style="display:flex;gap:8px;">
+        <span id="viewProcMeta" style="font-size:12px;color:var(--muted);align-self:center;"></span>
+        <button class="btn-sm btn-outline" onclick="closeModal('modalViewProc')">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="viewProcBody" style="min-height:300px;">
+      <div class="empty-state"><i class="bi bi-arrow-clockwise"></i> Cargando...</div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toastCont" style="position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;"></div>
+
+<script>
+// ── Datos del usuario desde servidor ──────────────────────────────────────────
+const _user = <%- JSON.stringify({
+  id:       user ? user.id : null,
+  username: user ? (user.username || '') : '',
+  full_name: user ? (user.full_name || user.nombre || user.username || '') : '',
+  role:     user ? (user.role || user.rol || '') : '',
+  email:    user ? (user.email || '') : ''
+}) %>;
+const _isAdmin = <%- JSON.stringify(user && ['administrador','especialista'].includes(user.role || user.rol || '')) %>;
+// Portal autogestion identity passed from server via query params (same pattern as faq.ejs)
+const _reporterEmail = <%- JSON.stringify(reporterEmail || '') %>;
+const _reporterName  = <%- JSON.stringify(reporterName  || '') %>;
+
+// ── Init avatar — prioriza identidad del portal autogestion (como faq.ejs) ────
+(function(){
+  // Priority: 1. server query params, 2. localStorage, 3. JWT user
+  var name  = _reporterName  || localStorage.getItem('portal_user_name')  || '';
+  var email = _reporterEmail || localStorage.getItem('portal_user_email') || '';
+  if (!name) name = email || _user.full_name || _user.username || '?';
+  // Persist to localStorage so chip stays consistent within session
+  if (_reporterName)  localStorage.setItem('portal_user_name',  _reporterName);
+  if (_reporterEmail) localStorage.setItem('portal_user_email', _reporterEmail);
+  var parts = name.trim().split(/\s+/);
+  var ini = parts.length >= 2 ? (parts[0][0]+parts[parts.length-1][0]).toUpperCase() : name.slice(0,2).toUpperCase();
+  document.getElementById('userAvatar').textContent = ini;
+  document.getElementById('userNameChip').textContent = name;
+})();
+
+// ── Variables ─────────────────────────────────────────────────────────────────
+let allCats = [], activeCatId = '', activeArticleId = '', searchTimer = null;
+let _procFileB64 = '', _procFileName = '', _activeProcCat = '';
+
+// ── Toast ──────────────────────────────────────────────────────────────────────
+function toast(msg, type='info'){
+  const el = document.createElement('div');
+  el.style.cssText = `background:${type==='success'?'#059669':type==='error'?'#dc2626':'#1d4ed8'};color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:340px;`;
+  el.textContent = msg;
+  document.getElementById('toastCont').appendChild(el);
+  setTimeout(()=>el.remove(), 3500);
 }
 
-async function loadCats() {
-    const res  = await fetch('/api/kb/categories');
-    const d    = await res.json();
-    allCats    = d.data || [];
+// ── Tema ───────────────────────────────────────────────────────────────────────
+function toggleTheme(){
+  const h=document.documentElement, t=h.getAttribute('data-theme')==='dark'?'light':'dark';
+  h.setAttribute('data-theme',t); localStorage.setItem('kbTheme',t);
+}
+(function(){ const t=localStorage.getItem('kbTheme')||'light'; document.documentElement.setAttribute('data-theme',t); })();
+
+// ── Modales ───────────────────────────────────────────────────────────────────
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click',function(e){ if(e.target===this) closeModal(this.id); }));
+
+// ── Tabs principales ──────────────────────────────────────────────────────────
+function switchTab(tab){
+  document.querySelectorAll('.section-tab').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.kb-tab').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab'+tab.charAt(0).toUpperCase()+tab.slice(1))?.classList.add('active');
+  document.getElementById('tabBtn'+tab.charAt(0).toUpperCase()+tab.slice(1))?.classList.add('active');
+
+  // Cargar datos según tab
+  if(tab === 'solicitudes') loadProcRequests();
+  if(tab === 'procedimientos') loadProcedures(_activeProcCat);
+}
+// mapear IDs de tabs
+const _tabSections = {articulos:'tabArticulos',procedimientos:'tabProcedimientos',solicitudes:'tabSolicitudes'};
+const _tabBtns = {articulos:'tabBtnArticulos',procedimientos:'tabBtnProc',solicitudes:'tabBtnSolicitudes'};
+function switchTab(tab){
+  document.querySelectorAll('.section-tab').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.kb-tab').forEach(el=>el.classList.remove('active'));
+  const sec = _tabSections[tab]; if(sec) document.getElementById(sec)?.classList.add('active');
+  const btn = _tabBtns[tab];    if(btn) document.getElementById(btn)?.classList.add('active');
+  if(tab==='solicitudes')    loadProcRequests();
+  if(tab==='procedimientos') loadProcedures(_activeProcCat);
+}
+
+// ── Esc ──────────────────────────────────────────────────────────────────────
+function esc(t){ return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ═══════════════ ARTÍCULOS ═══════════════════════════════════════════════════
+
+async function init(){
+  await Promise.all([loadCats(), loadArticles(), loadPopular()]);
+  if(_isAdmin) loadNoResults();
+}
+
+async function loadCats(){
+  try {
+    const d = await apiFetch('/api/kb/categories');
+    allCats = d.data||[];
     const list = document.getElementById('catList');
     const sel  = document.getElementById('artCatId');
-    sel.innerHTML = '<option value="">Sin categoría</option>' +
-        allCats.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
-    list.innerHTML = `
-      <div class="cat-item ${!activeCatId ? 'active' : ''}" onclick="selectCat('')">
-        <span class="cat-icon"><i class="bi bi-grid-3x3-gap"></i></span> Todos
-      </div>` +
-      allCats.map(c => `
-        <div class="cat-item ${activeCatId === c.id ? 'active' : ''}" onclick="selectCat('${c.id}')">
-          <span class="cat-icon"><i class="bi bi-${esc(c.icon||'folder')}"></i></span>
-          ${esc(c.name)}
-          <span style="margin-left:auto;font-size:11px;color:var(--muted);">${c.articulos?.length || 0}</span>
-        </div>`).join('');
+    if(sel) sel.innerHTML = '<option value="">Sin categoría</option>'+allCats.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+    list.innerHTML = `<div class="cat-item ${!activeCatId?'active':''}" onclick="selectCat('')"><span class="cat-icon"><i class="bi bi-grid-3x3-gap"></i></span> Todos</div>`+
+      allCats.map(c=>`<div class="cat-item ${activeCatId===c.id?'active':''}" onclick="selectCat('${c.id}')">
+        <span class="cat-icon"><i class="bi bi-${esc(c.icon||'folder')}"></i></span>${esc(c.name)}
+        <span style="margin-left:auto;font-size:11px;color:var(--muted);">${c.articulos?.length||0}</span></div>`).join('');
+  } catch(e){ console.error(e); }
 }
 
-async function loadArticles(catId = '') {
-    activeCatId = catId;
-    const params = new URLSearchParams({ status: 'publicado', limit: 50 });
-    if (catId) params.set('categoryId', catId);
-    const res  = await fetch(`/api/kb?${params}`);
-    const d    = await res.json();
-    const rows = d.data || [];
-    document.getElementById('artCount').textContent = `${rows.length} artículo${rows.length !== 1 ? 's' : ''}`;
+async function loadArticles(catId=''){
+  activeCatId = catId;
+  const params = new URLSearchParams({ status:'publicado', limit:50 });
+  if(catId) params.set('categoryId',catId);
+  try {
+    const d    = await apiFetch(`/api/kb?${params}`);
+    const rows = d.data||[];
+    document.getElementById('artCount').textContent = `${rows.length} artículo${rows.length!==1?'s':''}`;
     const list = document.getElementById('artList');
-    if (!rows.length) {
-        list.innerHTML = '<div class="empty-state"><i class="bi bi-inbox"></i>Sin artículos</div>';
-        return;
-    }
-    list.innerHTML = rows.map(a => `
-        <div class="art-item" onclick="openArticle('${a.id}')">
-          <div class="art-title">${esc(a.title)}</div>
-          <div class="art-excerpt">${esc(a.excerpt || '')}</div>
-          <div class="art-meta">
-            <span class="art-views"><i class="bi bi-eye"></i> ${a.views}</span>
-            <span><i class="bi bi-hand-thumbs-up"></i> ${a.helpfulYes}</span>
-            ${a.tags ? `<span><i class="bi bi-tags"></i> ${esc(a.tags.split(',').slice(0,3).join(', '))}</span>` : ''}
-          </div>
-        </div>`).join('');
+    if(!rows.length){ list.innerHTML='<div class="empty-state"><i class="bi bi-inbox"></i> Sin artículos</div>'; return; }
+    list.innerHTML = rows.map(a=>`<div class="art-item" onclick="openArticle('${a.id}')">
+      <div class="art-title">${esc(a.title)}</div>
+      <div class="art-excerpt">${esc(a.excerpt||'')}</div>
+      <div class="art-meta">
+        <span><i class="bi bi-eye"></i> ${a.views}</span>
+        <span><i class="bi bi-hand-thumbs-up"></i> ${a.helpfulYes||0}</span>
+        ${a.tags?`<span><i class="bi bi-tags"></i> ${esc(a.tags.split(',').slice(0,3).join(', '))}</span>`:''}
+      </div></div>`).join('');
+  } catch(e){ console.error(e); }
 }
 
-async function loadPopular() {
-    const res  = await fetch('/api/kb/popular');
-    const d    = await res.json();
-    const rows = d.data || [];
+function selectCat(id){ loadCats().then(()=>{}); loadArticles(id); }
+
+async function loadPopular(){
+  try {
+    const d    = await apiFetch('/api/kb/popular');
+    const rows = d.data||[];
     const list = document.getElementById('popList');
-    if (!rows.length) { list.innerHTML = '<div class="empty-state">Sin datos</div>'; return; }
-    list.innerHTML = rows.map((a, i) => `
-        <div class="pop-item" onclick="openArticle('${a.id}')">
-          <div class="pop-rank">${i+1}</div>
-          <div style="flex:1;font-size:13px;font-weight:600;">${esc(a.title)}</div>
-          <span style="font-size:11px;color:var(--muted);">${a.views} vistas</span>
-        </div>`).join('');
+    if(!rows.length){ list.innerHTML='<div class="empty-state">Sin datos</div>'; return; }
+    list.innerHTML = rows.map((a,i)=>`<div class="pop-item" onclick="openArticle('${a.id}')">
+      <div class="pop-rank">${i+1}</div>
+      <div style="flex:1;font-size:13px;font-weight:600;">${esc(a.title)}</div>
+      <span style="font-size:11px;color:var(--muted);">${a.views} vistas</span></div>`).join('');
+  } catch(e){}
 }
 
-async function loadNoResults() {
-    const res  = await fetch('/api/kb/no-results');
-    const d    = await res.json();
-    const rows = d.data || [];
+async function loadNoResults(){
+  try {
+    const d    = await apiFetch('/api/kb/no-results');
+    const rows = d.data||[];
     const list = document.getElementById('noResultsList');
-    if (!rows.length) { list.innerHTML = '<div class="empty-state" style="padding:16px;">Sin búsquedas sin resultado</div>'; return; }
-    list.innerHTML = rows.slice(0, 6).map(r => `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--border);font-size:12px;">
-          <span style="color:var(--text);">"${esc(r.query)}"</span>
-          <span style="color:var(--danger);font-weight:700;">${r.searches}x</span>
-        </div>`).join('');
+    if(!rows.length){ list.innerHTML='<div class="empty-state" style="padding:16px;">Sin búsquedas sin resultado</div>'; return; }
+    list.innerHTML = rows.slice(0,8).map(r=>`<div class="no-res-item">
+      <span>"${esc(r.query)}"</span>
+      <span style="color:var(--danger);font-weight:700;">${r.searches}x</span></div>`).join('');
+  } catch(e){}
 }
 
-function selectCat(id) {
-    loadCats().then(() => {});
-    loadArticles(id);
-}
-
-async function openArticle(id) {
-    const res = await fetch(`/api/kb/${id}`);
-    const d   = await res.json();
-    if (!d.success) return alert('Error cargando artículo');
+async function openArticle(id){
+  try {
+    const d = await apiFetch(`/api/kb/${id}`);
+    if(!d.success) return toast('Error cargando artículo','error');
     activeArticleId = id;
     const a = d.data;
     document.getElementById('articleTitle').textContent = a.title;
-    document.getElementById('articleContent').innerHTML =
-        a.content + (a.tags ? `<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
-            <strong>Tags:</strong> ${a.tags.split(',').map(t => `<span style="background:var(--hover);padding:2px 8px;border-radius:12px;font-size:12px;margin-right:4px;">${esc(t.trim())}</span>`).join('')}</div>` : '');
+    document.getElementById('articleContent').innerHTML = a.content +
+      (a.tags?`<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+        <strong>Tags:</strong> ${a.tags.split(',').map(t=>`<span style="background:var(--hover);padding:2px 8px;border-radius:12px;font-size:12px;margin-right:4px;">${esc(t.trim())}</span>`).join('')}</div>`:'');
     document.getElementById('articleView').classList.add('open');
-    document.getElementById('mainLayout').style.display = 'none';
-    document.getElementById('searchResults').style.display = 'none';
+    document.getElementById('mainTabs').style.display='none';
+    document.querySelectorAll('.section-tab').forEach(el=>el.style.display='none');
+    document.getElementById('searchResults').style.display='none';
+  } catch(e){ toast('Error cargando artículo','error'); }
 }
 
-function closeArticle() {
-    document.getElementById('articleView').classList.remove('open');
-    document.getElementById('mainLayout').style.display = 'grid';
-    activeArticleId = '';
+function closeArticle(){
+  document.getElementById('articleView').classList.remove('open');
+  document.getElementById('mainTabs').style.display='';
+  document.querySelectorAll('.section-tab').forEach(el=>el.style.display='');
+  // solo el tab activo queda visible
+  document.querySelectorAll('.section-tab:not(.active)').forEach(el=>el.style.display='none');
+  document.getElementById('tabArticulos').style.display='';
+  activeArticleId='';
 }
 
-async function vote(v) {
-    if (!activeArticleId) return;
-    await fetch(`/api/kb/${activeArticleId}/helpful`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ vote: v }),
-    });
-    alert(v === 'yes' ? '¡Gracias por tu feedback! 👍' : 'Gracias. Mejoraremos este artículo.');
+async function vote(v){
+  if(!activeArticleId) return;
+  await apiFetch(`/api/kb/${activeArticleId}/helpful`,{method:'POST',body:{vote:v}});
+  toast(v==='yes'?'¡Gracias por tu feedback! 👍':'Gracias. Mejoraremos este artículo.','success');
 }
 
-function debounceSearch() {
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(doSearch, 400);
-}
+// ─ Búsqueda ────────────────────────────────────────────────────────────────
+function debounceSearch(){ clearTimeout(searchTimer); searchTimer=setTimeout(doSearch,400); }
 
-async function doSearch() {
-    const q = document.getElementById('searchInput').value.trim();
-    if (!q) { document.getElementById('searchResults').style.display = 'none'; return; }
-    const res  = await fetch(`/api/kb/search?q=${encodeURIComponent(q)}`);
-    const d    = await res.json();
-    const rows = d.data || [];
-    const box  = document.getElementById('searchResults');
-    box.style.display = 'block';
-    if (!rows.length) {
-        box.innerHTML = `<div class="empty-state"><i class="bi bi-search"></i><br>Sin resultados para "<strong>${esc(q)}</strong>"</div>`;
-        return;
+async function doSearch(){
+  const q = document.getElementById('searchInput').value.trim();
+  const box = document.getElementById('searchResults');
+  if(!q){ box.style.display='none'; return; }
+  try {
+    const d    = await apiFetch(`/api/kb/search?q=${encodeURIComponent(q)}`);
+    const rows = d.data||[];
+    box.style.display='block';
+    if(!rows.length){
+      box.innerHTML=`<div class="empty-state" style="padding:20px;">
+        <i class="bi bi-search" style="font-size:24px;display:block;margin-bottom:8px;"></i>
+        Sin resultados para <strong>"${esc(q)}"</strong>
+        <div style="margin-top:12px;font-size:12px;">
+          ${!_isAdmin ? `<button class="btn-sm btn-purple" onclick="document.getElementById('reqQuery').value='${esc(q)}';openModal('modalRequest')"><i class="bi bi-send"></i> Solicitar este procedimiento</button>` : ''}
+        </div></div>`;
+      return;
     }
-    box.innerHTML = `<div style="padding:10px 18px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;">
-        ${rows.length} resultado${rows.length !== 1 ? 's' : ''} para "${esc(q)}"</div>` +
-        rows.map(a => `
-          <div class="search-result-item" onclick="openArticle('${a.id}')">
-            <div class="sr-title">${esc(a.title)}</div>
-            <div class="sr-excerpt">${esc(a.excerpt || '')}</div>
-          </div>`).join('');
+    box.innerHTML=`<div style="padding:10px 18px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;">${rows.length} resultado${rows.length!==1?'s':''} para "${esc(q)}"</div>`+
+      rows.map(a=>`<div class="search-result-item" onclick="openArticle('${a.id}')">
+        <div class="sr-title">${esc(a.title)}</div>
+        <div class="sr-excerpt">${esc(a.excerpt||'')}</div></div>`).join('');
+  } catch(e){}
 }
 
-async function crearArticulo() {
-    const title   = document.getElementById('artTitle').value.trim();
-    const content = document.getElementById('artContent').value.trim();
-    if (!title || !content) return alert('Título y contenido son requeridos');
-    const res = await fetch('/api/kb', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            title, content,
-            kbCategoryId: document.getElementById('artCatId').value || null,
-            tags:         document.getElementById('artTags').value,
-            status:       document.getElementById('artStatus').value,
-        }),
-    });
-    const d = await res.json();
-    if (!d.success) return alert(d.error);
-    closeModal();
-    init();
+async function crearArticulo(){
+  const title=document.getElementById('artTitle').value.trim();
+  const content=document.getElementById('artContent').value.trim();
+  if(!title||!content){ toast('Título y contenido son requeridos','error'); return; }
+  const d = await apiFetch('/api/kb',{method:'POST',body:{title,content,
+    kbCategoryId:document.getElementById('artCatId').value||null,
+    tags:document.getElementById('artTags').value,
+    status:document.getElementById('artStatus').value}});
+  if(!d.success){ toast(d.error||'Error','error'); return; }
+  toast('Artículo creado','success');
+  closeModal('modalArt');
+  init();
 }
 
-function openModal() { document.getElementById('modalArt').classList.add('open'); }
-function closeModal() { document.getElementById('modalArt').classList.remove('open'); }
-function esc(t) { return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
-function toggleTheme() {
-    const h = document.documentElement;
-    h.setAttribute('data-theme', h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+// ═══════════════ PROCEDIMIENTOS ══════════════════════════════════════════════
+
+const _procCatLabels = {
+  acceso_seguridad: {label:'Acceso y Seguridad', icon:'shield-lock', color:'#3b82f6'},
+  microsoft365:     {label:'Microsoft 365',      icon:'microsoft',   color:'#0078d4'},
+  onboarding:       {label:'Onboarding / RRHH',  icon:'person-plus', color:'#10b981'},
+  equipos:          {label:'Equipos',             icon:'laptop',      color:'#8b5cf6'},
+  general:          {label:'General',             icon:'folder',      color:'#64748b'},
+};
+
+const _procTypeInfo = {
+  text:  {icon:'file-text',        cls:'proc-type-text',  label:'Texto'},
+  pdf:   {icon:'file-pdf',         cls:'proc-type-pdf',   label:'PDF'},
+  image: {icon:'image',            cls:'proc-type-image', label:'Imagen'},
+  ppt:   {icon:'file-earmark-ppt', cls:'proc-type-ppt',   label:'PPT'},
+};
+
+async function loadProcedures(cat=''){
+  _activeProcCat = cat;
+  const url = '/api/kb/procedures' + (cat ? `?category=${encodeURIComponent(cat)}` : '');
+  try {
+    const d    = await apiFetch(url);
+    const rows = d.data||[];
+    const grid = document.getElementById('procGrid');
+
+    // Mostrar procedimientos predefinidos de ejemplo si no hay ninguno cargado
+    if(!rows.length){
+      grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1;padding:40px;">
+        <i class="bi bi-diagram-3" style="font-size:32px;display:block;margin-bottom:12px;"></i>
+        <div style="font-size:15px;font-weight:700;margin-bottom:6px;">Sin procedimientos ${cat?'en esta categoría':''}</div>
+        <div style="font-size:13px;">${_isAdmin?'Usa el botón "Agregar procedimiento" para subir el primero.':'Puedes solicitar un procedimiento al equipo de soporte.'}</div>
+      </div>`;
+      return;
+    }
+
+    grid.innerHTML = rows.map(p => {
+      const cat2 = _procCatLabels[p.procedure_category]||{label:p.procedure_category,icon:'folder',color:'#64748b'};
+      const ti  = _procTypeInfo[p.content_type]||{icon:'file',cls:'proc-type-text',label:'Texto'};
+      return `<div class="proc-card">
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div class="proc-card-icon" style="background:${cat2.color}20;">
+            <i class="bi bi-${cat2.icon}" style="color:${cat2.color};"></i>
+          </div>
+          <div style="flex:1;">
+            <div class="proc-card-title">${esc(p.title)}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">${esc(cat2.label)}</div>
+          </div>
+        </div>
+        <div class="proc-card-desc">${esc(p.description||'')}</div>
+        <div class="proc-card-meta">
+          <span class="proc-type-badge ${ti.cls}"><i class="bi bi-${ti.icon}"></i> ${ti.label}</span>
+          <div style="display:flex;gap:6px;">
+            <button class="btn-sm btn-primary" onclick="verProcedimiento(${p.id})"><i class="bi bi-eye"></i> Ver</button>
+            ${_isAdmin?`<button class="btn-sm btn-outline" style="color:var(--danger);border-color:var(--danger);" onclick="eliminarProc(${p.id})"><i class="bi bi-trash"></i></button>`:''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e){ console.error(e); }
 }
 
+function filterProcs(cat){
+  _activeProcCat = cat;
+  document.querySelectorAll('.proc-cat-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  loadProcedures(cat);
+}
+
+async function verProcedimiento(id){
+  document.getElementById('viewProcTitle').textContent = 'Cargando...';
+  document.getElementById('viewProcBody').innerHTML='<div class="empty-state"><i class="bi bi-arrow-clockwise"></i> Cargando...</div>';
+  openModal('modalViewProc');
+  try {
+    const d = await apiFetch(`/api/kb/procedures/${id}`);
+    if(!d.success){ document.getElementById('viewProcBody').innerHTML='<div class="empty-state">Error al cargar</div>'; return; }
+    const p = d.data;
+    const cat2 = _procCatLabels[p.procedure_category]||{label:p.procedure_category};
+    document.getElementById('viewProcTitle').textContent = p.title;
+    document.getElementById('viewProcMeta').textContent  = `${cat2.label} · Por ${p.created_by||'Soporte TI'}`;
+
+    let bodyHtml = '';
+    if(p.content_type === 'text'){
+      bodyHtml = `<div class="proc-viewer-text">${p.content_data||'Sin contenido'}</div>`;
+    } else if(p.content_type === 'image'){
+      bodyHtml = `<div style="text-align:center;"><img src="${p.content_data}" class="proc-viewer-img" alt="${esc(p.title)}"></div>`;
+    } else if(p.content_type === 'pdf'){
+      bodyHtml = `<embed src="${p.content_data}" type="application/pdf" class="proc-viewer-embed">
+        <div style="margin-top:10px;text-align:center;">
+          <a href="${p.content_data}" download="${esc(p.file_name||'procedimiento.pdf')}" class="btn-sm btn-primary" style="text-decoration:none;">
+            <i class="bi bi-download"></i> Descargar PDF
+          </a>
+        </div>`;
+    } else if(p.content_type === 'ppt'){
+      bodyHtml = `<div style="text-align:center;padding:40px 20px;">
+        <i class="bi bi-file-earmark-ppt" style="font-size:48px;color:#d97706;"></i>
+        <div style="font-size:15px;font-weight:700;margin:12px 0 8px;">${esc(p.file_name||'Presentación')}</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">Los archivos PPT/PPTX no se pueden previsualizar en el navegador</div>
+        <a href="${p.content_data}" download="${esc(p.file_name||'presentacion.pptx')}" class="btn-sm btn-warning" style="text-decoration:none;">
+          <i class="bi bi-download"></i> Descargar presentación
+        </a>
+      </div>`;
+    }
+    document.getElementById('viewProcBody').innerHTML = bodyHtml;
+  } catch(e){
+    document.getElementById('viewProcBody').innerHTML='<div class="empty-state">Error al cargar el procedimiento</div>';
+  }
+}
+
+async function eliminarProc(id){
+  if(!confirm('¿Eliminar este procedimiento?')) return;
+  const d = await apiFetch(`/api/kb/procedures/${id}`,{method:'DELETE'});
+  if(d.success){ toast('Procedimiento eliminado','success'); loadProcedures(_activeProcCat); }
+  else toast(d.error||'Error','error');
+}
+
+// ── Upload de archivo ─────────────────────────────────────────────────────────
+function onProcTypeChange(type){
+  const textArea = document.getElementById('procTextArea');
+  const fileArea = document.getElementById('procFileArea');
+  const fileInput = document.getElementById('procFile');
+  const hint = document.getElementById('procFileHint');
+  if(type === 'text'){
+    textArea.style.display=''; fileArea.style.display='none';
+  } else {
+    textArea.style.display='none'; fileArea.style.display='';
+    _procFileB64=''; _procFileName='';
+    document.getElementById('procFilePreview').style.display='none';
+    if(type==='pdf')   { fileInput.accept='application/pdf'; hint.textContent='(PDF — máx. 8MB)'; }
+    if(type==='image') { fileInput.accept='image/*';         hint.textContent='(PNG, JPG, WEBP — máx. 8MB)'; }
+    if(type==='ppt')   { fileInput.accept='.ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation'; hint.textContent='(PPT, PPTX — máx. 8MB)'; }
+    fileInput.value='';
+  }
+}
+
+function onProcFileChange(input){
+  const file = input.files[0];
+  if(!file) return;
+  if(file.size > 8*1024*1024){ toast('El archivo no debe superar 8MB','error'); input.value=''; return; }
+  _procFileName = file.name;
+  const reader = new FileReader();
+  reader.onload = e => {
+    _procFileB64 = e.target.result; // data URL completa con prefijo
+    const type  = document.querySelector('input[name="procType"]:checked').value;
+    const prev  = document.getElementById('procFilePreview');
+    prev.style.display='block';
+    if(type==='image'){
+      prev.innerHTML=`<img src="${_procFileB64}" style="max-width:100%;border-radius:8px;max-height:200px;object-fit:contain;">`;
+    } else {
+      prev.innerHTML=`<div style="background:var(--hover);border-radius:8px;padding:10px 14px;font-size:13px;display:flex;align-items:center;gap:8px;">
+        <i class="bi bi-check-circle-fill" style="color:var(--success);"></i> <strong>${esc(file.name)}</strong>
+        <span style="color:var(--muted);">(${(file.size/1024).toFixed(0)} KB)</span></div>`;
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function guardarProcedimiento(){
+  const title = document.getElementById('procTitle').value.trim();
+  if(!title){ toast('El título es requerido','error'); return; }
+  const type = document.querySelector('input[name="procType"]:checked').value;
+  let content_data='', file_name='';
+  if(type==='text'){
+    content_data = document.getElementById('procContent').value.trim();
+    if(!content_data){ toast('El contenido es requerido','error'); return; }
+  } else {
+    if(!_procFileB64){ toast('Selecciona un archivo','error'); return; }
+    content_data = _procFileB64;
+    file_name    = _procFileName;
+  }
+  const body = {
+    title,
+    description: document.getElementById('procDesc').value.trim(),
+    procedure_category: document.getElementById('procCategory').value,
+    content_type: type,
+    content_data,
+    file_name,
+  };
+  const d = await apiFetch('/api/kb/procedures',{method:'POST',body});
+  if(!d.success){ toast(d.error||'Error al guardar','error'); return; }
+  toast('Procedimiento guardado','success');
+  closeModal('modalProc');
+  // reset
+  document.getElementById('procTitle').value='';
+  document.getElementById('procDesc').value='';
+  document.getElementById('procContent').value='';
+  document.getElementById('procFile').value='';
+  _procFileB64=''; _procFileName='';
+  document.getElementById('procFilePreview').style.display='none';
+  loadProcedures(_activeProcCat);
+}
+
+// ═══════════════ SOLICITUDES DE PROCEDIMIENTO ════════════════════════════════
+
+async function enviarSolicitud(){
+  const query = document.getElementById('reqQuery').value.trim();
+  const desc  = document.getElementById('reqDesc').value.trim();
+  if(!query){ toast('Describe qué procedimiento necesitas','error'); return; }
+  // Priority: server query params > localStorage > JWT user
+  const portalName  = _reporterName  || localStorage.getItem('portal_user_name')  || '';
+  const portalEmail = _reporterEmail || localStorage.getItem('portal_user_email') || '';
+  const d = await apiFetch('/api/kb/procedure-requests',{method:'POST',body:{
+    query, description:desc,
+    user_name:  portalName  || _user.full_name || _user.username || '',
+    user_email: portalEmail || _user.email     || '',
+  }});
+  if(!d.success){ toast(d.error||'Error','error'); return; }
+  toast('¡Solicitud enviada! El equipo de soporte la revisará pronto.','success');
+  closeModal('modalRequest');
+  document.getElementById('reqQuery').value='';
+  document.getElementById('reqDesc').value='';
+}
+
+async function loadProcRequests(){
+  try {
+    const d    = await apiFetch('/api/kb/procedure-requests');
+    const rows = d.data||[];
+    const tbody = document.getElementById('reqTableBody');
+    if(!rows.length){ tbody.innerHTML='<tr><td colspan="8" class="empty-state">Sin solicitudes</td></tr>'; return; }
+
+    // Badge contador de pendientes
+    const pending = rows.filter(r=>r.status==='pendiente').length;
+    const badge = document.getElementById('solBadge');
+    if(badge){ badge.style.display = pending>0?'':'none'; badge.textContent=pending; }
+
+    tbody.innerHTML = rows.map(r=>`<tr>
+      <td style="font-weight:700;color:var(--muted);">#${r.id}</td>
+      <td style="font-weight:600;">${esc(r.user_name||'—')}</td>
+      <td style="color:var(--muted);font-size:12px;">${esc(r.user_email||'—')}</td>
+      <td style="font-weight:700;max-width:220px;">${esc(r.query)}</td>
+      <td style="font-size:12px;color:var(--muted);max-width:180px;">${esc(r.description||'—')}</td>
+      <td style="font-size:12px;color:var(--muted);white-space:nowrap;">${new Date(r.created_at).toLocaleDateString('es-PE',{day:'2-digit',month:'short',year:'numeric'})}</td>
+      <td><span class="status-badge status-${r.status}">${r.status.replace('_',' ')}</span></td>
+      <td>
+        <div style="display:flex;gap:4px;">
+          ${r.status!=='resuelto'?`<button class="btn-sm btn-success" style="padding:4px 10px;" onclick="updateReqStatus(${r.id},'resuelto')"><i class="bi bi-check2"></i></button>`:''}
+          ${r.status==='pendiente'?`<button class="btn-sm btn-primary" style="padding:4px 10px;" onclick="updateReqStatus(${r.id},'en_progreso')"><i class="bi bi-play-fill"></i></button>`:''}
+        </div>
+      </td>
+    </tr>`).join('');
+  } catch(e){ console.error(e); }
+}
+
+async function updateReqStatus(id, status){
+  const d = await apiFetch(`/api/kb/procedure-requests/${id}/status`,{method:'PATCH',body:{status}});
+  if(d.success){ toast('Estado actualizado','success'); loadProcRequests(); }
+  else toast(d.error||'Error','error');
+}
+
+// ═══════════════ FETCH HELPER ════════════════════════════════════════════════
+async function apiFetch(url, opts={}){
+  const res = await fetch(url, {
+    method:  opts.method||'GET',
+    credentials: 'include',
+    headers: opts.body ? {'Content-Type':'application/json'} : {},
+    body:    opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  return res.json();
+}
+
+// ── Arranque ──────────────────────────────────────────────────────────────────
 init();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

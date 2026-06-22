@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+:root,[data-theme="light"]{
+  --bg-main:#f0f4f9;--bg-card:#fff;--border-soft:#e2e8f0;
+  --text-main:#1e293b;--text-muted:#64748b;
+  --primary:#3b82f6;--success:#10b981;--warning:#f59e0b;--info:#06b6d4;
+  --danger:#ef4444;--purple:#8b5cf6;--pink:#ec4899;
+  --shadow-card:0 2px 8px rgba(0,0,0,.06);--shadow-hover:0 12px 32px rgba(59,130,246,.18);
+  --toggle-bg:#e2e8f0;--toggle-knob:#fff;--toggle-icon:#64748b;
+  --shine:rgba(255,255,255,.55);--grid-line:rgba(59,130,246,.07);
+  --hero-text:#1e293b;--hero-sub:#64748b;--chip-bg:rgba(59,130,246,.08);--chip-color:#3b82f6;
+  --tab-active:#fff;--tab-inactive:rgba(0,0,0,.04);--sidebar-bg:#fff;
+}
+[data-theme="dark"]{
+  --bg-main:#0b1120;--bg-card:#131f35;--border-soft:#1e3050;
+  --text-main:#e2e8f0;--text-muted:#94a3b8;
+  --primary:#60a5fa;--success:#34d399;--warning:#fbbf24;--info:#22d3ee;
+  --danger:#f87171;--purple:#a78bfa;--pink:#f472b6;
+  --shadow-card:0 2px 12px rgba(0,0,0,.4);--shadow-hover:0 14px 40px rgba(96,165,250,.22);
+  --toggle-bg:#3b82f6;--toggle-knob:#fff;--toggle-icon:#fff;
+  --shine:rgba(255,255,255,.04);--grid-line:rgba(96,165,250,.06);
+  --hero-text:#e2e8f0;--hero-sub:#94a3b8;--chip-bg:rgba(96,165,250,.12);--chip-color:#60a5fa;
+  --tab-active:#131f35;--tab-inactive:rgba(255,255,255,.04);--sidebar-bg:#0f1929;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg-main);color:var(--text-main);overflow-x:hidden;transition:background .35s,color .35s;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
+
+.theme-toggle{position:fixed;top:14px;right:16px;z-index:9999;display:flex;align-items:center;gap:8px;background:var(--bg-card);border:1px solid var(--border-soft);border-radius:30px;padding:6px 14px 6px 10px;box-shadow:var(--shadow-card);cursor:pointer;user-select:none;transition:all .25s;}
+.theme-toggle:hover{box-shadow:0 6px 20px rgba(0,0,0,.15);}
+.toggle-track{width:40px;height:22px;background:var(--toggle-bg);border-radius:11px;position:relative;flex-shrink:0;}
+.toggle-knob{width:16px;height:16px;background:var(--toggle-knob);border-radius:50%;position:absolute;top:3px;left:3px;transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:0 1px 4px rgba(0,0,0,.3);}
+[data-theme="dark"] .toggle-knob{transform:translateX(18px);}
+.toggle-icon{font-size:14px;color:var(--toggle-icon);}
+.toggle-label{font-size:12px;font-weight:600;color:var(--text-muted);white-space:nowrap;}
+
+.home-wrapper{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:40px 24px 80px;}
+
+.hero{text-align:center;margin-bottom:28px;animation:fadeDown .7s ease both;}
+.hero-logo{display:inline-flex;align-items:center;gap:12px;margin-bottom:12px;}
+.hero-logo-icon{width:52px;height:52px;background:linear-gradient(135deg,var(--primary),var(--info));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;color:#fff;box-shadow:0 6px 20px rgba(59,130,246,.35);}
+.hero-logo-text{font-size:26px;font-weight:800;letter-spacing:-1px;color:var(--hero-text);}
+.hero-logo-text span{color:var(--primary);}
+.hero-title{font-size:13px;color:var(--hero-sub);font-family:monospace;letter-spacing:.5px;}
+.hero-chip{display:inline-flex;align-items:center;gap:6px;background:var(--chip-bg);color:var(--chip-color);border:1px solid color-mix(in srgb,var(--primary) 25%,transparent);border-radius:20px;padding:4px 14px;font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;margin-top:10px;}
+
+.tabs-wrapper{width:100%;max-width:1040px;margin-bottom:22px;}
+.tabs-nav{display:flex;background:var(--tab-inactive);border:1px solid var(--border-soft);border-radius:14px;padding:5px;gap:4px;}
+.tab-btn{flex:1;padding:10px 20px;border:none;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;background:transparent;color:var(--text-muted);display:flex;align-items:center;justify-content:center;gap:8px;transition:all .25s;}
+.tab-btn.active{background:var(--tab-active);color:var(--text-main);box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.tab-btn:hover:not(.active){color:var(--text-main);background:rgba(59,130,246,.06);}
+.tab-btn i{font-size:15px;}
+
+.modules-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;width:100%;max-width:1040px;}
+@media(max-width:900px){.modules-grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:620px){.modules-grid{grid-template-columns:repeat(2,1fr);}}
+
+.mod-card{position:relative;background:var(--bg-card);border:1px solid var(--border-soft);border-radius:16px;padding:22px 18px 18px;text-decoration:none !important;display:flex;flex-direction:column;align-items:flex-start;overflow:hidden;cursor:pointer;transition:transform .28s cubic-bezier(.4,0,.2,1),box-shadow .28s,border-color .28s,background .35s;}
+.mod-card::after{content:'';position:absolute;top:-60%;left:-80%;width:60%;height:220%;background:var(--shine);transform:skewX(-18deg);transition:left .55s;pointer-events:none;}
+.mod-card:hover::after{left:150%;}
+.mod-card::before{content:'';position:absolute;top:-28px;right:-28px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,var(--ma,var(--primary)) 0%,transparent 70%);opacity:.07;transition:opacity .3s,transform .3s;}
+.mod-card:hover::before{opacity:.15;transform:scale(1.25);}
+.mod-card:hover{transform:translateY(-4px) scale(1.015);box-shadow:var(--shadow-hover);border-color:color-mix(in srgb,var(--ma,var(--primary)) 40%,transparent);}
+.mod-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px;position:relative;z-index:1;transition:transform .25s;}
+.mod-card:hover .mod-icon{transform:scale(1.1) rotate(-4deg);}
+.mod-name{font-size:13.5px;font-weight:700;color:var(--text-main);margin-bottom:4px;position:relative;z-index:1;transition:color .3s;}
+.mod-card:hover .mod-name{color:var(--ma,var(--primary));}
+.mod-desc{font-size:11px;line-height:1.5;color:var(--text-muted);position:relative;z-index:1;}
+.mod-arrow{position:absolute;bottom:14px;right:16px;font-size:13px;color:var(--text-muted);opacity:0;transform:translateX(-5px);transition:opacity .25s,transform .25s,color .25s;z-index:1;}
+.mod-card:hover .mod-arrow{opacity:1;transform:translateX(0);color:var(--ma,var(--primary));}
+.mod-badge{position:absolute;top:11px;right:11px;color:#fff;font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:2px 7px;border-radius:6px;z-index:2;background:var(--success);}
+
+.c-blue{--ma:#3b82f6}.c-green{--ma:#10b981}.c-purp{--ma:#8b5cf6}.c-amber{--ma:#f59e0b}.c-pink{--ma:#ec4899}.c-cyan{--ma:#06b6d4}.c-ora{--ma:#f97316}.c-red{--ma:#ef4444}.c-teal{--ma:#14b8a6}.c-indigo{--ma:#6366f1}.c-rose{--ma:#f43f5e}.c-purple{--ma:#7c3aed}.c-lime{--ma:#65a30d}.c-orange{--ma:#ea580c}
+[data-theme="dark"] .c-blue{--ma:#60a5fa}[data-theme="dark"] .c-green{--ma:#34d399}[data-theme="dark"] .c-purp{--ma:#a78bfa}[data-theme="dark"] .c-amber{--ma:#fbbf24}[data-theme="dark"] .c-pink{--ma:#f472b6}[data-theme="dark"] .c-cyan{--ma:#22d3ee}[data-theme="dark"] .c-ora{--ma:#fb923c}[data-theme="dark"] .c-red{--ma:#f87171}[data-theme="dark"] .c-teal{--ma:#2dd4bf}[data-theme="dark"] .c-indigo{--ma:#818cf8}[data-theme="dark"] .c-rose{--ma:#fb7185}[data-theme="dark"] .c-purple{--ma:#a78bfa}[data-theme="dark"] .c-lime{--ma:#84cc16}[data-theme="dark"] .c-orange{--ma:#fb923c}
+
+.ib{border-radius:12px;display:flex;align-items:center;justify-content:center;}
+.ib-blue{background:rgba(59,130,246,.12);color:#3b82f6;}
+.ib-green{background:rgba(16,185,129,.12);color:#10b981;}
+.ib-purp{background:rgba(139,92,246,.12);color:#8b5cf6;}
+.ib-amber{background:rgba(245,158,11,.12);color:#f59e0b;}
+.ib-pink{background:rgba(236,72,153,.12);color:#ec4899;}
+.ib-cyan{background:rgba(6,182,212,.12);color:#06b6d4;}
+.ib-ora{background:rgba(249,115,22,.12);color:#f97316;}
+.ib-red{background:rgba(239,68,68,.12);color:#ef4444;}
+.ib-teal{background:rgba(20,184,166,.12);color:#14b8a6;}
+.ib-indigo{background:rgba(99,102,241,.12);color:#6366f1;}
+.ib-rose{background:rgba(244,63,94,.12);color:#f43f5e;}
+[data-theme="dark"] .ib-blue{background:rgba(96,165,250,.15);color:#60a5fa;}
+[data-theme="dark"] .ib-green{background:rgba(52,211,153,.15);color:#34d399;}
+[data-theme="dark"] .ib-purp{background:rgba(167,139,250,.15);color:#a78bfa;}
+[data-theme="dark"] .ib-amber{background:rgba(251,191,36,.15);color:#fbbf24;}
+[data-theme="dark"] .ib-pink{background:rgba(244,114,182,.15);color:#f472b6;}
+[data-theme="dark"] .ib-cyan{background:rgba(34,211,238,.15);color:#22d3ee;}
+[data-theme="dark"] .ib-ora{background:rgba(251,146,60,.15);color:#fb923c;}
+[data-theme="dark"] .ib-red{background:rgba(248,113,113,.15);color:#f87171;}
+[data-theme="dark"] .ib-teal{background:rgba(45,212,191,.15);color:#2dd4bf;}
+[data-theme="dark"] .ib-indigo{background:rgba(129,140,248,.15);color:#818cf8;}
+[data-theme="dark"] .ib-rose{background:rgba(251,113,133,.15);color:#fb7185;}
+.ib-purple{background:rgba(124,58,237,.12);color:#7c3aed;}.ib-lime{background:rgba(101,163,13,.12);color:#65a30d;}.ib-orange{background:rgba(234,88,12,.12);color:#ea580c;}
+[data-theme="dark"] .ib-purple{background:rgba(167,139,250,.15);color:#a78bfa;}[data-theme="dark"] .ib-lime{background:rgba(132,204,22,.15);color:#84cc16;}[data-theme="dark"] .ib-orange{background:rgba(251,146,60,.15);color:#fb923c;}
+/* Modales portal empleado */
+.portal-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;}
+.portal-modal-overlay.show{display:flex;}
+.portal-modal{background:var(--bg-card,#fff);border-radius:16px;padding:28px 28px 24px;width:100%;max-width:480px;box-shadow:0 8px 40px rgba(0,0,0,.18);position:relative;}
+.portal-modal h3{font-size:17px;font-weight:700;margin:0 0 18px;display:flex;align-items:center;gap:8px;}
+.portal-modal label{font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:5px;margin-top:12px;}
+.portal-modal input,.portal-modal textarea,.portal-modal select{width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:9px 12px;font-size:13px;background:var(--bg-main,#f5f7fa);color:var(--text-main,#1e293b);outline:none;transition:border-color .2s;box-sizing:border-box;}
+.portal-modal input:focus,.portal-modal textarea:focus,.portal-modal select:focus{border-color:#6366f1;}
+.portal-modal .star-row{display:flex;gap:10px;margin:10px 0;position:relative;}
+.portal-modal .star-btn{font-size:34px;background:none;border:none;cursor:pointer;color:#d1d5db;transition:color .18s,transform .18s;padding:2px;position:relative;line-height:1;}
+.portal-modal .star-btn:hover{transform:scale(1.25);}
+.portal-modal .star-btn.active{color:#f59e0b;}
+.portal-modal .star-btn.pop{animation:starPop .38s cubic-bezier(.34,1.56,.64,1);}
+@keyframes starPop{0%{transform:scale(1)}40%{transform:scale(1.55)}70%{transform:scale(.88)}100%{transform:scale(1)}}
+
+/* Particles */
+.star-particle{position:fixed;pointer-events:none;font-size:16px;z-index:99999;animation:particleFly .7s ease-out forwards;}
+@keyframes particleFly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(.3)}}
+.portal-modal .pm-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
+.portal-modal .pm-btn{padding:9px 22px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:opacity .2s;}
+.portal-modal .pm-btn-primary{background:#6366f1;color:#fff;}.portal-modal .pm-btn-primary:hover{opacity:.88;}
+.portal-modal .pm-btn-secondary{background:#f1f5f9;color:#475569;}.portal-modal .pm-btn-secondary:hover{background:#e2e8f0;}
+.portal-modal .pm-close{position:absolute;top:14px;right:16px;background:none;border:none;font-size:18px;cursor:pointer;color:#94a3b8;}
+.portal-modal .pm-success{display:none;text-align:center;padding:16px 0 8px;}
+.portal-modal .pm-success i{font-size:40px;color:#10b981;}
+.portal-modal .pm-success p{font-size:14px;margin:10px 0 0;color:#374151;font-weight:500;}
+
+.tab-panel{display:none;width:100%;max-width:1040px;}
+.tab-panel.active{display:block;}
+.section-label{font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:1.1px;text-transform:uppercase;margin-bottom:12px;padding-left:2px;}
+
+.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;opacity:0;pointer-events:none;transition:opacity .3s;}
+.sidebar-overlay.open{opacity:1;pointer-events:all;}
+.itsm-sidebar{position:fixed;top:0;right:-340px;width:320px;height:100vh;background:var(--sidebar-bg);border-left:1px solid var(--border-soft);z-index:201;transition:right .35s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:-8px 0 32px rgba(0,0,0,.15);}
+.itsm-sidebar.open{right:0;}
+.sb-header{padding:20px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;justify-content:space-between;}
+.sb-title{font-size:15px;font-weight:700;color:var(--text-main);}
+.sb-sub{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.sb-close{width:32px;height:32px;border-radius:8px;border:1px solid var(--border-soft);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:15px;transition:all .2s;}
+.sb-close:hover{background:var(--bg-main);color:var(--text-main);}
+.sb-body{flex:1;overflow-y:auto;padding:14px;}
+.sb-item{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:12px;cursor:pointer;border:1px solid transparent;margin-bottom:8px;text-decoration:none;transition:all .2s;}
+.sb-item:hover{background:color-mix(in srgb,var(--sc) 8%,transparent);border-color:color-mix(in srgb,var(--sc) 28%,transparent);}
+.sb-item-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;transition:transform .2s;}
+.sb-item:hover .sb-item-icon{transform:scale(1.08);}
+.sb-item-name{font-size:13.5px;font-weight:600;color:var(--text-main);}
+.sb-item-desc{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.sb-arrow{margin-left:auto;font-size:12px;color:var(--text-muted);opacity:0;transition:opacity .2s,transform .2s;}
+.sb-item:hover .sb-arrow{opacity:1;transform:translateX(3px);}
+.si1{--sc:#ef4444}.si2{--sc:#3b82f6}.si3{--sc:#f59e0b}.si4{--sc:#8b5cf6}.si5{--sc:#10b981}
+[data-theme="dark"] .si1{--sc:#f87171}[data-theme="dark"] .si2{--sc:#60a5fa}[data-theme="dark"] .si3{--sc:#fbbf24}[data-theme="dark"] .si4{--sc:#a78bfa}[data-theme="dark"] .si5{--sc:#34d399}
+
+.home-footer{margin-top:36px;text-align:center;font-size:11px;color:var(--text-muted);font-family:monospace;opacity:.7;}
+.mx-kpi{background:var(--bg-card);border:1px solid var(--border-soft);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:6px;}
+.mx-kpi-val{font-size:28px;font-weight:800;color:var(--text-main);line-height:1;}
+.mx-kpi-lbl{font-size:11px;font-weight:600;color:var(--text-muted);display:flex;align-items:center;gap:5px;}
+.mx-tr:hover{background:rgba(59,130,246,.04);}
+.mx-badge{display:inline-block;padding:2px 9px;border-radius:6px;font-size:12px;font-weight:700;}
+.portal-back-btn{position:fixed;bottom:22px;left:22px;z-index:9000;display:flex;align-items:center;gap:8px;background:var(--primary);color:#fff;border:none;border-radius:30px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 18px rgba(59,130,246,.4);text-decoration:none;transition:transform .2s,box-shadow .2s;}
+.portal-back-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(59,130,246,.5);color:#fff;}
+
+/* MARQUESINA */
+.marquee-wrap{width:100%;max-width:1040px;margin-bottom:16px;border-radius:14px;display:none;overflow:hidden;}
+.marquee-wrap.has-banners{display:block;}
+.marquee-track{width:100%;overflow:hidden;padding:16px 0;display:block;}
+.marquee-inner{display:flex;gap:0;white-space:nowrap;animation:mq-scroll 22s linear infinite;width:max-content;}
+.marquee-inner:hover{animation-play-state:paused;}
+.marquee-item{display:inline-flex;align-items:center;gap:10px;padding:0 28px;font-size:15px;font-weight:800;font-style:italic;white-space:nowrap;letter-spacing:.01em;}
+.marquee-sep{opacity:.35;margin:0 14px;font-size:15px;font-weight:800;}
+.mq-critical{background:linear-gradient(90deg,#fef2f2,#fee2e2);color:#b91c1c;border:1px solid #fca5a5;}
+.mq-warning {background:linear-gradient(90deg,#fffbeb,#fef3c7);color:#92400e;border:1px solid #fcd34d;}
+.mq-info    {background:linear-gradient(90deg,#eff6ff,#dbeafe);color:#1e40af;border:1px solid #93c5fd;}
+.mq-success {background:linear-gradient(90deg,#f0fdf4,#dcfce7);color:#166534;border:1px solid #86efac;}
+[data-theme="dark"] .mq-critical{background:linear-gradient(90deg,#450a0a,#7f1d1d);color:#fca5a5;border-color:#dc2626;}
+[data-theme="dark"] .mq-warning {background:linear-gradient(90deg,#451a03,#78350f);color:#fcd34d;border-color:#d97706;}
+[data-theme="dark"] .mq-info    {background:linear-gradient(90deg,#0c1a3a,#1e3a5f);color:#93c5fd;border-color:#2563eb;}
+[data-theme="dark"] .mq-success {background:linear-gradient(90deg,#052e16,#14532d);color:#86efac;border-color:#16a34a;}
+@keyframes mq-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* CHATBOT */
+.cb-container{position:fixed;bottom:24px;right:24px;z-index:9997;display:none;}
+.cb-container.cb-visible{display:block;}
+.cb-btn{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#1e3a5f,#2563eb);border:none;box-shadow:0 4px 20px rgba(37,99,235,.45);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s;position:relative;}
+.cb-btn:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(37,99,235,.6);}
+.cb-btn i{color:#fff;font-size:26px;}
+.cb-btn-pulse{position:absolute;inset:0;border-radius:50%;background:rgba(37,99,235,.35);animation:cbPulse 2.2s ease-out infinite;}
+@keyframes cbPulse{0%{transform:scale(1);opacity:.7}70%{transform:scale(1.55);opacity:0}100%{opacity:0}}
+.cb-window{position:absolute;bottom:74px;right:0;width:380px;height:520px;background:#fff;border-radius:20px;box-shadow:0 16px 56px rgba(0,0,0,.2);display:none;flex-direction:column;overflow:hidden;}
+[data-theme="dark"] .cb-window{background:#0f1e35;}
+.cb-window.active{display:flex;animation:cbUp .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes cbUp{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes cbUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.cb-header{background:linear-gradient(135deg,#1e3a5f,#2563eb,#0ea5e9);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.cb-hinfo{display:flex;align-items:center;gap:12px;}
+.cb-avatar{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.cb-avatar i{color:#fff;font-size:20px;}
+.cb-htitle h4{margin:0;font-size:14px;font-weight:800;color:#fff;letter-spacing:.2px;}
+.cb-htitle p{margin:0;font-size:11px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:5px;}
+.cb-online-dot{width:7px;height:7px;background:#4ade80;border-radius:50%;display:inline-block;animation:cbPulse 2s ease-out infinite;}
+.cb-htitle-sub{font-size:11px;color:rgba(255,255,255,.65);margin-top:1px;}
+.cb-x{background:rgba(255,255,255,.15);border:none;color:#fff;cursor:pointer;font-size:15px;padding:6px;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+.cb-x:hover{background:rgba(255,255,255,.28);}
+.cb-msgs{flex:1;padding:16px;overflow-y:auto;background:#f4f6fb;display:flex;flex-direction:column;gap:10px;}
+[data-theme="dark"] .cb-msgs{background:#0b1120;}
+.cb-msgs::-webkit-scrollbar{width:4px;}
+.cb-msgs::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:2px;}
+[data-theme="dark"] .cb-msgs::-webkit-scrollbar-thumb{background:#334155;}
+.msg{display:flex;animation:msgIn .28s ease;}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.msg.bot{justify-content:flex-start;}
+.msg.user{justify-content:flex-end;}
+.msg-c{max-width:78%;padding:10px 14px;border-radius:15px;font-size:13px;line-height:1.5;}
+.msg.bot .msg-c{background:#fff;color:#1e293b;border-bottom-left-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,.07);}
+[data-theme="dark"] .msg.bot .msg-c{background:#1e3050;color:#e2e8f0;}
+.msg.user .msg-c{background:linear-gradient(135deg,#1e3a5f,#2563eb);color:#fff;border-bottom-right-radius:3px;}
+.qopts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.qopt{background:#fff;border:1.5px solid #2563eb;color:#2563eb;padding:6px 13px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
+[data-theme="dark"] .qopt{background:#0f1e35;border-color:#60a5fa;color:#60a5fa;}
+.qopt:hover{background:#2563eb;color:#fff;transform:translateY(-1px);}
+[data-theme="dark"] .qopt:hover{background:#1d4ed8;color:#fff;border-color:#1d4ed8;}
+.dots{display:flex;gap:4px;padding:3px 1px;}
+.dots span{width:7px;height:7px;background:#2563eb;border-radius:50%;animation:bounce 1.3s infinite;}
+.dots span:nth-child(2){animation-delay:.2s;}
+.dots span:nth-child(3){animation-delay:.4s;}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.7}30%{transform:translateY(-7px);opacity:1}}
+.cb-input-area{padding:12px;background:#fff;border-top:1px solid #e9ecef;display:flex;gap:9px;flex-shrink:0;}
+[data-theme="dark"] .cb-input-area{background:#131f35;border-top:1px solid #1e3050;}
+.cb-input{flex:1;border:1px solid #dee2e6;border-radius:22px;padding:8px 16px;font-size:13px;outline:none;font-family:inherit;background:#fff;color:#1e293b;transition:border-color .25s;}
+[data-theme="dark"] .cb-input{background:#0b1120;border-color:#1e3050;color:#e2e8f0;}
+.cb-input:focus{border-color:#2563eb;}
+.cb-send{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#1e3a5f,#2563eb);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .25s;}
+.cb-send:hover{transform:scale(1.07);box-shadow:0 4px 12px rgba(37,99,235,.4);}
+
+@keyframes fadeDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:500px){.cb-window{width:calc(100vw - 28px);right:-8px;}}
+
+/* ── Identify Box ─────────────────────────────────────────────────────────── */
+.identify-box{width:100%;max-width:520px;background:var(--bg-card);border:1px solid var(--border-soft);border-radius:20px;padding:28px 32px;margin-bottom:24px;box-shadow:var(--shadow-card);text-align:center;}
+.identify-title{font-size:16px;font-weight:700;color:var(--text-main);margin-bottom:5px;}
+.identify-sub{font-size:12.5px;color:var(--text-muted);margin-bottom:20px;line-height:1.5;}
+.id-input-row{display:flex;gap:10px;align-items:flex-start;position:relative;}
+.id-ac-wrap{flex:1;position:relative;}
+.id-field{width:100%;border:1.5px solid var(--border-soft);border-radius:12px;padding:10px 14px;font-size:13.5px;background:var(--bg-card);color:var(--text-main);outline:none;transition:border-color .2s;font-family:inherit;}
+.id-field:focus{border-color:var(--primary);}
+.id-btn{padding:10px 20px;background:var(--primary);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0;}
+.id-btn:hover{opacity:.88;transform:translateY(-1px);}
+.id-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.ac-drop{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg-card);border:1px solid var(--border-soft);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:100;overflow:hidden;display:none;}
+.ac-item{padding:10px 14px;cursor:pointer;font-size:13px;color:var(--text-main);display:flex;flex-direction:column;gap:2px;transition:background .15s;text-align:left;}
+.ac-item:hover,.ac-item.active{background:var(--bg-main);}
+.ac-item small{color:var(--text-muted);font-size:11px;}
+.id-status{margin-top:14px;padding:10px 14px;border-radius:10px;font-size:13px;display:none;text-align:left;}
+.id-status.ok{background:rgba(16,185,129,.1);color:#059669;border:1px solid rgba(16,185,129,.25);}
+.id-status.err{background:rgba(239,68,68,.1);color:#dc2626;border:1px solid rgba(239,68,68,.25);}
+.id-status.info{background:rgba(59,130,246,.1);color:#2563eb;border:1px solid rgba(59,130,246,.25);}
+/* Catalog section shown to employees after identify */
+.cat-section{width:100%;max-width:1040px;}
+.cat-welcome{margin-bottom:20px;padding:16px 20px;background:var(--bg-card);border:1px solid var(--border-soft);border-radius:14px;display:flex;align-items:center;gap:14px;}
+.cat-avatar{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--info));display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;flex-shrink:0;}
+.cat-welcome-name{font-size:15px;font-weight:700;color:var(--text-main);}
+.cat-welcome-sub{font-size:12px;color:var(--text-muted);margin-top:2px;}
+</style>
+</head>
+<body>
+
+<div class="theme-toggle" onclick="toggleTheme()">
+  <i id="toggleIcon" class="bi bi-moon-stars-fill toggle-icon"></i>
+  <div class="toggle-track"><div class="toggle-knob"></div></div>
+  <span id="toggleLabel" class="toggle-label">Oscuro</span>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar-overlay" id="sbOverlay" onclick="closeSB()"></div>
+<div class="itsm-sidebar" id="itsmSB">
+  <div class="sb-header">
+    <div><div class="sb-title">🎧 Soporte ITSM</div><div class="sb-sub">Gestión de servicios IT</div></div>
+    <button class="sb-close" onclick="closeSB()"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div class="sb-body">
+    <a href="#" class="sb-item si1"><div class="sb-item-icon ib-red"><i class="bi bi-exclamation-triangle-fill"></i></div><div><div class="sb-item-name">Gestión de Incidencias</div><div class="sb-item-desc">Registro y resolución de interrupciones</div></div><i class="bi bi-chevron-right sb-arrow"></i></a>
+    <a href="#" class="sb-item si2"><div class="sb-item-icon ib-blue"><i class="bi bi-clipboard2-check-fill"></i></div><div><div class="sb-item-name">Gestión de Requerimientos</div><div class="sb-item-desc">Solicitudes formales de servicios IT</div></div><i class="bi bi-chevron-right sb-arrow"></i></a>
+    <a href="#" class="sb-item si3"><div class="sb-item-icon ib-amber"><i class="bi bi-arrow-repeat"></i></div><div><div class="sb-item-name">Gestión de Cambios</div><div class="sb-item-desc">Control y aprobación de cambios</div></div><i class="bi bi-chevron-right sb-arrow"></i></a>
+    <a href="#" class="sb-item si4"><div class="sb-item-icon ib-purp"><i class="bi bi-bug-fill"></i></div><div><div class="sb-item-name">Gestión de Problemas</div><div class="sb-item-desc">Análisis de causa raíz</div></div><i class="bi bi-chevron-right sb-arrow"></i></a>
+    <a href="#" class="sb-item si5"><div class="sb-item-icon ib-green"><i class="bi bi-grid-3x3-gap-fill"></i></div><div><div class="sb-item-name">Catálogo de Servicios</div><div class="sb-item-desc">Portafolio completo de servicios</div></div><i class="bi bi-chevron-right sb-arrow"></i></a>
+  </div>
+</div>
+
+<%
+  const _isPrivileged = user && ['administrador','especialista','agente','tecnico'].includes(user.role);
+%>
+<div class="home-wrapper">
+  <div class="hero">
+    <div class="hero-logo">
+      <div class="hero-logo-icon"><i class="bi bi-hexagon-fill"></i></div>
+      <div class="hero-logo-text">ITSM · <span>WORKPLACE</span></div>
+    </div>
+    <div class="hero-title">Sistema de Gestión IT · v2.0</div>
+    <div class="hero-chip"><i class="bi bi-circle-fill" style="font-size:8px;color:var(--success);"></i> Plataforma activa</div>
+  </div>
+
+  <!-- MARQUESINA DE ALERTAS -->
+  <div class="marquee-wrap" id="marqueeWrap">
+    <div class="marquee-track" id="marqueeTrack">
+      <div class="marquee-inner" id="marqueeInner"></div>
+    </div>
+  </div>
+
+  <% if (!_isPrivileged) { %>
+  <!-- IDENTIFICATION BOX -->
+  <div class="identify-box" id="identifyBox">
+    <div class="identify-title"><i class="bi bi-person-check-fill" style="color:var(--primary);margin-right:6px;"></i>Identifíquese</div>
+    <div class="identify-sub">Ingrese su correo corporativo para acceder al portal de servicios</div>
+    <div class="id-input-row">
+      <div class="id-ac-wrap">
+        <input type="email" id="identEmail" class="id-field" placeholder="usuario@integratel.com.pe"
+               autocomplete="off" oninput="acIdentDebounce()" onkeydown="acIdentKey(event)">
+        <div class="ac-drop" id="identDrop"></div>
+      </div>
+      <button class="id-btn" id="identBtn" onclick="identificar()"><i class="bi bi-arrow-right-circle-fill"></i> Ingresar</button>
+    </div>
+    <div class="id-status" id="identStatus"></div>
+  </div>
+  <% } %>
+
+  <!-- TABS — only shown if privileged or unlocked by identify -->
+  <div class="tabs-wrapper" id="tabsWrapper" <% if (!_isPrivileged) { %>style="display:none"<% } %>>
+    <div class="tabs-nav">
+      <button class="tab-btn active" id="tb-wp" onclick="switchTab('wp')"><i class="bi bi-grid-1x2-fill"></i> Workplace</button>
+      <button class="tab-btn" id="tb-pa" onclick="switchTab('pa')"><i class="bi bi-person-badge-fill"></i> Portal de Autogestión</button>
+      <button class="tab-btn" id="tb-mx" onclick="switchTab('mx');loadPortalMetrics()"><i class="bi bi-bar-chart-line-fill"></i> Métricas Portal</button>
+    </div>
+  </div>
+
+  <!-- WORKPLACE — 9 módulos (sin Chatbot IA) -->
+  <div class="tab-panel active" id="panel-wp" <% if (!_isPrivileged) { %>style="display:none"<% } %>>
+    <div class="modules-grid">
+      <a href="http://localhost:3000/almacen" class="mod-card c-blue"><div class="mod-icon ib ib-blue"><i class="bi bi-hdd-stack-fill"></i></div><div class="mod-name">Almacén</div><div class="mod-desc">Gestión de hardware: laptops, desktops y activos tecnológicos.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="http://localhost:3000/employees" class="mod-card c-green"><div class="mod-icon ib ib-green"><i class="bi bi-people-fill"></i></div><div class="mod-name">Usuarios</div><div class="mod-desc">Administración de cuentas, perfiles, roles y colaboradores.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="#" class="mod-card c-purp"><div class="mod-icon ib ib-purp"><i class="bi bi-diagram-3-fill"></i></div><div class="mod-name">CMDB</div><div class="mod-desc">Base de datos de configuración: inventario y CIs.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="http://localhost:3000/soporte" class="mod-card c-amber" onclick="openSB(event)"><div class="mod-icon ib ib-amber"><i class="bi bi-headset"></i></div><div class="mod-name">Soporte</div><div class="mod-desc">Gestión de tickets, incidentes y atención al usuario.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="#" class="mod-card c-pink"><div class="mod-icon ib ib-pink"><i class="bi bi-kanban-fill"></i></div><div class="mod-name">Backlog</div><div class="mod-desc">Tablero de tareas y seguimiento de proyectos IT.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="#" class="mod-card c-cyan"><div class="mod-icon ib ib-cyan"><i class="bi bi-bar-chart-line-fill"></i></div><div class="mod-name">Reportes</div><div class="mod-desc">Dashboards analíticos, métricas KPI y reportes ejecutivos.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="#" class="mod-card c-ora"><span class="mod-badge">Nuevo</span><div class="mod-icon ib ib-ora"><i class="bi bi-key-fill"></i></div><div class="mod-name">Licencias</div><div class="mod-desc">Control de licencias de software y asignaciones.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="#" class="mod-card c-red"><span class="mod-badge">Nuevo</span><div class="mod-icon ib ib-red"><i class="bi bi-shield-lock-fill"></i></div><div class="mod-name">Seguridad</div><div class="mod-desc">Gestión de accesos, políticas y auditoría IT.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      
+    </div>
+  </div>
+
+  <!-- PORTAL — 8 módulos -->
+  <div class="tab-panel" id="panel-pa" <% if (!_isPrivileged) { %>style="display:none"<% } %>>
+    <div class="section-label"><i class="bi bi-person-badge-fill"></i> &nbsp;Portal de Autogestión — Acciones rápidas</div>
+    <div class="modules-grid">
+      <a href="#" class="mod-card c-blue"><div class="mod-icon ib ib-blue"><i class="bi bi-printer-fill"></i></div><div class="mod-name">Imprimir</div><div class="mod-desc">Enviar trabajos de impresión y gestionar colas.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="#" class="mod-card c-green"><div class="mod-icon ib ib-green"><i class="bi bi-ticket-perforated-fill"></i></div><div class="mod-name">Crear Ticket</div><div class="mod-desc">Reportar un incidente o solicitar asistencia técnica.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="#" class="mod-card c-indigo"><span class="mod-badge" style="background:#6366f1;">Nuevo</span><div class="mod-icon ib ib-indigo"><i class="bi bi-clipboard2-plus-fill"></i></div><div class="mod-name">Crear Requerimiento</div><div class="mod-desc">Solicitar formalmente un servicio, recurso o mejora IT.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="#" class="mod-card c-rose"><span class="mod-badge" style="background:#f43f5e;">Nuevo</span><div class="mod-icon ib ib-rose"><i class="bi bi-search-heart"></i></div><div class="mod-name">Consultar Incidencia / Req.</div><div class="mod-desc">Seguimiento del estado de tus incidencias y requerimientos.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="#" class="mod-card c-purp"><div class="mod-icon ib ib-purp"><i class="bi bi-journal-bookmark-fill"></i></div><div class="mod-name">Base de Conocimiento</div><div class="mod-desc">Artículos y guías para resolver problemas comunes.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="#" class="mod-card c-amber"><div class="mod-icon ib ib-amber"><i class="bi bi-patch-question-fill"></i></div><div class="mod-name">Preguntas Frecuentes</div><div class="mod-desc">Respuestas rápidas a consultas del equipo.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="/devolucion" data-reporter-link data-href="/devolucion" class="mod-card c-pink"><div class="mod-icon ib ib-pink"><i class="bi bi-box-arrow-in-left"></i></div><div class="mod-name">Devoluciones</div><div class="mod-desc">Gestionar devolución de equipos y activos IT.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="#" class="mod-card c-cyan"><div class="mod-icon ib ib-cyan"><i class="bi bi-patch-check-fill"></i></div><div class="mod-name">Garantías</div><div class="mod-desc">Consulta y registro de garantías de equipos.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="#" onclick="openMarqueeAdmin();return false;" class="mod-card c-orange"><span class="mod-badge" style="background:#ea580c;">Admin</span><div class="mod-icon ib ib-orange"><i class="bi bi-megaphone-fill"></i></div><div class="mod-name">Publicar Marquesina</div><div class="mod-desc">Gestiona alertas y avisos deslizantes visibles en el portal.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+    </div>
+  </div>
+
+  <!-- MÉTRICAS PORTAL — solo admin/especialista -->
+  <div class="tab-panel" id="panel-mx" <% if (!_isPrivileged) { %>style="display:none"<% } %>>
+    <div class="section-label"><i class="bi bi-bar-chart-line-fill"></i> &nbsp;Métricas del Portal de Autogestión</div>
+
+    <!-- Filtros -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;align-items:flex-end;">
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;">Desde</div>
+        <input type="date" id="mxFrom" class="form-control" style="font-size:13px;border-radius:8px;border:1px solid var(--border-soft);background:var(--bg-card);color:var(--text-main);padding:6px 10px;">
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;">Hasta</div>
+        <input type="date" id="mxTo" class="form-control" style="font-size:13px;border-radius:8px;border:1px solid var(--border-soft);background:var(--bg-card);color:var(--text-main);padding:6px 10px;">
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;">Correo</div>
+        <input type="text" id="mxEmail" placeholder="Filtrar por correo..." style="font-size:13px;border-radius:8px;border:1px solid var(--border-soft);background:var(--bg-card);color:var(--text-main);padding:6px 10px;width:220px;">
+      </div>
+      <button onclick="loadPortalMetrics()" style="padding:8px 18px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;"><i class="bi bi-search"></i> Filtrar</button>
+      <button onclick="exportMxCSV()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border-soft);background:var(--bg-card);color:var(--text-main);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;"><i class="bi bi-download"></i> CSV</button>
+    </div>
+
+    <!-- KPI cards -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:22px;" id="mxKpis">
+      <div class="mx-kpi" id="kpi-users"><div class="mx-kpi-val">—</div><div class="mx-kpi-lbl"><i class="bi bi-people-fill"></i> Usuarios únicos</div></div>
+      <div class="mx-kpi" id="kpi-logins"><div class="mx-kpi-val">—</div><div class="mx-kpi-lbl"><i class="bi bi-box-arrow-in-right"></i> Accesos</div></div>
+      <div class="mx-kpi" id="kpi-inc"><div class="mx-kpi-val">—</div><div class="mx-kpi-lbl"><i class="bi bi-exclamation-triangle-fill" style="color:var(--danger)"></i> Incidencias</div></div>
+      <div class="mx-kpi" id="kpi-req"><div class="mx-kpi-val">—</div><div class="mx-kpi-lbl"><i class="bi bi-clipboard2-plus-fill" style="color:var(--primary)"></i> Requerimientos</div></div>
+      <div class="mx-kpi" id="kpi-total"><div class="mx-kpi-val">—</div><div class="mx-kpi-lbl"><i class="bi bi-activity"></i> Acciones totales</div></div>
+    </div>
+
+    <!-- Tabla por usuario -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-soft);border-radius:14px;overflow:hidden;">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border-soft);font-size:13px;font-weight:700;color:var(--text-main);display:flex;align-items:center;gap:8px;">
+        <i class="bi bi-table"></i> Actividad por usuario
+        <span id="mxCount" style="font-size:11px;font-weight:400;color:var(--text-muted);margin-left:4px;"></span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:var(--bg-main);">
+              <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);">Correo</th>
+              <th style="padding:10px 12px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);">Accesos</th>
+              <th style="padding:10px 12px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);color:var(--danger);">Incidencias</th>
+              <th style="padding:10px 12px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--primary);">Requerimientos</th>
+              <th style="padding:10px 12px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);">Total acciones</th>
+              <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);">Última actividad</th>
+            </tr>
+          </thead>
+          <tbody id="mxTbody">
+            <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px;"><i class="bi bi-hourglass-split"></i> Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATALOG SECTION — shown to employees after identification -->
+  <div class="cat-section" id="catalogSection" style="display:none">
+    <div class="cat-welcome" id="catWelcome">
+      <div class="cat-avatar"><i class="bi bi-person-fill"></i></div>
+      <div>
+        <div class="cat-welcome-name" id="catWelcomeName">Bienvenido</div>
+        <div class="cat-welcome-sub" id="catWelcomeSub">Accede al catálogo de servicios de TI</div>
+      </div>
+    </div>
+    <div class="section-label"><i class="bi bi-grid-fill"></i> &nbsp;Catálogo de Servicios TI</div>
+    <div class="modules-grid">
+      <a href="/incidencias" data-reporter-link data-href="/incidencias" class="mod-card c-red"><div class="mod-icon ib ib-red"><i class="bi bi-exclamation-triangle-fill"></i></div><div class="mod-name">Generar Incidencia</div><div class="mod-desc">Reporta una falla, interrupción o problema con un servicio TI.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="/requerimientos" data-reporter-link data-href="/requerimientos" class="mod-card c-blue"><div class="mod-icon ib ib-blue"><i class="bi bi-clipboard2-plus-fill"></i></div><div class="mod-name">Generar Requerimiento</div><div class="mod-desc">Solicita formalmente un servicio, equipo, acceso o recurso TI.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="#" class="mod-card c-cyan"><div class="mod-icon ib ib-cyan"><i class="bi bi-printer-fill"></i></div><div class="mod-name">Imprimir</div><div class="mod-desc">Envía trabajos de impresión y gestiona colas de impresión.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="/catalogo?tab=mis-tickets" data-reporter-link data-href="/catalogo?tab=mis-tickets" class="mod-card c-indigo"><div class="mod-icon ib ib-indigo"><i class="bi bi-search-heart"></i></div><div class="mod-name">Consultar Ticket</div><div class="mod-desc">Revisa el estado de tus incidencias y requerimientos en curso.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="/devolucion" data-reporter-link data-href="/devolucion" class="mod-card c-pink"><div class="mod-icon ib ib-pink"><i class="bi bi-box-arrow-in-left"></i></div><div class="mod-name">Devoluciones</div><div class="mod-desc">Gestiona la devolución de equipos y activos tecnológicos.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="#" class="mod-card c-green"><div class="mod-icon ib ib-green"><i class="bi bi-patch-check-fill"></i></div><div class="mod-name">Garantías</div><div class="mod-desc">Consulta y registra garantías de equipos asignados.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="/preguntas-frecuentes" data-reporter-link data-href="/preguntas-frecuentes" class="mod-card c-amber"><div class="mod-icon ib ib-amber"><i class="bi bi-patch-question-fill"></i></div><div class="mod-name">Preguntas Frecuentes</div><div class="mod-desc">Respuestas rápidas a consultas comunes del equipo de TI.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="#" onclick="openWspModal();return false;" class="mod-card c-teal"><span class="mod-badge" style="background:#14b8a6;">WhatsApp</span><div class="mod-icon ib ib-teal"><i class="bi bi-whatsapp"></i></div><div class="mod-name">WhatsApp Bot</div><div class="mod-desc">Registra tu celular para gestionar servicios TI desde WhatsApp.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="/knowledge-base" data-reporter-link data-href="/knowledge-base" class="mod-card c-purple"><div class="mod-icon ib ib-purple"><i class="bi bi-journal-richtext"></i></div><div class="mod-name">Base de Conocimiento</div><div class="mod-desc">Consulta artículos, guías y soluciones documentadas del equipo TI.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="#" onclick="openSurveyModal();return false;" class="mod-card c-rose"><div class="mod-icon ib ib-rose"><i class="bi bi-star-half"></i></div><div class="mod-name">Encuesta de Satisfacción</div><div class="mod-desc">Comparte tu experiencia y ayúdanos a mejorar el servicio TI.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="#" onclick="openRecoModal();return false;" class="mod-card c-lime"><div class="mod-icon ib ib-lime"><i class="bi bi-terminal"></i></div><div class="mod-name">Instalacion de Software</div><div class="mod-desc">Envía sugerencias o mejoras al equipo de TI.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+      <a href="/anuncios" data-reporter-link data-href="/anuncios" class="mod-card c-orange"><div class="mod-icon ib ib-orange"><i class="bi bi-megaphone-fill"></i></div><div class="mod-name">Anuncio Corporativo</div><div class="mod-desc">Publica y lee comunicados internos del equipo.</div><i class="bi bi-arrow-right mod-arrow"></i></a>
+    </div>
+  </div>
+
+  <div class="home-footer">© 2025 Stefanini Group &nbsp;·&nbsp; IT Management Platform &nbsp;·&nbsp; v2.0.1</div>
+</div>
+
+<!-- MODAL: Gestión de Marquesina -->
+<div class="portal-modal-overlay" id="marqueeModalOverlay">
+  <div class="portal-modal" style="max-width:600px;width:95%;">
+    <button class="pm-close" onclick="closePModal('marqueeModalOverlay')"><i class="bi bi-x-lg"></i></button>
+    <h3><i class="bi bi-megaphone-fill" style="color:#ea580c"></i> Publicar Marquesina</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Los mensajes activos se muestran en el banner deslizante del portal de autogestión.</p>
+
+    <!-- Formulario nuevo aviso -->
+    <div style="background:var(--bg-main);border-radius:10px;padding:14px 16px;margin-bottom:18px;border:1px solid var(--border-soft);">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:10px;">Nuevo aviso</div>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:8px;">
+        <input type="text" id="mqMsg" placeholder="Texto del aviso (ej: Interrupción en SAP — en atención)" maxlength="200"
+               style="padding:8px 12px;border-radius:8px;border:1px solid var(--border-soft);background:var(--bg-card);color:var(--text-main);font-size:13px;width:100%;">
+        <select id="mqSeverity" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border-soft);background:var(--bg-card);color:var(--text-main);font-size:13px;">
+          <option value="critical">🔴 Crítico</option>
+          <option value="warning" selected>🟡 Advertencia</option>
+          <option value="info">🔵 Informativo</option>
+          <option value="success">🟢 Resuelto</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="datetime-local" id="mqExpires" title="Fecha de expiración (opcional)"
+               style="padding:7px 10px;border-radius:8px;border:1px solid var(--border-soft);background:var(--bg-card);color:var(--text-main);font-size:12px;flex:1;">
+        <span style="font-size:11px;color:var(--text-muted);white-space:nowrap;">Expira (opcional)</span>
+        <button onclick="submitBanner()" style="padding:8px 18px;border-radius:8px;border:none;background:#ea580c;color:#fff;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;"><i class="bi bi-send-fill"></i> Publicar</button>
+      </div>
+    </div>
+
+    <!-- Lista de avisos activos -->
+    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:8px;">Avisos activos</div>
+    <div id="mqList" style="display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;">
+      <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;"><i class="bi bi-hourglass-split"></i> Cargando...</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Encuesta de Satisfacción -->
+<div class="portal-modal-overlay" id="surveyModalOverlay">
+  <div class="portal-modal" style="max-width:460px;overflow:hidden;">
+    <button class="pm-close" onclick="closePModal('surveyModalOverlay')"><i class="bi bi-x-lg"></i></button>
+    <div id="surveyForm" style="max-height:82vh;overflow-y:auto;padding-right:2px;">
+      <div style="text-align:center;margin-bottom:16px;">
+        <div style="width:56px;height:56px;background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:26px;">⭐</div>
+        <div id="surveyGreeting" style="font-size:17px;font-weight:800;color:var(--text-main,#1e293b);">Encuesta de Satisfacción</div>
+        <div style="font-size:12px;color:#64748b;margin-top:3px;">Comparte tu experiencia con el servicio TI</div>
+      </div>
+
+      <!-- Sección 1: Plataforma -->
+      <div style="background:var(--bg-card,#f8fafc);border:1px solid var(--border-soft,#e2e8f0);border-radius:10px;padding:14px 16px;margin-bottom:12px;">
+        <div style="font-size:12px;font-weight:700;color:#2563eb;margin-bottom:8px;display:flex;align-items:center;gap:6px;"><i class="bi bi-laptop-fill"></i> Experiencia con la plataforma</div>
+        <div class="star-row" id="starRow" style="justify-content:center;">
+          <button class="star-btn" onclick="setStar('platform',1,this)">★</button>
+          <button class="star-btn" onclick="setStar('platform',2,this)">★</button>
+          <button class="star-btn" onclick="setStar('platform',3,this)">★</button>
+          <button class="star-btn" onclick="setStar('platform',4,this)">★</button>
+          <button class="star-btn" onclick="setStar('platform',5,this)">★</button>
+        </div>
+        <div id="surveyStarLabel" style="text-align:center;font-size:12px;font-weight:600;color:#f59e0b;min-height:18px;margin-top:4px;transition:all .2s;"></div>
+      </div>
+
+      <!-- Sección 2: Equipo corporativo -->
+      <div style="background:var(--bg-card,#f8fafc);border:1px solid var(--border-soft,#e2e8f0);border-radius:10px;padding:14px 16px;margin-bottom:12px;">
+        <div style="font-size:12px;font-weight:700;color:#7c3aed;margin-bottom:8px;display:flex;align-items:center;gap:6px;"><i class="bi bi-pc-display-horizontal"></i> Experiencia con tu equipo corporativo</div>
+        <div class="star-row" id="starRowEquip" style="justify-content:center;">
+          <button class="star-btn" onclick="setStar('equip',1,this)">★</button>
+          <button class="star-btn" onclick="setStar('equip',2,this)">★</button>
+          <button class="star-btn" onclick="setStar('equip',3,this)">★</button>
+          <button class="star-btn" onclick="setStar('equip',4,this)">★</button>
+          <button class="star-btn" onclick="setStar('equip',5,this)">★</button>
+        </div>
+        <div id="surveyStarLabelEquip" style="text-align:center;font-size:12px;font-weight:600;color:#f59e0b;min-height:18px;margin-top:4px;transition:all .2s;"></div>
+      </div>
+
+      <!-- Sección 3: Aplicaciones -->
+      <div style="background:var(--bg-card,#f8fafc);border:1px solid var(--border-soft,#e2e8f0);border-radius:10px;padding:14px 16px;margin-bottom:12px;">
+        <div style="font-size:12px;font-weight:700;color:#0891b2;margin-bottom:8px;display:flex;align-items:center;gap:6px;"><i class="bi bi-grid-3x3-gap-fill"></i> Experiencia con aplicaciones</div>
+        <input id="surveyAppName" type="text" placeholder="¿Qué aplicación? (ej. Teams, SAP, ERP...)" style="width:100%;padding:7px 10px;border:1px solid var(--border-soft,#e2e8f0);border-radius:7px;font-size:12px;background:var(--bg-main,#fff);color:var(--text-main,#1e293b);margin-bottom:8px;box-sizing:border-box;">
+        <div class="star-row" id="starRowApp" style="justify-content:center;">
+          <button class="star-btn" onclick="setStar('app',1,this)">★</button>
+          <button class="star-btn" onclick="setStar('app',2,this)">★</button>
+          <button class="star-btn" onclick="setStar('app',3,this)">★</button>
+          <button class="star-btn" onclick="setStar('app',4,this)">★</button>
+          <button class="star-btn" onclick="setStar('app',5,this)">★</button>
+        </div>
+        <div id="surveyStarLabelApp" style="text-align:center;font-size:12px;font-weight:600;color:#f59e0b;min-height:18px;margin-top:4px;transition:all .2s;"></div>
+      </div>
+
+      <label style="font-size:12px;font-weight:600;color:var(--text-muted,#64748b);">Comentario general (opcional)</label>
+      <textarea id="surveyComment" rows="2" placeholder="Cuéntanos tu experiencia..." style="margin-top:4px;"></textarea>
+      <div class="pm-actions">
+        <button class="pm-btn pm-btn-secondary" onclick="closePModal('surveyModalOverlay')">Cancelar</button>
+        <button class="pm-btn pm-btn-primary" onclick="submitSurvey()"><i class="bi bi-send-fill"></i> Enviar calificación</button>
+      </div>
+    </div>
+    <div class="pm-success" id="surveySuccess" style="display:none;padding:28px 16px 16px;text-align:center;">
+      <div id="surveySuccessEmoji" style="font-size:52px;margin-bottom:8px;">🎉</div>
+      <div id="surveyThanksTitle" style="font-size:18px;font-weight:800;color:var(--text-main,#1e293b);margin-bottom:6px;"></div>
+      <p id="surveyThanksMsg" style="font-size:13px;color:#64748b;margin:0 0 6px;"></p>
+      <div id="surveyStarsDisplay" style="font-size:28px;letter-spacing:2px;margin-bottom:18px;"></div>
+      <div class="pm-actions" style="justify-content:center;">
+        <button class="pm-btn pm-btn-secondary" onclick="closePModal('surveyModalOverlay')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Recomendaciones -->
+<div class="portal-modal-overlay" id="recoModalOverlay">
+  <div class="portal-modal">
+    <button class="pm-close" onclick="closePModal('recoModalOverlay')"><i class="bi bi-x-lg"></i></button>
+    <div id="recoForm">
+      <h3><i class="bi bi-lightbulb-fill" style="color:#65a30d"></i> Enviar Recomendación</h3>
+      <label>Categoría</label>
+      <select id="recoCategory">
+        <option value="">Selecciona una categoría...</option>
+        <option>Mejora de procesos</option>
+        <option>Herramientas y software</option>
+        <option>Infraestructura</option>
+        <option>Atención al usuario</option>
+        <option>Otro</option>
+      </select>
+      <label>Tu recomendación *</label>
+      <textarea id="recoText" rows="4" placeholder="Describe tu sugerencia o mejora..."></textarea>
+      <div class="pm-actions">
+        <button class="pm-btn pm-btn-secondary" onclick="closePModal('recoModalOverlay')">Cancelar</button>
+        <button class="pm-btn pm-btn-primary" onclick="submitReco()"><i class="bi bi-send-fill"></i> Enviar</button>
+      </div>
+    </div>
+    <div class="pm-success" id="recoSuccess">
+      <i class="bi bi-check-circle-fill"></i>
+      <p>¡Recomendación enviada!<br>El equipo de TI la revisará pronto.</p>
+      <div class="pm-actions" style="justify-content:center;margin-top:16px;">
+        <button class="pm-btn pm-btn-secondary" onclick="closePModal('recoModalOverlay')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Anuncio Corporativo -->
+<div class="portal-modal-overlay" id="anuncioModalOverlay">
+  <div class="portal-modal" style="max-width:520px;">
+    <button class="pm-close" onclick="closePModal('anuncioModalOverlay')"><i class="bi bi-x-lg"></i></button>
+    <div id="anuncioForm">
+      <h3><i class="bi bi-megaphone-fill" style="color:#ea580c"></i> Publicar Anuncio Corporativo</h3>
+      <label>Título del anuncio *</label>
+      <input type="text" id="anuncioTitle" placeholder="Ej: Mantenimiento programado este viernes">
+      <label>Mensaje *</label>
+      <textarea id="anuncioBody" rows="4" placeholder="Redacta el comunicado..."></textarea>
+      <label>Audiencia</label>
+      <select id="anuncioAudience">
+        <option value="todos">Todos los colaboradores</option>
+        <option value="ti">Equipo TI</option>
+        <option value="gerencia">Gerencia</option>
+      </select>
+      <div class="pm-actions">
+        <button class="pm-btn pm-btn-secondary" onclick="closePModal('anuncioModalOverlay')">Cancelar</button>
+        <button class="pm-btn pm-btn-primary" onclick="submitAnuncio()"><i class="bi bi-megaphone-fill"></i> Publicar</button>
+      </div>
+    </div>
+    <div class="pm-success" id="anuncioSuccess">
+      <i class="bi bi-check-circle-fill"></i>
+      <p>¡Anuncio publicado correctamente!</p>
+      <div class="pm-actions" style="justify-content:center;margin-top:16px;">
+        <button class="pm-btn pm-btn-secondary" onclick="closePModal('anuncioModalOverlay')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WHATSAPP REGISTER MODAL -->
+<div class="portal-modal-overlay" id="wspModalOverlay">
+  <div class="portal-modal" style="max-width:440px;">
+    <button class="pm-close" onclick="closePModal('wspModalOverlay')"><i class="bi bi-x-lg"></i></button>
+    <div id="wspForm">
+      <h3><i class="bi bi-whatsapp" style="color:#25d366;font-size:22px;"></i> Registrar WhatsApp Bot</h3>
+      <p style="font-size:13px;color:var(--text-muted,#64748b);margin-bottom:18px;">Una vez aprobado podrás gestionar incidencias, requerimientos y consultar el estado de tus tickets directamente desde WhatsApp.</p>
+
+      <label>Usuario</label>
+      <input type="text" id="wspUserDisplay" readonly style="background:var(--bg-main,#f5f7fa);cursor:default;">
+
+      <label>Correo corporativo</label>
+      <input type="text" id="wspEmailDisplay" readonly style="background:var(--bg-main,#f5f7fa);cursor:default;">
+
+      <label>Número de celular *</label>
+      <div style="display:flex;align-items:center;border:1.5px solid #e2e8f0;border-radius:8px;overflow:hidden;background:var(--bg-main,#f5f7fa);" id="wspPhoneWrap">
+        <span style="padding:9px 12px;font-size:13px;color:#64748b;border-right:1.5px solid #e2e8f0;white-space:nowrap;background:#fff;">+51</span>
+        <input type="tel" id="wspPhone" maxlength="9" placeholder="999 999 999" style="border:none;background:transparent;flex:1;padding:9px 12px;font-size:13px;color:var(--text-main,#1e293b);outline:none;"
+               oninput="this.value=this.value.replace(/\D/g,'')">
+      </div>
+      <div id="wspPhoneErr" style="display:none;font-size:11px;color:#dc2626;margin-top:4px;"></div>
+
+      <label>¿Por qué deseas acceder al bot?</label>
+      <textarea id="wspReason" rows="2" placeholder="Ej: Trabajo en campo y necesito reportar incidencias sin acceso al portal web…" style="resize:none;"></textarea>
+
+      <div class="pm-actions">
+        <button class="pm-btn pm-btn-secondary" onclick="closePModal('wspModalOverlay')">Cancelar</button>
+        <button class="pm-btn pm-btn-primary" id="btnWspSend" onclick="submitWsp()" style="background:#25d366;"><i class="bi bi-send-fill"></i> Solicitar registro</button>
+      </div>
+    </div>
+    <div id="wspSuccess" style="display:none;text-align:center;padding:24px 8px 8px;">
+      <div style="width:64px;height:64px;background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:30px;">✅</div>
+      <p style="font-weight:800;font-size:16px;color:#064e3b;margin-bottom:10px;">¡Número registrado!</p>
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+        <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">Has registrado el número</div>
+        <div id="wspSuccessPhone" style="font-size:22px;font-weight:800;color:#059669;letter-spacing:1px;"></div>
+        <div style="font-size:12px;color:#6b7280;margin-top:4px;">para el uso del chatbot de WhatsApp</div>
+      </div>
+      <p style="font-size:12px;color:#6b7280;margin-bottom:20px;">Tu solicitud está <strong>pendiente de aprobación</strong>. El equipo de TI la revisará y te notificará cuando sea activado.</p>
+      <div class="pm-actions" style="justify-content:center;gap:10px;">
+        <button class="pm-btn pm-btn-secondary" onclick="document.getElementById('wspForm').style.display='block';document.getElementById('wspSuccess').style.display='none';">
+          <i class="bi bi-pencil"></i> Editar
+        </button>
+        <button class="pm-btn pm-btn-primary" style="background:#25d366;" onclick="closePModal('wspModalOverlay')">
+          <i class="bi bi-check2-circle"></i> Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CHATBOT -->
+<div class="cb-container" id="cbContainer">
+  <div class="cb-window" id="cbWindow">
+    <div class="cb-header">
+      <div class="cb-hinfo">
+        <div class="cb-avatar"><i class="bi bi-stars"></i></div>
+        <div class="cb-htitle">
+          <h4>ARIA · Asistente TI</h4>
+          <p><span class="cb-online-dot"></span> En línea · <span id="cbHeaderUser"></span></p>
+        </div>
+      </div>
+      <button class="cb-x" id="cbClose"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="cb-msgs" id="cbMsgs"></div>
+    <div class="cb-input-area">
+      <input type="text" class="cb-input" id="cbInput" placeholder="Pregúntame algo…" autocomplete="off">
+      <button class="cb-send" id="cbSend"><i class="bi bi-send-fill"></i></button>
+    </div>
+  </div>
+  <button class="cb-btn" id="cbToggle">
+    <div class="cb-btn-pulse"></div>
+    <i class="bi bi-stars"></i>
+  </button>
+</div>
+
+<script>
+(function(){
+  const s=localStorage.getItem('dashboardTheme')||'light';
+  document.documentElement.setAttribute('data-theme',s);
+  updateToggleUI(s);
+})();
+function toggleTheme(){
+  const n=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',n);
+  localStorage.setItem('dashboardTheme',n);
+  updateToggleUI(n);
+}
+function updateToggleUI(t){
+  document.getElementById('toggleIcon').className=t==='dark'?'bi bi-sun-fill toggle-icon':'bi bi-moon-stars-fill toggle-icon';
+  document.getElementById('toggleLabel').textContent=t==='dark'?'Claro':'Oscuro';
+}
+function switchTab(t){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tb-'+t).classList.add('active');
+  document.getElementById('panel-'+t).classList.add('active');
+}
+function openSB(e){e.preventDefault();document.getElementById('itsmSB').classList.add('open');document.getElementById('sbOverlay').classList.add('open');document.body.style.overflow='hidden';}
+function closeSB(){document.getElementById('itsmSB').classList.remove('open');document.getElementById('sbOverlay').classList.remove('open');document.body.style.overflow='';}
+
+// ── IDENTIFICATION FLOW ────────────────────────────────────────────────────
+let _acItems=[], _acIdx=-1, _acTimer=null;
+const _identBox = document.getElementById('identifyBox');
+
+function acIdentDebounce(){
+  clearTimeout(_acTimer);
+  _acTimer = setTimeout(acIdentFetch, 280);
+  document.getElementById('identDrop').style.display='none';
+}
+
+async function acIdentFetch(){
+  const q = (document.getElementById('identEmail')?.value||'').trim();
+  const drop = document.getElementById('identDrop');
+  if(!drop) return;
+  if(q.length < 2){ drop.style.display='none'; return; }
+  try{
+    const r = await fetch(`/api/employees/search-emails?q=${encodeURIComponent(q)}`,{credentials:'include'});
+    const d = await r.json();
+    _acItems = (d.data||[]).slice(0,8);
+    _acIdx = -1;
+    if(!_acItems.length){ drop.style.display='none'; return; }
+    drop.innerHTML = _acItems.map((it,i)=>`<div class="ac-item" data-idx="${i}" onmousedown="acIdentPick(${i})">
+      <span>${it.full_name||it.email}</span><small>${it.email}${it.position_name?' · '+it.position_name:''}</small>
+    </div>`).join('');
+    drop.style.display='block';
+  }catch(e){ drop.style.display='none'; }
+}
+
+function acIdentPick(i){
+  const it = _acItems[i];
+  if(!it) return;
+  document.getElementById('identEmail').value = it.email;
+  document.getElementById('identDrop').style.display='none';
+}
+
+function acIdentKey(e){
+  const drop = document.getElementById('identDrop');
+  const items = drop?.querySelectorAll('.ac-item');
+  if(!items?.length) { if(e.key==='Enter') identificar(); return; }
+  if(e.key==='ArrowDown'){ e.preventDefault(); _acIdx=Math.min(_acIdx+1,items.length-1); items.forEach((el,i)=>el.classList.toggle('active',i===_acIdx)); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); _acIdx=Math.max(_acIdx-1,0); items.forEach((el,i)=>el.classList.toggle('active',i===_acIdx)); }
+  else if(e.key==='Enter'){ e.preventDefault(); if(_acIdx>=0){ acIdentPick(_acIdx); drop.style.display='none'; } else{ drop.style.display='none'; identificar(); } }
+  else if(e.key==='Escape'){ drop.style.display='none'; }
+}
+
+document.addEventListener('click', e=>{
+  const drop = document.getElementById('identDrop');
+  if(drop && !document.getElementById('identEmail')?.contains(e.target) && !drop.contains(e.target)){
+    drop.style.display='none';
+  }
+});
+
+async function identificar(){
+  const emailEl = document.getElementById('identEmail');
+  const statusEl = document.getElementById('identStatus');
+  const btn = document.getElementById('identBtn');
+  if(!emailEl || !statusEl) return;
+
+  const email = emailEl.value.trim();
+  if(!email){ setIdentStatus('err','Ingrese un correo electrónico.'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Verificando...';
+  statusEl.style.display = 'none';
+
+  try{
+    const r = await fetch('/api/portal/identify', {
+      method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email})
+    });
+    const d = await r.json();
+
+    if(!d.success){
+      setIdentStatus('err', d.error || 'Correo no encontrado. Solo se permite el dominio @integratel.com.pe');
+      return;
+    }
+
+    // Persist email for cross-page use
+    const resolvedName = d.name || email;
+    localStorage.setItem('portal_user_email', email);
+    localStorage.setItem('portal_user_name', resolvedName);
+
+    // Log activity (non-blocking)
+    fetch('/api/portal/activity-log', {
+      method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email, action: 'identify', page: 'autogestion', metadata: { type: d.type, name: d.name } })
+    }).catch(()=>{});
+
+    if(d.type === 'admin'){
+      setIdentStatus('ok', `<i class="bi bi-shield-check-fill"></i> Bienvenido, <strong>${d.name}</strong>. Acceso completo habilitado.`);
+      setTimeout(()=>{
+        if(_identBox) _identBox.style.display='none';
+        applyReporterLinks(email);
+        showFullTabs();
+      }, 900);
+    } else if(d.type === 'employee' || d.type === 'new_registered'){
+      const msg = d.type==='new_registered'
+        ? `<i class="bi bi-envelope-check-fill"></i> Correo registrado. Te enviamos un correo de bienvenida a <strong>${email}</strong>.`
+        : `<i class="bi bi-check-circle-fill"></i> Bienvenido, <strong>${d.name}</strong>. Acceso al catálogo habilitado.`;
+      setIdentStatus('info', msg);
+      setTimeout(()=>{
+        if(_identBox) _identBox.style.display='none';
+        applyReporterLinks(email);
+        showCatalog(d.name || email, d.type === 'new_registered');
+      }, 1100);
+    }
+  }catch(err){
+    setIdentStatus('err', 'Error de conexión. Intente nuevamente.');
+  } finally{
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-arrow-right-circle-fill"></i> Ingresar';
+  }
+}
+
+function applyReporterLinks(email){
+  const enc  = encodeURIComponent(email);
+  const name = localStorage.getItem('portal_user_name') || email;
+  const encN = encodeURIComponent(name);
+  document.querySelectorAll('a[data-reporter-link]').forEach(a => {
+    const base = a.dataset.href;
+    const sep  = base.includes('?') ? '&' : '?';
+    a.href = base + sep + 'reporter=' + enc + '&name=' + encN;
+  });
+}
+
+// On page load: restore session from localStorage
+(function restorePortalSession(){
+  const savedEmail = localStorage.getItem('portal_user_email');
+  const savedName  = localStorage.getItem('portal_user_name');
+  if(!savedEmail) return;
+  const emailEl = document.getElementById('identEmail');
+  if(emailEl) emailEl.value = savedEmail;
+  applyReporterLinks(savedEmail);
+  cbShow(savedEmail, savedName || savedEmail);
+  // Show a restore banner instead of forcing re-entry
+  const statusEl = document.getElementById('identStatus');
+  if(statusEl){
+    statusEl.className = 'id-status info';
+    statusEl.innerHTML = `<i class="bi bi-person-check-fill"></i> Sesión restaurada: <strong>${savedEmail}</strong>. <a href="#" onclick="clearPortalSession();return false;" style="color:inherit;text-decoration:underline;">No soy yo</a>`;
+    statusEl.style.display = 'block';
+  }
+})();
+
+function clearPortalSession(){
+  localStorage.removeItem('portal_user_email');
+  localStorage.removeItem('portal_user_name');
+  const emailEl = document.getElementById('identEmail');
+  if(emailEl) emailEl.value = '';
+  const statusEl = document.getElementById('identStatus');
+  if(statusEl) statusEl.style.display = 'none';
+}
+
+function setIdentStatus(type, html){
+  const el = document.getElementById('identStatus');
+  if(!el) return;
+  el.className = 'id-status ' + type;
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+
+function showFullTabs(){
+  const tw = document.getElementById('tabsWrapper');
+  const wp = document.getElementById('panel-wp');
+  const pa = document.getElementById('panel-pa');
+  if(tw) tw.style.display='';
+  if(wp){ wp.style.display=''; wp.classList.add('active'); }
+  if(pa){ pa.style.display=''; pa.classList.remove('active'); }
+}
+
+function showCatalog(name, isNew){
+  const cs = document.getElementById('catalogSection');
+  const nameEl = document.getElementById('catWelcomeName');
+  const subEl = document.getElementById('catWelcomeSub');
+  if(nameEl) nameEl.textContent = name ? 'Hola, ' + name : 'Bienvenido';
+  if(subEl) subEl.textContent = isNew
+    ? 'Tu correo fue registrado. Revisa tu bandeja de entrada.'
+    : 'Selecciona un servicio del catálogo de TI';
+  if(cs) cs.style.display='';
+  // Show ARIA chatbot with user context
+  const email = localStorage.getItem('portal_user_email') || '';
+  cbShow(email, name || email);
+}
+// ── END IDENTIFICATION ─────────────────────────────────────────────────────
+
+// ── ARIA CHATBOT ──────────────────────────────────────────────────────────────
+var _cbEmail = '', _cbName = '', _cbHistory = [], _cbGreeted = false;
+var _cbPrivEmail = <%- JSON.stringify((user && user.email) || '') %>;
+var _cbPrivName  = <%- JSON.stringify((user && (user.full_name || user.name || user.email)) || '') %>;
+if (_cbPrivEmail) setTimeout(() => cbShow(_cbPrivEmail, _cbPrivName), 500);
+
+const cbWin   = document.getElementById('cbWindow');
+const cbMsgs  = document.getElementById('cbMsgs');
+const cbInput = document.getElementById('cbInput');
+
+function cbShow(email, name){
+  _cbEmail = email; _cbName = name;
+  const hdr = document.getElementById('cbHeaderUser');
+  if(hdr) hdr.textContent = name || email;
+  document.getElementById('cbContainer').classList.add('cb-visible');
+}
+
+document.getElementById('cbToggle').addEventListener('click', () => {
+  cbWin.classList.toggle('active');
+  if(cbWin.classList.contains('active')){
+    setTimeout(() => cbInput.focus(), 120);
+    if(!_cbGreeted){ _cbGreeted = true; cbGreet(); }
+  }
+});
+document.getElementById('cbClose').addEventListener('click', () => cbWin.classList.remove('active'));
+
+function cbGreet(){
+  const firstName = (_cbName || '').split(' ')[0] || 'usuario';
+  const hr = new Date().getHours();
+  const saludo = hr < 12 ? 'Buenos días' : hr < 19 ? 'Buenas tardes' : 'Buenas noches';
+  cbAddMsg(`${saludo}, <strong>${firstName}</strong> 👋<br>Soy <strong>ARIA</strong>, tu asistente de TI. ¿En qué puedo ayudarte hoy?<div class="qopts">
+    <button class="qopt" onclick="cbOptClick('net_account')">🔑 Cuenta de red</button>
+    <button class="qopt" onclick="cbOptClick('my_permissions')">🔐 Ver mis permisos</button>
+    <button class="qopt" onclick="cbOptClick('my_licenses')">📦 Mis licencias asignadas</button>
+    <button class="qopt" onclick="cbOptClick('know_me')" style="background:linear-gradient(135deg,#fef3c7,#fde68a);color:#92400e;border-color:#fbbf24;">💬 Conócenos más...</button>
+  </div>`, 'bot');
+}
+
+function cbShowMenu(){
+  cbAddMsg(`¿Hay algo más en lo que pueda ayudarte?<div class="qopts">
+    <button class="qopt" onclick="cbOptClick('net_account')">🔑 Cuenta de red</button>
+    <button class="qopt" onclick="cbOptClick('my_permissions')">🔐 Ver mis permisos</button>
+    <button class="qopt" onclick="cbOptClick('my_licenses')">📦 Mis licencias asignadas</button>
+    <button class="qopt" onclick="cbOptClick('know_me')" style="background:linear-gradient(135deg,#fef3c7,#fde68a);color:#92400e;border-color:#fbbf24;">💬 Conócenos más...</button>
+  </div>`, 'bot');
+}
+
+// ── Flujo "Conócenos más" ──────────────────────────────────────────────────
+var _cbFlow     = null;   // null | 'know_me'
+var _cbKnowStep = 0;
+var _cbKnowData = {};
+
+const _KNOW_ME_STEPS = [
+  { key:'birthday', ask:'¡Me encanta conocerte mejor! 🌟<br>Cuéntame, ¿cuándo es tu cumpleaños? 🎂<br><span style="font-size:11px;color:#94a3b8;">(Ej. 15 de marzo)</span>' },
+  { key:'area',     ask:'¡Anotado! 📅<br>¿En qué área de la empresa trabajas actualmente? 🏢' },
+  { key:'daily',    ask:'¡Perfecto! 💼<br>¿Qué herramienta, recurso o mejora crees que te ayudaría más en tu labor diaria? 💡' },
+];
+
+function cbOptClick(key){
+  // Mostrar como mensaje de usuario
+  const labels = {
+    net_account:     '🔑 Cuenta de red',
+    net_unlock:      '🔓 Desbloquear cuenta',
+    net_reset:       '🔄 Resetear contraseña',
+    my_permissions:  '🔐 Ver mis permisos',
+    my_licenses:     '📦 Mis licencias asignadas',
+    know_me:         '💬 Conócenos más...',
+  };
+  cbAddMsg(labels[key] || key, 'user');
+  cbShowTyping();
+  setTimeout(function(){
+    cbHideTyping();
+    if(key === 'net_account'){
+      cbAddMsg(`🔑 <strong>Cuenta de red</strong><br>¿Qué necesitas hacer?<div class="qopts"><button class="qopt" onclick="cbOptClick('net_unlock')">🔓 Desbloquear cuenta</button><button class="qopt" onclick="cbOptClick('net_reset')">🔄 Resetear contraseña</button></div>`, 'bot');
+    } else if(key === 'net_unlock'){
+      cbAddMsg('🔓 <strong>Desbloquear cuenta</strong><br><br>Esta función desbloqueará tu cuenta de red automáticamente si fue bloqueada por intentos fallidos de inicio de sesión.<br><br><span style="background:#fef9c3;color:#854d0e;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;">⏳ Próximamente disponible</span>', 'bot');
+      setTimeout(cbShowMenu, 1200);
+    } else if(key === 'net_reset'){
+      cbAddMsg('🔄 <strong>Resetear contraseña</strong><br><br>Podrás restablecer tu contraseña de red de forma segura y sin necesidad de contactar al Service Desk.<br><br><span style="background:#fef9c3;color:#854d0e;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;">⏳ Próximamente disponible</span>', 'bot');
+      setTimeout(cbShowMenu, 1200);
+    } else if(key === 'my_permissions'){
+      cbAddMsg('🔐 <strong>Ver mis permisos</strong><br><br>Aquí podrás consultar todos los permisos y accesos asignados a tu usuario en los distintos sistemas y aplicaciones corporativas.<br><br><span style="background:#fef9c3;color:#854d0e;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;">⏳ Próximamente disponible</span>', 'bot');
+      setTimeout(cbShowMenu, 1200);
+    } else if(key === 'my_licenses'){
+      cbAddMsg('📦 <strong>Mis licencias asignadas</strong><br><br>Podrás ver todas las licencias de software asignadas a tu perfil: Office, antivirus, herramientas especializadas y más.<br><br><span style="background:#fef9c3;color:#854d0e;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;">⏳ Próximamente disponible</span>', 'bot');
+      setTimeout(cbShowMenu, 1200);
+    } else if(key === 'know_me'){
+      _cbFlow = 'know_me'; _cbKnowStep = 0; _cbKnowData = {};
+      cbAddMsg(_KNOW_ME_STEPS[0].ask, 'bot');
+    }
+  }, 700);
+}
+
+function cbHandleKnowMe(txt){
+  _cbKnowData[_KNOW_ME_STEPS[_cbKnowStep].key] = txt;
+  _cbKnowStep++;
+  cbShowTyping();
+  setTimeout(function(){
+    cbHideTyping();
+    if(_cbKnowStep < _KNOW_ME_STEPS.length){
+      cbAddMsg(_KNOW_ME_STEPS[_cbKnowStep].ask, 'bot');
+    } else {
+      _cbFlow = null;
+      var name = (_cbName||'').split(' ')[0] || 'usuario';
+      cbAddMsg(`¡Muchas gracias, <strong>${name}</strong>! 💙✨<br><br>Hemos guardado tus respuestas:<br>
+        <div style="background:#f0f9ff;border-left:3px solid #0ea5e9;border-radius:6px;padding:10px 14px;margin-top:8px;font-size:12px;line-height:1.8;">
+          🎂 <strong>Cumpleaños:</strong> ${_cbKnowData.birthday||'—'}<br>
+          🏢 <strong>Área:</strong> ${_cbKnowData.area||'—'}<br>
+          💡 <strong>Necesita:</strong> ${_cbKnowData.daily||'—'}
+        </div>
+        <br>Con esta información podré asistirte de forma más personalizada. ¡Gracias por compartirlo! 🚀`, 'bot');
+      setTimeout(cbShowMenu, 1500);
+    }
+  }, 800);
+}
+
+function cbAddMsg(html, who){
+  const d = document.createElement('div');
+  d.className = 'msg ' + who;
+  const c = document.createElement('div');
+  c.className = 'msg-c';
+  c.innerHTML = html;
+  d.appendChild(c);
+  cbMsgs.appendChild(d);
+  cbMsgs.scrollTop = cbMsgs.scrollHeight;
+}
+function cbShowTyping(){
+  const d = document.createElement('div');
+  d.className = 'msg bot'; d.id = 'ariaTyping';
+  d.innerHTML = '<div class="msg-c"><div class="dots"><span></span><span></span><span></span></div></div>';
+  cbMsgs.appendChild(d);
+  cbMsgs.scrollTop = cbMsgs.scrollHeight;
+}
+function cbHideTyping(){ const t = document.getElementById('ariaTyping'); if(t) t.remove(); }
+
+function cbDoAction(action){
+  const enc  = encodeURIComponent(_cbEmail);
+  const encN = encodeURIComponent(_cbName);
+  const qs   = _cbEmail ? '?reporter='+enc+'&name='+encN : '';
+  const urls = {
+    open_incidencia:   '/incidencias'+qs,
+    open_requerimiento:'/requerimientos'+qs,
+    open_tickets:      '/home',
+    open_faq:          '/preguntas-frecuentes'+qs
+  };
+  if(urls[action]) window.open(urls[action], '_blank');
+}
+
+async function cbSendMsg(){
+  const txt = cbInput.value.trim(); if(!txt) return;
+  cbAddMsg(txt, 'user');
+  cbInput.value = ''; cbInput.disabled = true;
+  // Intercept guided flows before AI
+  if(_cbFlow === 'know_me'){
+    cbInput.disabled = false; cbInput.focus();
+    cbHandleKnowMe(txt);
+    return;
+  }
+  _cbHistory.push({ role:'user', content: txt });
+  cbShowTyping();
+  try {
+    const r = await fetch('/api/portal/chat', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ message: txt, email: _cbEmail, name: _cbName, history: _cbHistory.slice(-8) })
+    });
+    const d = await r.json();
+    cbHideTyping();
+    if(d.success){
+      const reply = d.reply || 'Lo siento, no entendí. ¿Puedes reformular?';
+      const html = reply.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+      // If there's an action, append a button to the same message bubble
+      let actionBtn = '';
+      if(d.action && _CB_ACTION_LABELS[d.action]){
+        const lbl = _CB_ACTION_LABELS[d.action].label;
+        actionBtn = `<div style="margin-top:10px;"><button onclick="cbDoAction('${d.action}')" style="background:linear-gradient(135deg,#1e3a5f,#2563eb);color:#fff;border:none;border-radius:18px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><i class="bi bi-box-arrow-up-right"></i> ${lbl}</button></div>`;
+      }
+      cbAddMsg(html + actionBtn, 'bot');
+      _cbHistory.push({ role:'assistant', content: reply });
+    } else {
+      cbAddMsg('⚠️ Hubo un error al procesar tu consulta. Intenta de nuevo.', 'bot');
+    }
+  } catch(e){
+    cbHideTyping();
+    cbAddMsg('⚠️ Sin conexión. Verifica tu red e intenta de nuevo.', 'bot');
+  } finally { cbInput.disabled = false; cbInput.focus(); }
+}
+
+document.getElementById('cbSend').addEventListener('click', cbSendMsg);
+cbInput.addEventListener('keypress', e => { if(e.key === 'Enter' && !cbInput.disabled) cbSendMsg(); });
+
+// ── PORTAL MODALS ──────────────────────────────────────────────────────────
+function openSurveyModal(){
+  _surveyRating = 0; _surveyRatingEquip = 0; _surveyRatingApp = 0;
+  ['#starRow','#starRowEquip','#starRowApp'].forEach(sel =>
+    document.querySelectorAll(sel+' .star-btn').forEach(b => { b.classList.remove('active'); b.style.color='#d1d5db'; })
+  );
+  document.getElementById('surveyComment').value    = '';
+  document.getElementById('surveyAppName').value    = '';
+  document.getElementById('surveyStarLabel').textContent      = '';
+  document.getElementById('surveyStarLabelEquip').textContent = '';
+  document.getElementById('surveyStarLabelApp').textContent   = '';
+  document.getElementById('surveyForm').style.display    = '';
+  document.getElementById('surveySuccess').style.display = 'none';
+  const name = (localStorage.getItem('portal_user_name')||'').split(' ')[0];
+  const gr = document.getElementById('surveyGreeting');
+  if(gr) gr.textContent = name ? 'Hola, ' + name + ' 👋' : 'Encuesta de Satisfacción';
+  document.getElementById('surveyModalOverlay').classList.add('show');
+}
+function openRecoModal(){ document.getElementById('recoText').value=''; document.getElementById('recoCategory').value=''; document.getElementById('recoForm').style.display=''; document.getElementById('recoSuccess').style.display='none'; document.getElementById('recoModalOverlay').classList.add('show'); }
+function openAnuncioModal(){ document.getElementById('anuncioTitle').value=''; document.getElementById('anuncioBody').value=''; document.getElementById('anuncioForm').style.display=''; document.getElementById('anuncioSuccess').style.display='none'; document.getElementById('anuncioModalOverlay').classList.add('show'); }
+
+function openWspModal(){
+  const email = localStorage.getItem('portal_user_email') || '';
+  const name  = localStorage.getItem('portal_user_name')  || '';
+  if(!email){ alert('Identifícate primero para solicitar el registro.'); return; }
+  document.getElementById('wspEmailDisplay').value = email;
+  document.getElementById('wspUserDisplay').value  = name || email;
+  document.getElementById('wspPhone').value  = '';
+  document.getElementById('wspReason').value = '';
+  document.getElementById('wspPhoneErr').style.display = 'none';
+  document.getElementById('wspForm').style.display    = 'block';
+  document.getElementById('wspSuccess').style.display = 'none';
+  document.getElementById('wspModalOverlay').classList.add('show');
+}
+
+async function submitWsp(){
+  const phone  = document.getElementById('wspPhone').value.trim();
+  const reason = document.getElementById('wspReason').value.trim();
+  const email  = document.getElementById('wspEmailDisplay').value;
+  const name   = document.getElementById('wspUserDisplay').value;
+  const errEl  = document.getElementById('wspPhoneErr');
+  if(phone.length < 9){ errEl.textContent='Ingresa un número de 9 dígitos.'; errEl.style.display='block'; return; }
+  errEl.style.display='none';
+  const btn = document.getElementById('btnWspSend');
+  btn.disabled=true; btn.innerHTML='<i class="bi bi-hourglass-split"></i> Enviando…';
+  try {
+    const r = await fetch('/api/portal/whatsapp-register', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email, name, phone:'+51'+phone, reason })
+    });
+    const d = await r.json();
+    if(d.success){
+      document.getElementById('wspSuccessPhone').textContent = '+51 ' + phone;
+      document.getElementById('wspForm').style.display    = 'none';
+      document.getElementById('wspSuccess').style.display = 'block';
+    } else alert('Error: '+(d.error||'No se pudo enviar la solicitud'));
+  } catch(e){ alert('Error de conexión'); }
+  finally{ btn.disabled=false; btn.innerHTML='<i class="bi bi-send-fill"></i> Solicitar registro'; }
+}
+function closePModal(id){ document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.portal-modal-overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('show'); }));
+
+// Estrellas encuesta
+var _surveyRating = 0;
+var _surveyRatingEquip = 0;
+var _surveyRatingApp   = 0;
+const _starLabels = ['','😞 Muy malo','😕 Malo','😐 Regular','😊 Bueno','🤩 ¡Excelente!'];
+const _starThanks = [
+  '',
+  { emoji:'😞', title:'Lamentamos tu experiencia', msg:'Gracias por contarnos. Usaremos tu feedback para mejorar urgentemente.' },
+  { emoji:'😕', title:'Gracias por tu honestidad', msg:'Trabajaremos para superar tus expectativas la próxima vez.' },
+  { emoji:'😊', title:'¡Gracias por tu calificación!', msg:'Es bueno saber que vamos por buen camino. ¡Seguimos mejorando!' },
+  { emoji:'😄', title:'¡Genial, nos alegra mucho!', msg:'Tu satisfacción es nuestra motivación. ¡Gracias!' },
+  { emoji:'🤩', title:'¡Muchas gracias!', msg:'¡Nos encanta saber que tu experiencia fue excelente!' }
+];
+const _starSectionMap = {
+  platform: { rowId:'starRow',      labelId:'surveyStarLabel',      store: function(v){ _surveyRating = v; } },
+  equip:    { rowId:'starRowEquip', labelId:'surveyStarLabelEquip', store: function(v){ _surveyRatingEquip = v; } },
+  app:      { rowId:'starRowApp',   labelId:'surveyStarLabelApp',   store: function(v){ _surveyRatingApp = v; } },
+};
+
+function setStar(section, n, btn){
+  var cfg = _starSectionMap[section]; if(!cfg) return;
+  cfg.store(n);
+  document.querySelectorAll('#'+cfg.rowId+' .star-btn').forEach(function(b,i){
+    b.classList.toggle('active', i < n);
+    b.style.color = i < n ? '#f59e0b' : '#d1d5db';
+  });
+  btn.classList.remove('pop'); void btn.offsetWidth; btn.classList.add('pop');
+  btn.addEventListener('animationend', function(){ btn.classList.remove('pop'); }, {once:true});
+  burstStars(btn, n);
+  var lbl = document.getElementById(cfg.labelId);
+  if(lbl) lbl.textContent = _starLabels[n] || '';
+}
+
+function burstStars(el, count){
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width/2;
+  const cy = rect.top  + rect.height/2;
+  const particles = ['⭐','✨','💫','🌟','⚡'];
+  const num = Math.min(4 + count, 10);
+  for(let i = 0; i < num; i++){
+    const p = document.createElement('span');
+    p.className = 'star-particle';
+    p.textContent = particles[i % particles.length];
+    const angle = (360 / num) * i * (Math.PI / 180);
+    const dist  = 40 + Math.random() * 50;
+    p.style.setProperty('--tx', Math.cos(angle)*dist + 'px');
+    p.style.setProperty('--ty', Math.sin(angle)*dist + 'px');
+    p.style.left = cx + 'px';
+    p.style.top  = cy + 'px';
+    p.style.marginLeft = '-10px';
+    p.style.marginTop  = '-10px';
+    document.body.appendChild(p);
+    p.addEventListener('animationend', () => p.remove());
+  }
+}
+
+async function submitSurvey(){
+  if(!_surveyRating){ document.getElementById('surveyStarLabel').textContent='👆 Selecciona una calificación'; return; }
+  const comment = document.getElementById('surveyComment').value.trim();
+  const appName = document.getElementById('surveyAppName').value.trim();
+  try {
+    await fetch('/api/portal/survey-general', { method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        rating:          _surveyRating,
+        rating_equipment: _surveyRatingEquip || null,
+        rating_app:       _surveyRatingApp   || null,
+        app_name:         appName || null,
+        comment,
+        portalEmail: localStorage.getItem('portal_user_email') || '',
+        portalName:  localStorage.getItem('portal_user_name')  || ''
+      }) });
+  } catch(e) {}
+  const name = (localStorage.getItem('portal_user_name')||'').split(' ')[0] || 'usuario';
+  const t = _starThanks[_surveyRating] || _starThanks[5];
+  document.getElementById('surveySuccessEmoji').textContent  = t.emoji;
+  document.getElementById('surveyThanksTitle').textContent   = `¡Hola, ${name}! ${t.title}`;
+  document.getElementById('surveyThanksMsg').textContent     = t.msg;
+  document.getElementById('surveyStarsDisplay').textContent  = '★'.repeat(_surveyRating) + '☆'.repeat(5-_surveyRating);
+  document.getElementById('surveyForm').style.display    = 'none';
+  document.getElementById('surveySuccess').style.display = 'block';
+  const modal = document.querySelector('#surveyModalOverlay .portal-modal');
+  if(modal){ const r=modal.getBoundingClientRect(); burstStars({getBoundingClientRect:()=>({left:r.left+r.width/2-15,top:r.top+80,width:30,height:30})}, 5); }
+  setTimeout(() => closePModal('surveyModalOverlay'), 3000);
+}
+
+async function submitReco(){
+  const text = document.getElementById('recoText').value.trim();
+  if(!text){ alert('Escribe tu recomendación'); return; }
+  const category = document.getElementById('recoCategory').value;
+  try {
+    await fetch('/api/portal/recommendation', { method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ text, category }) });
+  } catch(e) {}
+  document.getElementById('recoForm').style.display='none';
+  document.getElementById('recoSuccess').style.display='block';
+}
+
+async function submitAnuncio(){
+  const title = document.getElementById('anuncioTitle').value.trim();
+  const body  = document.getElementById('anuncioBody').value.trim();
+  if(!title||!body){ alert('Completa título y mensaje'); return; }
+  const audience = document.getElementById('anuncioAudience').value;
+  try {
+    await fetch('/api/portal/announcement', { method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ title, body, audience }) });
+  } catch(e) {}
+  document.getElementById('anuncioForm').style.display='none';
+  document.getElementById('anuncioSuccess').style.display='block';
+}
+
+// ── MARQUESINA ─────────────────────────────────────────────────────────────
+const _mqIcons = { critical:'bi-exclamation-triangle-fill', warning:'bi-exclamation-circle-fill', info:'bi-info-circle-fill', success:'bi-check-circle-fill' };
+const _mqClass = { critical:'mq-critical', warning:'mq-warning', info:'mq-info', success:'mq-success' };
+
+async function loadMarquee(){
+  try {
+    const r = await fetch('/api/portal/banners');
+    const d = await r.json();
+    if(!d.success || !d.data?.length) return;
+    const wrap = document.getElementById('marqueeWrap');
+    const inner = document.getElementById('marqueeInner');
+    if(!wrap || !inner) return;
+    // Build items (duplicated for seamless loop)
+    const items = d.data.map(b => {
+      const cls = _mqClass[b.severity] || 'mq-info';
+      const ico = _mqIcons[b.severity] || 'bi-info-circle-fill';
+      return `<span class="marquee-item ${cls}"><i class="bi ${ico}" style="font-size:16px;flex-shrink:0;"></i>${b.message}</span><span class="marquee-sep ${cls}">◆</span>`;
+    }).join('');
+    inner.innerHTML = items + items; // duplicate for infinite loop
+    wrap.classList.add('has-banners');
+    // Adjust animation speed by content length
+    const totalLen = d.data.reduce((s,b)=>s+b.message.length,0);
+    const dur = Math.max(14, Math.min(40, totalLen * 0.18));
+    inner.style.animationDuration = dur + 's';
+    // Apply dominant severity class to both wrap (border) and track (background)
+    const track = document.getElementById('marqueeTrack');
+    const dominant = d.data.find(b=>b.severity==='critical') || d.data.find(b=>b.severity==='warning') || d.data[0];
+    const sevCls = _mqClass[dominant.severity] || 'mq-info';
+    track.className = 'marquee-track ' + sevCls;
+    wrap.className  = 'marquee-wrap has-banners ' + sevCls;
+  } catch(e) {}
+}
+loadMarquee();
+
+function openMarqueeAdmin(){
+  document.getElementById('marqueeModalOverlay').classList.add('show');
+  loadBannerList();
+}
+
+async function loadBannerList(){
+  const list = document.getElementById('mqList');
+  list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;"><i class="bi bi-hourglass-split"></i> Cargando...</div>';
+  try {
+    const r = await fetch('/api/portal/banners?all=1', {credentials:'include'});
+    const d = await r.json();
+    if(!d.data?.length){ list.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">No hay avisos publicados</div>'; return; }
+    list.innerHTML = d.data.map(b => {
+      const cls = _mqClass[b.severity] || 'mq-info';
+      const ico = _mqIcons[b.severity] || 'bi-info-circle-fill';
+      const exp = b.expires_at ? ` · Expira: ${new Date(b.expires_at).toLocaleString('es-PE',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}` : '';
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid var(--border-soft);background:var(--bg-card);">
+        <span class="marquee-item ${cls}" style="flex:1;padding:5px 12px;border-radius:6px;font-size:12px;"><i class="bi ${ico}"></i>${b.message}</span>
+        <span style="font-size:11px;color:var(--text-muted);white-space:nowrap;">${new Date(b.created_at).toLocaleString('es-PE',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}${exp}</span>
+        <button onclick="deleteBanner(${b.id})" style="padding:4px 10px;border-radius:6px;border:1px solid #fca5a5;background:rgba(239,68,68,.08);color:#dc2626;cursor:pointer;font-size:12px;" title="Desactivar"><i class="bi bi-trash3"></i></button>
+      </div>`;
+    }).join('');
+  } catch(e) { list.innerHTML='<div style="color:var(--danger);padding:12px;">Error al cargar avisos</div>'; }
+}
+
+async function submitBanner(){
+  const msg = document.getElementById('mqMsg').value.trim();
+  const severity = document.getElementById('mqSeverity').value;
+  const expires = document.getElementById('mqExpires').value;
+  if(!msg){ alert('Escribe el texto del aviso'); return; }
+  try {
+    const r = await fetch('/api/portal/banners', {
+      method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ message: msg, severity, expires_at: expires || null })
+    });
+    const d = await r.json();
+    if(d.success){
+      document.getElementById('mqMsg').value = '';
+      document.getElementById('mqExpires').value = '';
+      loadBannerList();
+      loadMarquee();
+    } else alert(d.error || 'Error al publicar');
+  } catch(e) { alert('Error de conexión'); }
+}
+
+async function deleteBanner(id){
+  if(!confirm('¿Desactivar este aviso?')) return;
+  try {
+    await fetch(`/api/portal/banners/${id}`, {method:'DELETE', credentials:'include'});
+    loadBannerList();
+    loadMarquee();
+  } catch(e) {}
+}
+
+// ── MÉTRICAS PORTAL ────────────────────────────────────────────────────────
+let _mxData = [];
+async function loadPortalMetrics(){
+  const from  = document.getElementById('mxFrom')?.value  || '';
+  const to    = document.getElementById('mxTo')?.value    || '';
+  const email = document.getElementById('mxEmail')?.value || '';
+  const tbody = document.getElementById('mxTbody');
+  if(tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);"><i class="bi bi-hourglass-split"></i> Cargando...</td></tr>';
+  try {
+    const qs = new URLSearchParams();
+    if(from)  qs.set('from',  from);
+    if(to)    qs.set('to',    to);
+    if(email) qs.set('email', email);
+    const r = await fetch('/api/portal/activity-metrics?' + qs.toString(), { credentials:'include' });
+    const d = await r.json();
+    if(!d.success){ if(tbody) tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--danger);">Error al cargar métricas</td></tr>'; return; }
+
+    // KPIs
+    const t = d.totals || {};
+    const kv = (id, v) => { const el=document.getElementById(id); if(el) el.querySelector('.mx-kpi-val').textContent = v ?? 0; };
+    kv('kpi-users',  t.unique_users);
+    kv('kpi-logins', t.total_logins);
+    kv('kpi-inc',    t.total_incidencias);
+    kv('kpi-req',    t.total_requerimientos);
+    kv('kpi-total',  t.total_actions);
+
+    // Tabla
+    _mxData = d.summary || [];
+    const cnt = document.getElementById('mxCount');
+    if(cnt) cnt.textContent = `(${_mxData.length} usuarios)`;
+    renderMxTable();
+  } catch(e) {
+    if(tbody) tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--danger);">Error de conexión</td></tr>';
+  }
+}
+
+function renderMxTable(){
+  const tbody = document.getElementById('mxTbody');
+  if(!tbody) return;
+  if(!_mxData.length){ tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">Sin actividad registrada</td></tr>'; return; }
+  tbody.innerHTML = _mxData.map(u => {
+    const lastSeen = u.last_seen ? new Date(u.last_seen).toLocaleString('es-PE',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+    const incBadge = u.incidencias > 0 ? `<span class="mx-badge" style="background:rgba(239,68,68,.12);color:#dc2626;">${u.incidencias}</span>` : `<span style="color:var(--text-muted)">0</span>`;
+    const reqBadge = u.requerimientos > 0 ? `<span class="mx-badge" style="background:rgba(59,130,246,.12);color:#2563eb;">${u.requerimientos}</span>` : `<span style="color:var(--text-muted)">0</span>`;
+    return `<tr class="mx-tr" style="border-top:1px solid var(--border-soft);">
+      <td style="padding:10px 16px;font-weight:600;color:var(--text-main);">${u.email}</td>
+      <td style="padding:10px 12px;text-align:center;color:var(--text-muted);">${u.identifies ?? 0}</td>
+      <td style="padding:10px 12px;text-align:center;">${incBadge}</td>
+      <td style="padding:10px 12px;text-align:center;">${reqBadge}</td>
+      <td style="padding:10px 12px;text-align:center;font-weight:700;color:var(--text-main);">${u.total}</td>
+      <td style="padding:10px 16px;color:var(--text-muted);font-size:12px;">${lastSeen}</td>
+    </tr>`;
+  }).join('');
+}
+
+function exportMxCSV(){
+  if(!_mxData.length){ alert('No hay datos para exportar'); return; }
+  const rows = [['Correo','Accesos','Incidencias','Requerimientos','Total acciones','Última actividad']];
+  _mxData.forEach(u => rows.push([u.email, u.identifies??0, u.incidencias??0, u.requerimientos??0, u.total, u.last_seen||'']));
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+  a.download = `metricas-portal-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+</script>
+</body>
+</html>

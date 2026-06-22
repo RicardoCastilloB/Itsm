@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Devolución de Equipos — Service Desk TI</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+:root{--bg:#f5f7fa;--bg-card:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;--primary:#3b82f6;--primary-soft:#dbeafe;--accent:#2563eb;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;}
+[data-theme="dark"]{--bg:#0f172a;--bg-card:#1e293b;--border:#2d3f55;--text:#e2e8f0;--muted:#94a3b8;--primary:#60a5fa;--primary-soft:#1e3a5f;--accent:#60a5fa;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh;}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#1e3a5f,#be185d,#ec4899);padding:40px 24px 56px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23fff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");}
+.hero h1{font-size:clamp(20px,4vw,32px);font-weight:800;color:#fff;margin-bottom:8px;position:relative;}
+.hero p{font-size:14px;color:rgba(255,255,255,.8);position:relative;}
+
+/* USER CHIP */
+.user-chip{position:absolute;top:16px;right:20px;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:50px;padding:6px 14px 6px 6px;backdrop-filter:blur(8px);}
+.user-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;}
+.user-chip span{font-size:12px;font-weight:600;color:#fff;}
+
+/* MAIN CONTAINER */
+.container{max-width:720px;margin:0 auto;padding:0 16px 60px;}
+
+/* STEPS */
+.steps-bar{display:flex;align-items:center;gap:0;margin:-28px auto 32px;max-width:460px;position:relative;z-index:1;}
+.step-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.step-circle{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;border:2px solid var(--border);background:var(--bg-card);color:var(--muted);transition:all .3s;}
+.step-circle.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 0 4px rgba(37,99,235,.2);}
+.step-circle.done{background:var(--success);border-color:var(--success);color:#fff;}
+.step-label{font-size:10px;font-weight:600;color:var(--muted);white-space:nowrap;}
+.step-line{flex:1;height:2px;background:var(--border);margin-top:-20px;}
+.step-line.done{background:var(--success);}
+
+/* CARD */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,.06);}
+.card-title{font-size:15px;font-weight:800;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.card-title i{color:var(--accent);}
+
+/* EMPLOYEE INFO */
+.emp-info-row{display:flex;align-items:center;gap:14px;padding:14px;background:var(--primary-soft);border-radius:12px;margin-bottom:16px;}
+.emp-av{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#0ea5e9);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;flex-shrink:0;}
+.emp-info h3{font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.emp-info p{font-size:12px;color:var(--muted);}
+
+/* EQUIPMENT LIST */
+.equip-list{display:flex;flex-direction:column;gap:8px;}
+.equip-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:all .2s;user-select:none;}
+.equip-item:hover{border-color:var(--primary);background:var(--primary-soft);}
+.equip-item.selected{border-color:var(--success);background:#f0fdf4;}
+.equip-icon{width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,#dbeafe,#bfdbfe);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.equip-info{flex:1;min-width:0;}
+.equip-info strong{font-size:13px;font-weight:700;color:var(--text);display:block;}
+.equip-info span{font-size:11px;color:var(--muted);}
+.equip-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;}
+.equip-item.selected .equip-check{background:var(--success);border-color:var(--success);color:#fff;}
+
+/* CHECKLIST */
+.checklist{display:flex;flex-direction:column;gap:10px;}
+.check-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;transition:border-color .2s;}
+.check-row.checked{border-color:var(--success);background:#f0fdf4;}
+.check-row.unchecked{border-color:#fca5a5;background:#fff5f5;}
+.check-info{display:flex;align-items:center;gap:12px;}
+.check-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.check-text strong{font-size:13px;font-weight:700;color:var(--text);display:block;}
+.check-text span{font-size:11px;color:var(--muted);}
+/* Toggle switch */
+.toggle{position:relative;width:48px;height:26px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:#d1d5db;border-radius:50px;cursor:pointer;transition:.3s;}
+.toggle-slider:before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 4px rgba(0,0,0,.2);}
+.toggle input:checked + .toggle-slider{background:var(--success);}
+.toggle input:checked + .toggle-slider:before{transform:translateX(22px);}
+
+/* SIGNATURE PAD */
+.sig-wrap{border:2px dashed var(--border);border-radius:12px;position:relative;overflow:hidden;background:#fafafa;cursor:crosshair;}
+[data-theme="dark"] .sig-wrap{background:#1a2744;}
+#sigCanvas{display:block;width:100%;touch-action:none;}
+.sig-toolbar{display:flex;gap:8px;margin-top:10px;align-items:center;}
+.sig-hint{font-size:11px;color:var(--muted);flex:1;}
+.btn-sig-clear{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg-card);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;}
+.sig-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;pointer-events:none;color:var(--muted);opacity:.5;}
+.sig-placeholder i{font-size:32px;}
+.sig-placeholder span{font-size:12px;}
+
+/* OBSERVACIONES */
+.obs-input{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13px;font-family:inherit;background:var(--bg-card);color:var(--text);resize:vertical;outline:none;transition:border-color .2s;}
+.obs-input:focus{border-color:var(--primary);}
+
+/* ALERT */
+.alert-warning{background:#fef9c3;border:1px solid #fde047;border-radius:12px;padding:14px 16px;font-size:13px;color:#854d0e;display:flex;gap:10px;align-items:flex-start;margin-bottom:16px;}
+.alert-danger{background:#fff5f5;border:1px solid #fca5a5;border-radius:12px;padding:14px 16px;font-size:13px;color:#991b1b;display:flex;gap:10px;align-items:flex-start;margin-bottom:16px;}
+
+/* BUTTONS */
+.btn-row{display:flex;gap:12px;margin-top:8px;}
+.btn-primary{flex:1;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,#be185d,#ec4899);color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;}
+.btn-primary:hover{opacity:.88;transform:translateY(-1px);}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn-outline{padding:14px 20px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg-card);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-outline:hover{border-color:var(--primary);color:var(--primary);}
+
+/* SUCCESS SCREEN */
+.success-screen{text-align:center;padding:40px 20px;}
+.success-icon{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#dcfce7,#bbf7d0);display:flex;align-items:center;justify-content:center;font-size:40px;margin:0 auto 20px;}
+.success-screen h2{font-size:22px;font-weight:800;color:var(--text);margin-bottom:8px;}
+.success-screen p{font-size:14px;color:var(--muted);max-width:360px;margin:0 auto 24px;}
+
+/* LOADING STATE */
+.loading-equip{padding:32px;text-align:center;color:var(--muted);font-size:13px;}
+.spinner{display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:8px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* EMPTY */
+.empty-equip{padding:32px;text-align:center;color:var(--muted);font-size:13px;}
+.empty-equip i{font-size:36px;display:block;margin-bottom:8px;opacity:.4;}
+
+/* HIDDEN step panes */
+.step-pane{display:none;}
+.step-pane.active{display:block;}
+
+/* BACK btn */
+.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer;margin-bottom:16px;padding:4px 0;background:none;border:none;font-family:inherit;}
+.back-btn:hover{color:var(--primary);}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="user-chip">
+    <div class="user-av" id="userAv">?</div>
+    <span id="userName">Cargando...</span>
+  </div>
+  <h1><i class="bi bi-box-arrow-in-left" style="margin-right:8px;"></i>Devolución de Equipos</h1>
+  <p>Registra la entrega de equipos y activos tecnológicos asignados</p>
+</div>
+
+<div class="container">
+
+  <!-- Steps bar -->
+  <div class="steps-bar">
+    <div class="step-item">
+      <div class="step-circle active" id="sc1">1</div>
+      <div class="step-label">Equipos</div>
+    </div>
+    <div class="step-line" id="sl1"></div>
+    <div class="step-item">
+      <div class="step-circle" id="sc2">2</div>
+      <div class="step-label">Checklist</div>
+    </div>
+    <div class="step-line" id="sl2"></div>
+    <div class="step-item">
+      <div class="step-circle" id="sc3">3</div>
+      <div class="step-label">Firma</div>
+    </div>
+    <div class="step-line" id="sl3"></div>
+    <div class="step-item">
+      <div class="step-circle" id="sc4">4</div>
+      <div class="step-label">Confirmar</div>
+    </div>
+  </div>
+
+  <!-- ── STEP 1: Equipos ── -->
+  <div class="step-pane active" id="pane1">
+    <div class="card">
+      <div class="emp-info-row" id="empInfoRow" style="display:none;">
+        <div class="emp-av" id="empAv">?</div>
+        <div class="emp-info">
+          <h3 id="empName">—</h3>
+          <p id="empEmail">—</p>
+        </div>
+      </div>
+      <div class="card-title"><i class="bi bi-laptop"></i> Equipos asignados</div>
+      <div id="equipList">
+        <div class="loading-equip"><div class="spinner"></div><br>Cargando equipos...</div>
+      </div>
+
+      <!-- ¿No es tu equipo? -->
+      <div id="wrongEquipBanner" style="display:none;margin-top:16px;border:1.5px solid #fbbf24;border-radius:12px;padding:14px 16px;background:#fffbeb;">
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+          <input type="checkbox" id="chkWrongEquip" style="margin-top:3px;width:16px;height:16px;accent-color:#f59e0b;cursor:pointer;" onchange="toggleWrongEquip(this.checked)">
+          <div style="flex:1;">
+            <label for="chkWrongEquip" style="font-size:13px;font-weight:700;color:#92400e;cursor:pointer;">¿El equipo mostrado no es el tuyo o hay un error en la asignación?</label>
+            <p style="font-size:12px;color:#b45309;margin:4px 0 0;">Marca esta casilla para reportar una incidencia y que TI corrija la asignación.</p>
+          </div>
+        </div>
+        <div id="wrongEquipAction" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid #fde68a;">
+          <p style="font-size:12px;color:#92400e;margin-bottom:10px;">Se abrirá el formulario de incidencias para que puedas detallar el problema con tu equipo asignado.</p>
+          <button onclick="openIncidenciasForEquip()" style="display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:10px;border:none;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:13px;font-weight:700;cursor:pointer;">
+            <i class="bi bi-exclamation-triangle-fill"></i> Generar incidencia de equipo incorrecto
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-outline" onclick="window.history.back()">Cancelar</button>
+      <button class="btn-primary" id="btnStep1" onclick="goStep(2)" disabled>
+        <i class="bi bi-arrow-right"></i> Continuar
+      </button>
+    </div>
+  </div>
+
+  <!-- ── STEP 2: Checklist ── -->
+  <div class="step-pane" id="pane2">
+    <button class="back-btn" onclick="goStep(1)"><i class="bi bi-arrow-left"></i> Volver</button>
+    <div class="card">
+      <div class="card-title"><i class="bi bi-clipboard2-check"></i> Lista de verificación</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Indica el estado de cada ítem al momento de la entrega:</p>
+      <div class="checklist">
+
+        <div class="check-row unchecked" id="cr-celular">
+          <div class="check-info">
+            <div class="check-icon" style="background:linear-gradient(135deg,#fef3c7,#fde68a);">📱</div>
+            <div class="check-text">
+              <strong>Celular corporativo</strong>
+              <span>¿Devolvió el teléfono corporativo asignado?</span>
+            </div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="chk-celular" onchange="updateCheck('celular',this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="check-row unchecked" id="cr-locker">
+          <div class="check-info">
+            <div class="check-icon" style="background:linear-gradient(135deg,#fce7f3,#fbcfe8);">🔑</div>
+            <div class="check-text">
+              <strong>Llave de locker</strong>
+              <span>¿Mantiene en su poder la llave del locker asignado?</span>
+            </div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="chk-locker" onchange="updateCheck('locker',this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="check-row unchecked" id="cr-fotocheck">
+          <div class="check-info">
+            <div class="check-icon" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);">🪪</div>
+            <div class="check-text">
+              <strong>Fotocheck</strong>
+              <span>¿Entregó su fotocheck / credencial de identificación?</span>
+            </div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="chk-fotocheck" onchange="updateCheck('fotocheck',this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-outline" onclick="goStep(1)">Atrás</button>
+      <button class="btn-primary" onclick="goStep(3)">
+        <i class="bi bi-arrow-right"></i> Continuar
+      </button>
+    </div>
+  </div>
+
+  <!-- ── STEP 3: Firma digital ── -->
+  <div class="step-pane" id="pane3">
+    <button class="back-btn" onclick="goStep(2)"><i class="bi bi-arrow-left"></i> Volver</button>
+    <div class="card">
+      <div class="card-title"><i class="bi bi-pen"></i> Firma digital</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Firme en el recuadro de abajo para confirmar la devolución. Su firma quedará registrada en el acta.</p>
+      <div class="sig-wrap" id="sigWrap">
+        <div class="sig-placeholder" id="sigPlaceholder">
+          <i class="bi bi-pen-fill"></i>
+          <span>Dibuje su firma aquí</span>
+        </div>
+        <canvas id="sigCanvas" height="180"></canvas>
+      </div>
+      <div class="sig-toolbar">
+        <span class="sig-hint">Use el mouse o su dedo en pantalla táctil</span>
+        <button class="btn-sig-clear" onclick="sigClear()"><i class="bi bi-eraser"></i> Limpiar</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="bi bi-chat-text"></i> Observaciones</div>
+      <textarea class="obs-input" id="obsInput" rows="3" placeholder="Indique cualquier observación relevante sobre la devolución (opcional)..."></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn-outline" onclick="goStep(2)">Atrás</button>
+      <button class="btn-primary" id="btnStep3" onclick="goStep(4)">
+        <i class="bi bi-arrow-right"></i> Continuar
+      </button>
+    </div>
+  </div>
+
+  <!-- ── STEP 4: Confirmación ── -->
+  <div class="step-pane" id="pane4">
+    <button class="back-btn" onclick="goStep(3)"><i class="bi bi-arrow-left"></i> Volver</button>
+
+    <div class="alert-warning">
+      <i class="bi bi-exclamation-triangle-fill" style="font-size:20px;flex-shrink:0;margin-top:1px;"></i>
+      <div>
+        <strong>Acción irreversible:</strong> Al confirmar, su cuenta será <strong>dada de baja</strong> en el sistema y los equipos seleccionados pasarán al área de recuperos en almacén.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="bi bi-file-text"></i> Resumen de devolución</div>
+      <div id="summaryContent" style="font-size:13px;line-height:1.8;color:var(--text);"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-outline" onclick="goStep(3)">Atrás</button>
+      <button class="btn-primary" id="btnSubmit" onclick="submitDevolucion()">
+        <i class="bi bi-check-circle-fill"></i> Confirmar devolución
+      </button>
+    </div>
+  </div>
+
+  <!-- ── SUCCESS ── -->
+  <div class="step-pane" id="paneSuccess">
+    <div class="card success-screen">
+      <div class="success-icon">✅</div>
+      <h2>¡Devolución registrada!</h2>
+      <p>Tu devolución ha sido procesada exitosamente. Los equipos han pasado al área de recuperos y tu perfil ha sido dado de baja en el sistema.</p>
+      <p style="margin-top:12px;font-size:12px;color:var(--muted);">Puedes cerrar esta ventana.</p>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ── Portal identity ────────────────────────────────────────────────────────
+const _reporterEmail = <%- JSON.stringify(reporterEmail || '') %>;
+const _reporterName  = <%- JSON.stringify(reporterName  || '') %>;
+
+var _portalEmail = _reporterEmail || localStorage.getItem('portal_user_email') || '';
+var _portalName  = _reporterName  || localStorage.getItem('portal_user_name')  || '';
+
+if (_reporterEmail) { localStorage.setItem('portal_user_email', _reporterEmail); localStorage.setItem('portal_user_name', _reporterName); }
+
+// Init chip
+(function(){
+  var name = _portalName || _portalEmail || '?';
+  var parts = name.trim().split(/\s+/);
+  var ini = parts.length >= 2 ? (parts[0][0]+parts[parts.length-1][0]).toUpperCase() : name.slice(0,2).toUpperCase();
+  document.getElementById('userAv').textContent = ini;
+  document.getElementById('userName').textContent = name;
+})();
+
+// ── State ──────────────────────────────────────────────────────────────────
+var _employeeId   = null;
+var _equipSelected = [];  // array of {id, label}
+var _chkCelular   = false;
+var _chkLocker    = false;
+var _chkFotocheck = false;
+var _sigHasData   = false;
+var _currentStep  = 1;
+
+// ── Steps navigation ────────────────────────────────────────────────────────
+function goStep(n){
+  if(n === 4) buildSummary();
+  document.querySelectorAll('.step-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('pane'+n).classList.add('active');
+  _currentStep = n;
+  // Update circles
+  for(var i=1;i<=4;i++){
+    var c = document.getElementById('sc'+i);
+    c.classList.remove('active','done');
+    if(i < n) c.classList.add('done'), c.innerHTML = '<i class="bi bi-check-lg" style="font-size:13px;"></i>';
+    else if(i === n) { c.classList.add('active'); c.textContent = i; }
+    else c.textContent = i;
+    if(i < 4){ var l = document.getElementById('sl'+i); l.classList.toggle('done', i < n); }
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── Load employee + equipment ────────────────────────────────────────────────
+async function loadEquipment(){
+  if(!_portalEmail){ showEmptyEquip('Inicia sesión en el portal para ver tus equipos.'); return; }
+
+  // Init emp info row
+  var name = _portalName || _portalEmail;
+  var parts = name.trim().split(/\s+/);
+  var ini   = parts.length >= 2 ? (parts[0][0]+parts[parts.length-1][0]).toUpperCase() : name.slice(0,2).toUpperCase();
+  document.getElementById('empAv').textContent  = ini;
+  document.getElementById('empName').textContent = name;
+  document.getElementById('empEmail').textContent = _portalEmail;
+  document.getElementById('empInfoRow').style.display = 'flex';
+
+  try{
+    const r = await fetch('/api/portal/devolucion/equipment?email=' + encodeURIComponent(_portalEmail), {credentials:'include'});
+    const d = await r.json();
+    if(!d.success) throw new Error(d.error||'Error');
+    _employeeId = d.employeeId;
+    var items = d.equipment || [];
+    if(!items.length){ showEmptyEquip('No tienes equipos asignados actualmente.'); return; }
+    renderEquipList(items);
+    document.getElementById('wrongEquipBanner').style.display = 'block';
+  }catch(e){
+    showEmptyEquip('No se pudieron cargar los equipos. ' + e.message);
+  }
+}
+
+var _equipIcons = {
+  'Laptop':'💻','Computadora':'🖥️','Desktop':'🖥️','Monitor':'🖥️','Impresora':'🖨️',
+  'Celular':'📱','Teléfono':'📱','Tablet':'📱','USB':'💾','Teclado':'⌨️',
+  'Mouse':'🖱️','Headset':'🎧','Proyector':'📽️'
+};
+function equipIcon(type){ for(var k in _equipIcons){ if((type||'').toLowerCase().includes(k.toLowerCase())) return _equipIcons[k]; } return '💼'; }
+
+function renderEquipList(items){
+  var html = items.map(function(eq){
+    var icon = equipIcon(eq.equipment_type || eq.brand || '');
+    var label = [eq.brand, eq.model].filter(Boolean).join(' ') || eq.device_code || 'Equipo';
+    return `<div class="equip-item" id="eq-${eq.id}" onclick="toggleEquip(${eq.id},'${escJs(label)}','${escJs(eq.device_code||'')}')">
+      <div class="equip-icon">${icon}</div>
+      <div class="equip-info">
+        <strong>${escHtml(label)}</strong>
+        <span>${escHtml(eq.device_code||'')}${eq.serial_number?' · S/N: '+escHtml(eq.serial_number):''}</span>
+      </div>
+      <div class="equip-check" id="eqc-${eq.id}"></div>
+    </div>`;
+  }).join('');
+  document.getElementById('equipList').innerHTML = html;
+}
+
+function showEmptyEquip(msg){
+  document.getElementById('equipList').innerHTML = `<div class="empty-equip"><i class="bi bi-inbox"></i>${escHtml(msg)}</div>`;
+  document.getElementById('wrongEquipBanner').style.display = 'block';
+}
+
+function toggleWrongEquip(checked){
+  document.getElementById('wrongEquipAction').style.display = checked ? 'block' : 'none';
+}
+
+function openIncidenciasForEquip(){
+  var enc  = encodeURIComponent(_portalEmail);
+  var encN = encodeURIComponent(_portalName);
+  var qs   = _portalEmail ? '?reporter='+enc+'&name='+encN : '';
+  window.open('/incidencias'+qs, '_blank');
+}
+
+function toggleEquip(id, label, code){
+  var idx = _equipSelected.findIndex(function(e){ return e.id===id; });
+  if(idx >= 0){ _equipSelected.splice(idx,1); }
+  else { _equipSelected.push({id:id, label:label, code:code}); }
+  var el = document.getElementById('eq-'+id);
+  var ch = document.getElementById('eqc-'+id);
+  if(el && ch){
+    el.classList.toggle('selected', idx<0);
+    ch.innerHTML = idx<0 ? '<i class="bi bi-check-lg" style="font-size:13px;"></i>' : '';
+  }
+  document.getElementById('btnStep1').disabled = _equipSelected.length === 0;
+}
+
+// ── Checklist ──────────────────────────────────────────────────────────────
+function updateCheck(key, val){
+  if(key==='celular')   { _chkCelular   = val; document.getElementById('cr-celular').className   = 'check-row '+(val?'checked':'unchecked'); }
+  if(key==='locker')    { _chkLocker    = val; document.getElementById('cr-locker').className    = 'check-row '+(val?'checked':'unchecked'); }
+  if(key==='fotocheck') { _chkFotocheck = val; document.getElementById('cr-fotocheck').className = 'check-row '+(val?'checked':'unchecked'); }
+}
+
+// ── Signature Pad ──────────────────────────────────────────────────────────
+var _sigCtx, _sigDrawing = false, _sigCanvas;
+
+function initSig(){
+  _sigCanvas = document.getElementById('sigCanvas');
+  _sigCtx    = _sigCanvas.getContext('2d');
+  // Fit canvas to wrapper width
+  _sigCanvas.width  = _sigCanvas.offsetWidth || 640;
+  _sigCanvas.height = 180;
+  _sigCtx.strokeStyle = '#1e293b';
+  _sigCtx.lineWidth   = 2.5;
+  _sigCtx.lineCap     = 'round';
+  _sigCtx.lineJoin    = 'round';
+
+  function pos(e){
+    var r = _sigCanvas.getBoundingClientRect();
+    var src = e.touches ? e.touches[0] : e;
+    return { x:(src.clientX-r.left)*((_sigCanvas.width)/r.width), y:(src.clientY-r.top)*((_sigCanvas.height)/r.height) };
+  }
+  _sigCanvas.addEventListener('mousedown',  function(e){ _sigDrawing=true; _sigCtx.beginPath(); var p=pos(e); _sigCtx.moveTo(p.x,p.y); hidePlaceholder(); });
+  _sigCanvas.addEventListener('mousemove',  function(e){ if(!_sigDrawing) return; var p=pos(e); _sigCtx.lineTo(p.x,p.y); _sigCtx.stroke(); _sigHasData=true; });
+  _sigCanvas.addEventListener('mouseup',    function(){ _sigDrawing=false; });
+  _sigCanvas.addEventListener('mouseleave', function(){ _sigDrawing=false; });
+  _sigCanvas.addEventListener('touchstart', function(e){ e.preventDefault(); _sigDrawing=true; _sigCtx.beginPath(); var p=pos(e); _sigCtx.moveTo(p.x,p.y); hidePlaceholder(); }, {passive:false});
+  _sigCanvas.addEventListener('touchmove',  function(e){ e.preventDefault(); if(!_sigDrawing) return; var p=pos(e); _sigCtx.lineTo(p.x,p.y); _sigCtx.stroke(); _sigHasData=true; }, {passive:false});
+  _sigCanvas.addEventListener('touchend',   function(){ _sigDrawing=false; });
+}
+
+function hidePlaceholder(){ var p=document.getElementById('sigPlaceholder'); if(p) p.style.display='none'; }
+function sigClear(){
+  _sigCtx.clearRect(0,0,_sigCanvas.width,_sigCanvas.height);
+  _sigHasData=false;
+  var p=document.getElementById('sigPlaceholder'); if(p) p.style.display='flex';
+}
+
+// ── Summary ────────────────────────────────────────────────────────────────
+function buildSummary(){
+  var equipHtml = _equipSelected.map(function(e){ return `<li>${escHtml(e.label)}${e.code?' ('+escHtml(e.code)+')':''}</li>`; }).join('');
+  document.getElementById('summaryContent').innerHTML = `
+    <div style="margin-bottom:12px;"><strong style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Colaborador</strong><br>${escHtml(_portalName||_portalEmail)}</div>
+    <div style="margin-bottom:12px;"><strong style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Equipos a devolver</strong><ul style="margin:6px 0 0 16px;">${equipHtml}</ul></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+      <div style="padding:10px;background:${_chkCelular?'#f0fdf4':'#fff5f5'};border-radius:8px;text-align:center;font-size:12px;"><div style="font-size:18px;margin-bottom:4px;">📱</div><strong>Celular</strong><br><span style="color:${_chkCelular?'var(--success)':'var(--danger)'};">${_chkCelular?'✔ Devuelto':'✘ No devuelto'}</span></div>
+      <div style="padding:10px;background:${_chkLocker?'#f0fdf4':'#fff5f5'};border-radius:8px;text-align:center;font-size:12px;"><div style="font-size:18px;margin-bottom:4px;">🔑</div><strong>Llave locker</strong><br><span style="color:${_chkLocker?'var(--success)':'var(--danger)'};">${_chkLocker?'✔ Entregada':'✘ Pendiente'}</span></div>
+      <div style="padding:10px;background:${_chkFotocheck?'#f0fdf4':'#fff5f5'};border-radius:8px;text-align:center;font-size:12px;"><div style="font-size:18px;margin-bottom:4px;">🪪</div><strong>Fotocheck</strong><br><span style="color:${_chkFotocheck?'var(--success)':'var(--danger)'};">${_chkFotocheck?'✔ Entregado':'✘ Pendiente'}</span></div>
+    </div>
+    ${document.getElementById('obsInput').value.trim() ? '<div><strong style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Observaciones</strong><br>'+escHtml(document.getElementById('obsInput').value.trim())+'</div>' : ''}
+  `;
+}
+
+// ── Submit ─────────────────────────────────────────────────────────────────
+async function submitDevolucion(){
+  var btn = document.getElementById('btnSubmit');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Procesando...';
+
+  var firma = _sigHasData ? _sigCanvas.toDataURL('image/png') : null;
+
+  try{
+    var r = await fetch('/api/portal/devolucion', {
+      method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        portalEmail:      _portalEmail,
+        portalName:       _portalName,
+        employeeId:       _employeeId,
+        equipmentIds:     _equipSelected.map(function(e){ return e.id; }),
+        devolvio_celular: _chkCelular,
+        mantiene_llave:   _chkLocker,
+        entrego_fotocheck:_chkFotocheck,
+        firma_digital:    firma,
+        observaciones:    document.getElementById('obsInput').value.trim(),
+      })
+    });
+    var d = await r.json();
+    if(!d.success) throw new Error(d.error||'Error al registrar');
+    document.querySelectorAll('.step-pane').forEach(p => p.classList.remove('active'));
+    document.getElementById('paneSuccess').classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }catch(e){
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Confirmar devolución';
+    var existing = document.querySelector('.alert-danger.runtime');
+    if(existing) existing.remove();
+    var al = document.createElement('div');
+    al.className = 'alert-danger runtime';
+    al.innerHTML = '<i class="bi bi-x-circle-fill" style="font-size:18px;flex-shrink:0;"></i><span>'+escHtml(e.message)+'</span>';
+    document.getElementById('pane4').insertBefore(al, document.querySelector('.btn-row'));
+  }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function escHtml(s){ var d=document.createElement('div'); d.textContent=String(s||''); return d.innerHTML; }
+function escJs(s)  { return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+
+// ── Init ────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function(){
+  loadEquipment();
+  // Init sig on step 3 reveal
+  var _sigInited = false;
+  var origGoStep = goStep;
+  window.goStep = function(n){
+    origGoStep(n);
+    if(n===3 && !_sigInited){ _sigInited=true; setTimeout(initSig,50); }
+  };
+});
+</script>
+</body>
+</html>

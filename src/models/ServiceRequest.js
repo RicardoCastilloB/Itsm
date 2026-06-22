@@ -15,7 +15,8 @@ const ServiceRequest = sequelize.define('ServiceRequest', {
     priority:       { type: DataTypes.ENUM('baja','media','alta','critica'), defaultValue: 'media' },
     dueDate:        { type: DataTypes.DATE, allowNull: true, field: 'due_date' },
     completedAt:    { type: DataTypes.DATE, allowNull: true, field: 'completed_at' },
-    rejectedReason: { type: DataTypes.TEXT, allowNull: true, field: 'rejected_reason' },
+    rejectedReason:  { type: DataTypes.TEXT,       allowNull: true,  field: 'rejected_reason' },
+    requesterEmail:  { type: DataTypes.STRING(255), allowNull: true,  field: 'requester_email' },
 }, {
     tableName:  'service_requests',
     underscored: true,

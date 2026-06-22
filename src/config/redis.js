@@ -1,25 +1,21 @@
-// src/config/redis.js — Conexión Redis con ioredis
-require('dotenv').config();
-const Redis = require('ioredis');
+'use strict';
 
-const redisConfig = {
-    host:           process.env.REDIS_HOST     || 'localhost',
-    port:           parseInt(process.env.REDIS_PORT) || 6379,
-    password:       process.env.REDIS_PASSWORD || undefined,
-    db:             parseInt(process.env.REDIS_DB)   || 0,
-    maxRetriesPerRequest: null,   // requerido por Bull
-    enableReadyCheck:     false,  // requerido por Bull
-    retryStrategy(times) {
-        if (times > 10) return null;           // deja de reintentar
-        return Math.min(times * 200, 3000);   // backoff
+// In-memory TTL cache — drop-in replacement for ioredis
+// Usado por FeatureFlagService y ViewResolver (cache de features/branding por tenant)
+const _store = new Map();
+
+const cache = {
+    async get(key) {
+        const entry = _store.get(key);
+        if (!entry) return null;
+        if (Date.now() > entry.exp) { _store.delete(key); return null; }
+        return entry.val;
     },
+    async setex(key, ttlSeconds, value) {
+        _store.set(key, { val: value, exp: Date.now() + ttlSeconds * 1000 });
+    },
+    async del(key) { _store.delete(key); },
 };
 
-const redis = new Redis(redisConfig);
-
-redis.on('connect',  () => require('../../utils/logger').info('✅ Redis conectado'));
-redis.on('error',    (err) => require('../../utils/logger').warn(`⚠️  Redis error: ${err.message}`));
-redis.on('close',    () => require('../../utils/logger').warn('⚠️  Redis desconectado'));
-
-module.exports = redis;
-module.exports.redisConfig = redisConfig;
+module.exports = cache;
+module.exports.redisConfig = {}; // conservado por si algún require lo desestructura

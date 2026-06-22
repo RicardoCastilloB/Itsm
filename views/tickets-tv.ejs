@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard TV — Cola de Tickets</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    :root {
+      --bg: #0d1117; --card: #161b22; --border: #21262d;
+      --text: #c9d1d9; --muted: #8b949e;
+      --p1: #ef4444; --p2: #f97316; --p3: #3b82f6; --p4: #6b7280;
+      --green: #10b981; --yellow: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; overflow-x: hidden;
+    }
+
+    /* ── Header ── */
+    .tv-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #172b4d, #0052cc);
+      border-bottom: 2px solid #2684ff;
+    }
+    .tv-header-left { display: flex; align-items: center; gap: 14px; }
+    .tv-logo { width: 36px; height: 36px; }
+    .tv-title { font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -.5px; }
+    .tv-subtitle { font-size: 12px; color: rgba(255,255,255,.6); margin-top: 2px; }
+    .tv-clock {
+      font-size: 28px; font-weight: 700; color: #fff;
+      font-variant-numeric: tabular-nums; letter-spacing: 1px;
+    }
+    .tv-refresh-badge {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; color: rgba(255,255,255,.55);
+    }
+    .tv-refresh-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #10b981; animation: blink 2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    /* ── Stats bar ── */
+    .tv-stats {
+      display: flex; gap: 0; border-bottom: 1px solid var(--border);
+    }
+    .tv-stat {
+      flex: 1; padding: 12px 20px; text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .tv-stat:last-child { border-right: none; }
+    .tv-stat-val { font-size: 28px; font-weight: 800; line-height: 1; }
+    .tv-stat-lbl { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .06em; }
+
+    /* ── Grid de tickets ── */
+    .tv-body { padding: 20px 24px; }
+    .tv-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 14px;
+    }
+    .tv-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px;
+      border-left: 4px solid var(--p3);
+      transition: transform .15s;
+    }
+    .tv-card:hover { transform: translateY(-2px); }
+    .tv-card[data-prio="P1"] { border-left-color: var(--p1); }
+    .tv-card[data-prio="P2"] { border-left-color: var(--p2); }
+    .tv-card[data-prio="P3"] { border-left-color: var(--p3); }
+    .tv-card[data-prio="P4"] { border-left-color: var(--p4); }
+
+    .tc-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+    .tc-key { font-size: 11px; font-family: monospace; color: var(--muted); }
+    .tc-badges { display: flex; gap: 5px; flex-wrap: wrap; }
+    .tc-badge {
+      font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px;
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .badge-p1 { background: rgba(239,68,68,.2); color: #fca5a5; }
+    .badge-p2 { background: rgba(249,115,22,.2); color: #fdba74; }
+    .badge-p3 { background: rgba(59,130,246,.2); color: #93c5fd; }
+    .badge-p4 { background: rgba(107,114,128,.2); color: #d1d5db; }
+    .badge-open   { background: rgba(16,185,129,.15); color: #6ee7b7; }
+    .badge-wait   { background: rgba(245,158,11,.15); color: #fde68a; }
+    .badge-prog   { background: rgba(59,130,246,.15); color: #93c5fd; }
+
+    .tc-summary { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; line-height: 1.35; }
+    .tc-meta { font-size: 11px; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; }
+    .tc-meta span { display: flex; align-items: center; gap: 4px; }
+
+    /* SLA indicator */
+    .tc-sla { margin-top: 8px; }
+    .tc-sla-bar { height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; }
+    .tc-sla-fill { height: 100%; border-radius: 2px; transition: width .5s; }
+    .sla-ok   { background: var(--green); }
+    .sla-warn { background: var(--yellow); }
+    .sla-over { background: var(--p1); animation: pulse-red 1.5s infinite; }
+    @keyframes pulse-red { 0%,100%{opacity:1} 50%{opacity:.5} }
+    .tc-sla-txt { font-size: 10px; color: var(--muted); margin-top: 3px; }
+
+    /* ── Empty ── */
+    .tv-empty {
+      text-align: center; padding: 60px 20px;
+      color: var(--muted); font-size: 16px;
+    }
+    .tv-empty i { font-size: 48px; display: block; margin-bottom: 12px; opacity: .4; }
+
+    /* ── Spinner ── */
+    .tv-spinner {
+      display: flex; justify-content: center; align-items: center;
+      height: 200px; color: var(--muted);
+    }
+    .spin { animation: spin .8s linear infinite; font-size: 32px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Countdown ── */
+    .tv-countdown { font-size: 10px; color: rgba(255,255,255,.4); }
+    .tv-countdown span { color: rgba(255,255,255,.7); font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="tv-header">
+  <div class="tv-header-left">
+    <svg class="tv-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="g1" x1="100%" y1="0%" x2="18%" y2="100%">
+          <stop offset="0%" stop-color="#2684FF"/><stop offset="100%" stop-color="#0052CC"/>
+        </linearGradient>
+        <linearGradient id="g2" x1="0%" y1="100%" x2="82%" y2="0%">
+          <stop offset="0%" stop-color="#0052CC"/><stop offset="100%" stop-color="#2684FF"/>
+        </linearGradient>
+      </defs>
+      <path d="M15.5 3L3 15.5l5.5 5.5 7-7 7 7 5.5-5.5z" fill="url(#g1)"/>
+      <path d="M15.5 29L28 16.5 22.5 11l-7 7-7-7L3 16.5z" fill="url(#g2)"/>
+    </svg>
+    <div>
+      <div class="tv-title">Cola de Tickets</div>
+      <div class="tv-subtitle">Dashboard en tiempo real · Solo tickets abiertos y en progreso</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:24px;">
+    <div>
+      <div class="tv-refresh-badge">
+        <div class="tv-refresh-dot"></div>
+        <span>Actualizando en <span id="cdCount" class="tv-countdown"><span>30</span>s</span></span>
+      </div>
+    </div>
+    <div class="tv-clock" id="tvClock">--:--:--</div>
+  </div>
+</div>
+
+<!-- Stats bar -->
+<div class="tv-stats" id="tvStats">
+  <div class="tv-stat"><div class="tv-stat-val" id="st-total">—</div><div class="tv-stat-lbl">Total Abiertos</div></div>
+  <div class="tv-stat"><div class="tv-stat-val" style="color:var(--p1)" id="st-p1">—</div><div class="tv-stat-lbl">P1 Crítico</div></div>
+  <div class="tv-stat"><div class="tv-stat-val" style="color:var(--p2)" id="st-p2">—</div><div class="tv-stat-lbl">P2 Alto</div></div>
+  <div class="tv-stat"><div class="tv-stat-val" style="color:var(--p3)" id="st-p3">—</div><div class="tv-stat-lbl">P3 Medio</div></div>
+  <div class="tv-stat"><div class="tv-stat-val" style="color:var(--green)" id="st-sla">—</div><div class="tv-stat-lbl">Cumplimiento SLA</div></div>
+</div>
+
+<!-- Grid -->
+<div class="tv-body">
+  <div class="tv-grid" id="tvGrid">
+    <div class="tv-spinner"><i class="bi bi-arrow-clockwise spin"></i></div>
+  </div>
+</div>
+
+<script>
+const SLA_HOURS = { P1: 1, P2: 4, P3: 8, P4: 24 };
+let countdown = 30;
+
+// Reloj
+function updateClock() {
+  document.getElementById('tvClock').textContent =
+    new Date().toLocaleTimeString('es-PE', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// Countdown
+function tickCountdown() {
+  countdown--;
+  document.querySelector('#cdCount span').textContent = countdown;
+  if (countdown <= 0) { countdown = 30; loadTV(); }
+}
+setInterval(tickCountdown, 1000);
+
+// Calcular % SLA consumido
+function slaPercent(ticket) {
+  if (!ticket.created_at) return 0;
+  const slaH = SLA_HOURS[ticket.priority] || 8;
+  const elapsed = (Date.now() - new Date(ticket.created_at).getTime()) / 3600000;
+  return Math.min((elapsed / slaH) * 100, 100);
+}
+
+function slaClass(pct) {
+  if (pct >= 100) return 'sla-over';
+  if (pct >= 75)  return 'sla-warn';
+  return 'sla-ok';
+}
+
+function slaLabel(ticket) {
+  const slaH = SLA_HOURS[ticket.priority] || 8;
+  const elapsed = (Date.now() - new Date(ticket.created_at).getTime()) / 3600000;
+  const remaining = slaH - elapsed;
+  if (remaining <= 0) return `⚠ Vencido hace ${Math.abs(remaining).toFixed(1)}h`;
+  return `${remaining.toFixed(1)}h restantes de ${slaH}h`;
+}
+
+function statusBadge(status) {
+  const s = (status||'').toLowerCase();
+  if (s.includes('progreso') || s.includes('progress')) return '<span class="tc-badge badge-prog">En progreso</span>';
+  if (s.includes('espera') || s.includes('pending') || s.includes('wait')) return '<span class="tc-badge badge-wait">En espera</span>';
+  return '<span class="tc-badge badge-open">Abierto</span>';
+}
+
+function prioBadge(p) {
+  const cls = { P1:'badge-p1', P2:'badge-p2', P3:'badge-p3', P4:'badge-p4' };
+  return `<span class="tc-badge ${cls[p]||'badge-p4'}">${p}</span>`;
+}
+
+async function loadTV() {
+  try {
+    const r = await fetch('/api/jira/tickets?limit=100&estado=abierto,en_progreso,en_proceso,pendiente', { credentials:'include' });
+    const j = await r.json();
+    const tickets = (j.data || []).filter(t => {
+      const s = (t.status || t.estado || '').toLowerCase();
+      return !s.includes('cerrado') && !s.includes('closed') && !s.includes('resuelto') && !s.includes('resolved');
+    });
+
+    // Stats
+    document.getElementById('st-total').textContent = tickets.length;
+    document.getElementById('st-p1').textContent = tickets.filter(t=>t.priority==='P1').length;
+    document.getElementById('st-p2').textContent = tickets.filter(t=>t.priority==='P2').length;
+    document.getElementById('st-p3').textContent = tickets.filter(t=>t.priority==='P3').length;
+    const inSla = tickets.filter(t => slaPercent(t) < 100).length;
+    document.getElementById('st-sla').textContent = tickets.length
+      ? Math.round((inSla / tickets.length) * 100) + '%' : '—';
+
+    // Ordenar: P1 primero, luego por % SLA consumido desc
+    tickets.sort((a, b) => {
+      const prioOrder = { P1:0, P2:1, P3:2, P4:3 };
+      const pd = (prioOrder[a.priority]||3) - (prioOrder[b.priority]||3);
+      if (pd !== 0) return pd;
+      return slaPercent(b) - slaPercent(a);
+    });
+
+    const grid = document.getElementById('tvGrid');
+    if (!tickets.length) {
+      grid.innerHTML = `<div class="tv-empty" style="grid-column:1/-1;"><i class="bi bi-check2-circle"></i>No hay tickets abiertos. ¡Todo bajo control!</div>`;
+      return;
+    }
+
+    grid.innerHTML = tickets.map(t => {
+      const pct = slaPercent(t);
+      const cls = slaClass(pct);
+      const status = t.status || t.estado || '';
+      const reporter = t.reporter_name || t.reporter || t.solicitante || '—';
+      const tech = t.assignee_name || t.tecnico || '—';
+      const cat = t.category || t.tipologia || '';
+      return `
+        <div class="tv-card" data-prio="${t.priority||'P3'}">
+          <div class="tc-top">
+            <span class="tc-key">${t.key||t.ticket_key||'—'}</span>
+            <div class="tc-badges">
+              ${prioBadge(t.priority||'P3')}
+              ${statusBadge(status)}
+            </div>
+          </div>
+          <div class="tc-summary">${t.summary||t.titulo||'Sin título'}</div>
+          <div class="tc-meta">
+            <span><i class="bi bi-person"></i>${reporter}</span>
+            <span><i class="bi bi-person-badge"></i>${tech}</span>
+            ${cat ? `<span><i class="bi bi-tag"></i>${cat}</span>` : ''}
+          </div>
+          <div class="tc-sla">
+            <div class="tc-sla-bar"><div class="tc-sla-fill ${cls}" style="width:${pct}%"></div></div>
+            <div class="tc-sla-txt">${slaLabel(t)}</div>
+          </div>
+        </div>`;
+    }).join('');
+  } catch(e) {
+    document.getElementById('tvGrid').innerHTML =
+      `<div class="tv-empty" style="grid-column:1/-1;"><i class="bi bi-exclamation-triangle"></i>Error cargando tickets: ${e.message}</div>`;
+  }
+}
+
+loadTV();
+</script>
+</body>
+</html>

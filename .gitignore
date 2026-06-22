@@ -1,6 +1,31 @@
 node_modules/
 .env
+.env.*
+!.env.example
 *.log
+logs/
+
+# Archivos de usuario — nunca en el repo
+uploads/
+backups/
+*.sql.gz
+
+# Cobertura y caché de tests
+coverage/
+.nyc_output/
+.jest-cache/
+
+# OS / Editor
 .DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Build
 dist/
-coverage/logs/
+
+# SSL — nunca subir claves privadas
+ssl/*.key
+ssl/*.crt
+ssl/*.pem
+ssl/*.pfx

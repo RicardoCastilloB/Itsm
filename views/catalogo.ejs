@@ -1,187 +1,664 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="light">
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Catálogo de Servicios</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<title><%= title %> - Service Desk</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root,[data-theme="light"]{
-    --bg:#f0f4f8;--card:#fff;--hdr:#f8fafc;--border:#e2e8f0;
-    --text:#1e293b;--muted:#64748b;--primary:#3b82f6;--success:#10b981;
-    --warning:#f59e0b;--info:#06b6d4;--danger:#ef4444;--purple:#8b5cf6;
-    --hover:#f1f5f9;--sh-sm:0 1px 3px rgba(0,0,0,.06);--sh-md:0 4px 12px rgba(0,0,0,.08);
+  --bg-main:#f5f7fa;--bg-card:#ffffff;--bg-header:#fafbfc;--border-soft:#e2e8f0;--border-row:#f1f5f9;
+  --text-main:#1e293b;--text-muted:#64748b;--primary:#3b82f6;--success:#10b981;--warning:#f59e0b;
+  --info:#06b6d4;--danger:#ef4444;--purple:#8b5cf6;--jira-blue:#0052cc;--jira-hover:#003d99;
+  --hover-row:#f8fafc;--input-bg:#ffffff;--pill-bg:#ffffff;
+  --ac-bg:#ffffff;--ac-hover:#f0f7ff;--ac-border:#f1f5f9;
 }
 [data-theme="dark"]{
-    --bg:#0f172a;--card:#1e293b;--hdr:#162032;--border:#2d3f55;
-    --text:#e2e8f0;--muted:#94a3b8;--primary:#60a5fa;--success:#34d399;
-    --warning:#fbbf24;--info:#22d3ee;--danger:#f87171;--purple:#a78bfa;
-    --hover:#243348;
+  --bg-main:#0f172a;--bg-card:#1e293b;--bg-header:#162032;--border-soft:#2d3f55;--border-row:#2d3f55;
+  --text-main:#e2e8f0;--text-muted:#94a3b8;--primary:#60a5fa;--success:#34d399;--warning:#fbbf24;
+  --info:#22d3ee;--danger:#f87171;--purple:#a78bfa;--jira-blue:#3b7dd8;--jira-hover:#2563b0;
+  --hover-row:#243348;--input-bg:#162032;--pill-bg:#1e293b;
+  --ac-bg:#1e293b;--ac-hover:#243348;--ac-border:#2d3f55;
 }
-*{box-sizing:border-box;}
-body{margin:0;background:var(--bg);color:var(--text);font-family:'DM Sans',-apple-system,sans-serif;}
-.pg{max-width:1700px;margin:0 auto;padding:24px 20px;}
-.page-hdr{display:flex;align-items:center;gap:16px;margin-bottom:28px;}
-.page-hdr-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;box-shadow:var(--sh-md);}
-.page-hdr h1{font-size:22px;font-weight:800;margin:0;}
-.page-hdr p{margin:3px 0 0;font-size:13px;color:var(--muted);}
-.page-hdr-right{margin-left:auto;display:flex;gap:8px;align-items:center;}
-.two-col{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start;}
-@media(max-width:900px){.two-col{grid-template-columns:1fr;}}
-.cat-list{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh-sm);overflow:hidden;}
-.cat-list-head{padding:13px 16px;background:var(--hdr);border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
-.cat-item{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s;font-size:13px;font-weight:600;}
+body{margin:0;background:var(--bg-main);color:var(--text-main);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;transition:background .3s,color .3s;}
+.dashboard-wrapper{width:100%;padding:16px;margin-top:60px;}
+.dashboard-content{width:100%;max-width:1680px;margin:0 auto;}
+/* Corp tab nav */
+.corp-tabnav{display:flex;gap:0;border-bottom:2px solid var(--border-soft);margin-bottom:24px;background:var(--bg-card);border-radius:12px 12px 0 0;padding:0 8px;box-shadow:0 1px 3px rgba(0,0,0,.04);flex-wrap:wrap;}
+.corp-tab{background:none;border:none;border-bottom:3px solid transparent;padding:13px 18px;font-size:13px;font-weight:600;color:var(--text-muted);cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all .2s;margin-bottom:-2px;white-space:nowrap;}
+.corp-tab:hover{color:var(--jira-blue);}
+.corp-tab.active{color:var(--jira-blue);border-bottom-color:var(--jira-blue);}
+.corp-tabpanel{animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+/* Cards */
+.card-panel{background:var(--bg-card);border-radius:12px;border:1px solid var(--border-soft);box-shadow:0 1px 3px rgba(0,0,0,.05);padding:20px;margin-bottom:16px;}
+/* KPI */
+.cards-5{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+@media(max-width:1100px){.cards-5{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:640px){.cards-5{grid-template-columns:repeat(2,1fr);}}
+.kpi-card{background:var(--bg-card);border-radius:12px;height:90px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border-soft);box-shadow:0 1px 3px rgba(0,0,0,.05);transition:all .2s;cursor:pointer;}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08);}
+.kpi-title{font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted);font-weight:600;margin-bottom:5px;}
+.kpi-value{font-size:26px;font-weight:700;line-height:1;}
+.kpi-icon{font-size:28px;opacity:.22;}
+/* Table */
+.tbl-wrap{overflow:auto;max-height:530px;}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl thead th{background:var(--bg-header);color:var(--text-muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:10px 14px;border-bottom:1px solid var(--border-soft);white-space:nowrap;position:sticky;top:0;z-index:5;}
+.tbl tbody tr{border-bottom:1px solid var(--border-row);transition:background .12s;cursor:pointer;}
+.tbl tbody tr:hover td{background:var(--hover-row);}
+.tbl td{padding:10px 14px;vertical-align:middle;}
+/* Catalog grid */
+.cat-sidebar{background:var(--bg-card);border:1px solid var(--border-soft);border-radius:12px;overflow:hidden;position:sticky;top:76px;}
+.cat-sidebar-head{padding:11px 14px;background:var(--bg-header);border-bottom:1px solid var(--border-soft);font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;}
+.cat-item{display:flex;align-items:center;gap:9px;padding:11px 14px;cursor:pointer;border-bottom:1px solid var(--border-row);transition:background .12s;font-size:13px;font-weight:600;color:var(--text-main);}
 .cat-item:last-child{border-bottom:none;}
-.cat-item:hover,.cat-item.active{background:var(--hover);}
-.cat-item.active{color:var(--primary);border-left:3px solid var(--primary);}
-.cat-item .cat-icon{font-size:18px;width:28px;text-align:center;}
-.cat-item .cat-count{margin-left:auto;background:var(--border);color:var(--muted);padding:1px 7px;border-radius:10px;font-size:11px;}
-.card-ui{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh-sm);overflow:hidden;margin-bottom:20px;}
-.card-head{padding:13px 18px;background:var(--hdr);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
-.card-head .title{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
-.svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;padding:16px;}
-.svc-card{border:1px solid var(--border);border-radius:12px;padding:16px;background:var(--card);transition:all .2s;cursor:pointer;position:relative;}
-.svc-card:hover{border-color:var(--primary);box-shadow:0 4px 16px rgba(59,130,246,.12);transform:translateY(-1px);}
-.svc-name{font-size:14px;font-weight:700;margin-bottom:5px;}
-.svc-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px;}
-.svc-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.svc-sla{background:#dbeafe;color:#2563eb;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;}
-.svc-approval{background:#fef3c7;color:#d97706;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;}
-.svc-btn{position:absolute;top:12px;right:12px;background:var(--primary);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;opacity:0;transition:opacity .2s;}
-.svc-card:hover .svc-btn{opacity:1;}
-.btn-sm{padding:6px 14px;font-size:12px;font-weight:600;border-radius:8px;border:none;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
-.btn-primary{background:var(--primary);color:#fff;}
-.btn-primary:hover{opacity:.88;}
-.btn-outline{background:transparent;border:1px solid var(--border);color:var(--muted);}
-.btn-outline:hover{background:var(--hover);}
-.form-ctrl{width:100%;border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;background:var(--card);color:var(--text);outline:none;transition:border .15s;}
-.form-ctrl:focus{border-color:var(--primary);}
+.cat-item:hover{background:var(--hover-row);}
+.cat-item.active{background:rgba(0,82,204,.06);color:var(--jira-blue);border-left:3px solid var(--jira-blue);}
+.cat-item .cnt{margin-left:auto;background:var(--border-soft);color:var(--text-muted);padding:1px 7px;border-radius:10px;font-size:11px;font-weight:700;}
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;padding:16px;}
+.svc-card{border:1.5px solid var(--border-soft);border-radius:12px;padding:16px;background:var(--bg-card);transition:all .2s;cursor:pointer;position:relative;overflow:hidden;}
+.svc-card:hover{border-color:var(--jira-blue);box-shadow:0 4px 16px rgba(0,82,204,.1);transform:translateY(-2px);}
+.svc-name{font-size:14px;font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:7px;}
+.svc-desc{font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:10px;}
+.svc-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.badge-sla{background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;}
+.badge-aprob{background:#fef3c7;color:#d97706;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;}
+[data-theme="dark"] .badge-sla{background:#1e3a5f;color:#93c5fd;}
+[data-theme="dark"] .badge-aprob{background:#422006;color:#fde68a;}
+.svc-btn-hover{position:absolute;bottom:14px;right:14px;background:var(--jira-blue);color:#fff;border:none;border-radius:8px;padding:5px 13px;font-size:11px;font-weight:700;cursor:pointer;opacity:0;transition:opacity .18s;display:inline-flex;align-items:center;gap:5px;}
+.svc-card:hover .svc-btn-hover{opacity:1;}
+.svc-admin-btns{position:absolute;top:10px;right:10px;display:flex;gap:5px;opacity:0;transition:opacity .18s;}
+.svc-card:hover .svc-admin-btns{opacity:1;}
+/* Badges status/priority */
+.bs{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.bs-pendiente_aprobacion{background:#fef3c7;color:#d97706;}
+.bs-aprobado{background:#d1fae5;color:#059669;}
+.bs-en_proceso{background:#dbeafe;color:#2563eb;}
+.bs-completado{background:#d1fae5;color:#059669;}
+.bs-rechazado{background:#fee2e2;color:#dc2626;}
+.bs-borrador{background:#f1f5f9;color:#64748b;}
+.bs-cancelado{background:#f1f5f9;color:#94a3b8;}
+.bp-baja{background:#d1fae5;color:#059669;}
+.bp-media{background:#fef3c7;color:#d97706;}
+.bp-alta{background:#fee2e2;color:#dc2626;}
+.bp-critica{background:#fce7f3;color:#be185d;}
+[data-theme="dark"] .bs-pendiente_aprobacion{background:#422006;color:#fde68a;}
+[data-theme="dark"] .bs-aprobado,.bs-completado{background:#064e3b;color:#6ee7b7;}
+[data-theme="dark"] .bs-rechazado{background:#450a0a;color:#f87171;}
+[data-theme="dark"] .bs-en_proceso{background:#1e3a5f;color:#93c5fd;}
+/* Form */
+.form-label-custom{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);margin-bottom:6px;display:block;}
+.form-control-custom,.form-select-custom{border:1.5px solid var(--border-soft);border-radius:8px;padding:9px 12px;font-size:13px;width:100%;background:var(--input-bg);color:var(--text-main);outline:none;transition:border .2s;}
+.form-control-custom:focus,.form-select-custom:focus{border-color:var(--jira-blue);box-shadow:0 0 0 3px rgba(0,82,204,.1);}
+.form-control-custom::placeholder{color:var(--text-muted);}
+textarea.form-control-custom{resize:vertical;}
 .form-group{margin-bottom:14px;}
-.form-lbl{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px;display:block;}
-.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
-.modal-overlay.open{opacity:1;pointer-events:all;}
-.modal-box{background:var(--card);border-radius:20px;width:560px;max-width:95vw;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.25);transform:translateY(20px);transition:transform .2s;}
-.modal-overlay.open .modal-box{transform:translateY(0);}
-.modal-hdr{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.modal-hdr h3{margin:0;font-size:16px;font-weight:800;}
+/* Autocomplete */
+.autocomplete-wrap{position:relative;}
+.ac-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--ac-bg);border:1.5px solid var(--border-soft);border-radius:10px;box-shadow:0 10px 36px rgba(0,0,0,.12);max-height:260px;overflow-y:auto;z-index:1060;display:none;}
+.ac-dropdown.show{display:block;animation:dropIn .15s ease;}
+@keyframes dropIn{from{opacity:0;transform:translateY(-5px);}to{opacity:1;transform:translateY(0);}}
+.ac-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--ac-border);transition:background .12s;font-size:13px;}
+.ac-item:last-child{border-bottom:none;}
+.ac-item:hover,.ac-item.active-ac{background:var(--ac-hover);}
+.ac-name{font-weight:600;color:var(--text-main);}
+.ac-sub{font-size:11px;color:var(--text-muted);}
+/* Modal */
+.modal-ov{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);z-index:1050;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-ov.open{opacity:1;pointer-events:all;}
+.modal-box{background:var(--bg-card);border-radius:16px;width:600px;max-width:96vw;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.25);transform:translateY(20px);transition:transform .2s;}
+.modal-ov.open .modal-box{transform:translateY(0);}
+.modal-hdr{padding:18px 24px 14px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;justify-content:space-between;}
+.modal-hdr h3{margin:0;font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px;}
 .modal-body{padding:20px 24px;overflow-y:auto;flex:1;}
-.modal-ftr{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
-.empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
-.search-input{height:36px;border:1px solid var(--border);border-radius:8px;padding:0 12px;font-size:13px;background:var(--card);color:var(--text);outline:none;width:220px;}
-.theme-toggle{background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--text);font-size:16px;}
+.modal-ftr{padding:14px 24px;border-top:1px solid var(--border-soft);display:flex;justify-content:flex-end;gap:8px;}
+/* Btns */
+.btn-jira{background:var(--jira-blue);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all .2s;}
+.btn-jira:hover{background:var(--jira-hover);}
+.btn-outline-sm{border:1.5px solid var(--border-soft);background:transparent;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);display:inline-flex;align-items:center;gap:5px;transition:all .15s;}
+.btn-outline-sm:hover{border-color:var(--jira-blue);color:var(--jira-blue);}
+.btn-danger-sm{border:1.5px solid #fca5a5;background:transparent;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;color:#dc2626;display:inline-flex;align-items:center;gap:5px;transition:all .15s;}
+.btn-danger-sm:hover{background:#fee2e2;}
+.btn-success-sm{border:1.5px solid #6ee7b7;background:transparent;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;color:#059669;display:inline-flex;align-items:center;gap:5px;transition:all .15s;}
+.btn-success-sm:hover{background:#d1fae5;}
+/* Tabs inside modals */
+.search-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+.s-input{height:35px;border:1.5px solid var(--border-soft);border-radius:8px;padding:0 12px;font-size:13px;background:var(--input-bg);color:var(--text-main);outline:none;transition:border .15s;}
+.s-input:focus{border-color:var(--jira-blue);}
+/* Software tag list */
+.sw-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(0,82,204,.08);color:var(--jira-blue);border:1px solid rgba(0,82,204,.2);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;margin:2px;}
+.sw-tag .rm{cursor:pointer;opacity:.6;font-size:11px;margin-left:2px;}
+.sw-tag .rm:hover{opacity:1;}
+.tag-wrap{min-height:32px;padding:4px 8px;border:1.5px solid var(--border-soft);border-radius:8px;display:flex;flex-wrap:wrap;gap:3px;cursor:text;background:var(--input-bg);}
+/* Pagination */
+.pag{display:flex;gap:4px;justify-content:flex-end;padding:10px 0;}
+.pg-btn{width:30px;height:30px;border:1px solid var(--border-soft);border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;background:var(--bg-card);color:var(--text-main);transition:all .15s;}
+.pg-btn:hover,.pg-btn.active{background:var(--jira-blue);color:#fff;border-color:var(--jira-blue);}
+/* Detail rows in modal */
+.detail-row{display:flex;gap:12px;margin-bottom:10px;font-size:13px;}
+.detail-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);min-width:100px;}
+/* Toast */
+.toast-box{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.t-item{background:var(--text-main);color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:9px;box-shadow:0 4px 20px rgba(0,0,0,.2);animation:slideUp .3s ease;}
+.t-ok{background:#065f46;}.t-err{background:#991b1b;}.t-inf{background:#1e3a5f;}
+@keyframes slideUp{from{transform:translateY(16px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.empty-state{text-align:center;padding:48px 20px;color:var(--text-muted);}
+.empty-state i{font-size:44px;opacity:.28;display:block;margin-bottom:12px;}
+/* two col layout */
+.two-col{display:grid;grid-template-columns:260px 1fr;gap:14px;align-items:start;}
+@media(max-width:860px){.two-col{grid-template-columns:1fr;}}
+.software-tag-list{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;}
+/* Auto-toggle */
+.auto-toggle-wrap{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;}
+.auto-toggle-wrap input{opacity:0;width:0;height:0;}
+.auto-toggle{position:absolute;inset:0;background:var(--border-soft);border-radius:24px;cursor:pointer;transition:background .2s;}
+.auto-toggle::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.auto-toggle-wrap input:checked + .auto-toggle{background:var(--jira-blue);}
+.auto-toggle-wrap input:checked + .auto-toggle::before{transform:translateX(20px);}
+/* 6-col grid */
+@media(max-width:1400px){.cards-6r{grid-template-columns:repeat(3,1fr)!important;}}
+@media(max-width:640px){.cards-6r{grid-template-columns:repeat(2,1fr)!important;}}
+/* Cat inline list */
+.cat-inline-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid var(--border-soft);background:var(--bg-card);margin-bottom:6px;}
+.cat-inline-row:hover{border-color:var(--jira-blue);}
+/* Gestión pills */
+.filter-pills{display:flex;gap:6px;flex-wrap:wrap;}
+.pill{border:1.5px solid var(--border-soft);background:var(--pill-bg);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;color:var(--text-muted);}
+.pill.active{background:var(--jira-blue);border-color:var(--jira-blue);color:#fff;}
+.pill:hover:not(.active){border-color:var(--jira-blue);color:var(--jira-blue);}
+.cards-6{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px;}
+@media(max-width:1400px){.cards-6{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:640px){.cards-6{grid-template-columns:repeat(2,1fr);}}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+.page-title{font-size:20px;font-weight:700;color:var(--text-main);display:flex;align-items:center;gap:9px;}
+.search-gbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px;padding:12px 16px;background:var(--bg-header);border-bottom:1px solid var(--border-soft);border-radius:12px 12px 0 0;}
+.search-gbar input{height:35px;border:1.5px solid var(--border-soft);border-radius:8px;padding:0 12px 0 32px;font-size:13px;background:var(--input-bg);color:var(--text-main);outline:none;flex:1;min-width:200px;}
+.search-gbar input:focus{border-color:var(--jira-blue);}
+.search-gbar-wrap{position:relative;flex:1;min-width:200px;}
+.search-gbar-wrap i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:13px;pointer-events:none;}
 </style>
 </head>
 <body>
-<div class="pg">
-  <div class="page-hdr">
-    <div class="page-hdr-icon" style="background:linear-gradient(135deg,#06b6d4,#0891b2);">
-      <i class="bi bi-grid-3x3-gap" style="color:#fff;"></i>
+<%- include('partials/sidebar_top') %>
+
+<%
+  const _role = user?.role || 'usuario';
+  const _isAdmin       = _role === 'administrador';
+  const _isEsp         = ['especialista','agente','tecnico'].includes(_role);
+  const _isVisor       = _role === 'visor';
+  const _canRequest    = !_isVisor;
+  const _canManage     = _isAdmin || _isEsp;
+  // Tabs por perfil:
+  // usuario      : Registrar
+  // visor        : Registrar, Indicadores
+  // especialista : Registrar, Gestión, Indicadores, Categorías, Software
+  // admin        : todo + Especialistas, Automatizaciones, Administración
+%>
+<script>(function(){document.documentElement.setAttribute('data-theme',localStorage.getItem('dashboardTheme')||'light');})();</script>
+<script>
+function toggleTheme(){const h=document.documentElement,c=h.getAttribute('data-theme'),n=c==='dark'?'light':'dark';h.setAttribute('data-theme',n);localStorage.setItem('dashboardTheme',n);const i=document.getElementById('toggleIcon'),l=document.getElementById('toggleLabel');if(i)i.textContent=n==='dark'?'☀️':'🌙';if(l)l.textContent=n==='dark'?'Claro':'Oscuro';}
+document.addEventListener('DOMContentLoaded',()=>{const t=localStorage.getItem('dashboardTheme')||'light';const i=document.getElementById('toggleIcon'),l=document.getElementById('toggleLabel');if(i)i.textContent=t==='dark'?'☀️':'🌙';if(l)l.textContent=t==='dark'?'Claro':'Oscuro';});
+</script>
+
+<div class="dashboard-wrapper">
+<div class="dashboard-content">
+
+<nav class="corp-tabnav" role="tablist">
+  <button class="corp-tab active" id="tabBtnRegistrar" onclick="doTab('registrar',this)"><i class="bi bi-grid-3x3-gap"></i> Registrar</button>
+  <% if (_canManage) { %>
+  <button class="corp-tab" id="tabBtnGestion"       onclick="doTab('gestion',this)"><i class="bi bi-kanban"></i> Gestión</button>
+  <% } %>
+  <% if (_isVisor || _canManage) { %>
+  <button class="corp-tab" id="tabBtnIndicadores"   onclick="doTab('indicadores',this)"><i class="bi bi-bar-chart-line"></i> Indicadores</button>
+  <% } %>
+  <% if (_canManage) { %>
+  <button class="corp-tab" id="tabBtnCategorias"    onclick="doTab('categorias',this)"><i class="bi bi-tags"></i> Categorías</button>
+  <button class="corp-tab" id="tabBtnSoftware"      onclick="doTab('software',this)"><i class="bi bi-box-seam"></i> Software</button>
+  <% } %>
+  <% if (_isAdmin) { %>
+  <button class="corp-tab" id="tabBtnEspecialistas" onclick="doTab('especialistas',this)"><i class="bi bi-people"></i> Especialistas</button>
+  <button class="corp-tab" id="tabBtnAutomaciones"  onclick="doTab('automaciones',this)"><i class="bi bi-gear-wide-connected"></i> Automatizaciones</button>
+  <button class="corp-tab" id="tabBtnAdmin"         onclick="doTab('admin',this)"><i class="bi bi-shield-lock"></i> Administración</button>
+  <% } %>
+</nav>
+
+<script>
+var _tabLoaded={};
+var _userCanRequest=<%= _canRequest %>;
+var _userCanManage=<%= _canManage %>;
+var _isAdmin=<%= _isAdmin %>;
+function doTab(name,btn){
+  document.querySelectorAll('.corp-tabpanel').forEach(p=>p.style.display='none');
+  document.querySelectorAll('.corp-tab').forEach(b=>b.classList.remove('active'));
+  var panels={registrar:'tab-registrar',gestion:'tab-gestion',indicadores:'tab-indicadores',categorias:'tab-categorias',software:'tab-software',especialistas:'tab-especialistas',automaciones:'tab-automaciones',admin:'tab-admin'};
+  var el=document.getElementById(panels[name]); if(el)el.style.display='block';
+  if(btn)btn.classList.add('active');
+  // Gestión siempre recarga para mostrar datos frescos
+  if(name==='gestion'){if(typeof loadGestion==='function')loadGestion();return;}
+  if(!_tabLoaded[name]){
+    _tabLoaded[name]=true;
+    setTimeout(()=>{
+      if(name==='registrar'    && typeof loadCatalog==='function')        loadCatalog();
+      if(name==='indicadores'  && typeof loadIndicadores==='function')    loadIndicadores();
+      if(name==='categorias'   && typeof loadCats==='function')           loadCats();
+      if(name==='software'     && typeof loadSoftwareList==='function')   loadSoftwareList();
+      if(name==='especialistas'&& typeof loadSpecialists==='function')    loadSpecialists();
+      if(name==='automaciones' && typeof loadAutomations==='function')    loadAutomations();
+      if(name==='admin'        && typeof loadAdminUsers==='function')     loadAdminUsers();
+    },0);
+  }
+}
+</script>
+
+<!-- ══ TAB: REGISTRAR ══ -->
+<div id="tab-registrar" class="corp-tabpanel" style="display:block;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+    <div style="font-size:18px;font-weight:700;display:flex;align-items:center;gap:9px;">
+      <i class="bi bi-grid-3x3-gap" style="color:var(--jira-blue);"></i> Catálogo de Servicios
     </div>
-    <div>
-      <h1>Catálogo de Servicios</h1>
-      <p>Solicita servicios de TI de forma rápida y estructurada</p>
-    </div>
-    <div class="page-hdr-right">
-      <button class="theme-toggle" onclick="toggleTheme()"><i class="bi bi-moon-stars-fill"></i></button>
-      <input type="text" class="search-input" id="searchInput" placeholder="Buscar servicio..." oninput="filterServices()">
-      <button class="btn-sm btn-primary" onclick="openModalAdd()">
-        <i class="bi bi-plus-lg"></i> Agregar Servicio
-      </button>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input class="s-input" style="width:220px;" id="catSearchInput" placeholder="Buscar servicio..." oninput="filterCatalog()">
+      <% if (_canManage) { %>
+      <button class="btn-jira" onclick="openModalAddSvc()"><i class="bi bi-plus-lg"></i> Agregar Servicio</button>
+      <% } %>
     </div>
   </div>
-
   <div class="two-col">
-    <!-- Sidebar categorías -->
-    <div class="cat-list">
-      <div class="cat-list-head">Categorías</div>
-      <div id="catList">
-        <div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">
-          <i class="bi bi-arrow-clockwise"></i> Cargando...
-        </div>
+    <div class="cat-sidebar">
+      <div class="cat-sidebar-head">Categorías</div>
+      <div id="catNavList"><div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;"><i class="bi bi-arrow-clockwise"></i> Cargando...</div></div>
+    </div>
+    <div class="card-panel" style="padding:0;">
+      <div style="padding:12px 16px;background:var(--bg-header);border-bottom:1px solid var(--border-soft);display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:7px;" id="catPanelTitle"><i class="bi bi-grid-3x3-gap"></i> Todos los servicios</span>
+        <span style="font-size:12px;color:var(--text-muted);" id="svcCount">0 servicios</span>
+      </div>
+      <div class="svc-grid" id="svcGrid"><div class="empty-state" style="grid-column:1/-1;"><i class="bi bi-arrow-clockwise"></i></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TAB: GESTIÓN ══ -->
+<% if (_canManage) { %>
+<div id="tab-gestion" class="corp-tabpanel" style="display:none;">
+  <div class="page-header">
+    <div class="page-title"><i class="bi bi-kanban-fill" style="color:var(--jira-blue);"></i> Gestión de Solicitudes</div>
+    <button class="btn-outline-sm" onclick="loadGestion()"><i class="bi bi-arrow-clockwise"></i> Actualizar</button>
+  </div>
+  <div class="cards-6">
+    <div class="kpi-card"><div><div class="kpi-title">Total</div><div class="kpi-value" id="gkTotal" style="color:var(--purple);">—</div></div><i class="bi bi-collection kpi-icon" style="color:var(--purple);"></i></div>
+    <div class="kpi-card" onclick="setGestPill(null,'pendiente_aprobacion')"><div><div class="kpi-title">Pendientes</div><div class="kpi-value" id="gkPend" style="color:var(--warning);">—</div></div><i class="bi bi-hourglass-split kpi-icon" style="color:var(--warning);"></i></div>
+    <div class="kpi-card" onclick="setGestPill(null,'aprobado')"><div><div class="kpi-title">Aprobadas</div><div class="kpi-value" id="gkAprov" style="color:var(--success);">—</div></div><i class="bi bi-check-circle kpi-icon" style="color:var(--success);"></i></div>
+    <div class="kpi-card" onclick="setGestPill(null,'en_proceso')"><div><div class="kpi-title">En proceso</div><div class="kpi-value" id="gkProc" style="color:var(--primary);">—</div></div><i class="bi bi-arrow-repeat kpi-icon" style="color:var(--primary);"></i></div>
+    <div class="kpi-card" onclick="setGestPill(null,'completado')"><div><div class="kpi-title">Completadas</div><div class="kpi-value" id="gkComp" style="color:var(--info);">—</div></div><i class="bi bi-check2-all kpi-icon" style="color:var(--info);"></i></div>
+    <div class="kpi-card" onclick="setGestPill(null,'rechazado')"><div><div class="kpi-title">Rechazadas</div><div class="kpi-value" id="gkRej" style="color:var(--danger);">—</div></div><i class="bi bi-x-circle kpi-icon" style="color:var(--danger);"></i></div>
+  </div>
+  <div class="card-panel" style="padding:0;overflow:hidden;">
+    <div class="search-gbar">
+      <div class="search-gbar-wrap">
+        <i class="bi bi-search"></i>
+        <input id="gestQ" placeholder="Buscar solicitante, título, categoría..." oninput="filterGestion()">
+      </div>
+      <div class="filter-pills" id="gestPills">
+        <span class="pill active" onclick="setGestPill(this,'all')">Todas</span>
+        <span class="pill" onclick="setGestPill(this,'pendiente_aprobacion')">Pendientes</span>
+        <span class="pill" onclick="setGestPill(this,'aprobado')">Aprobadas</span>
+        <span class="pill" onclick="setGestPill(this,'en_proceso')">En proceso</span>
+        <span class="pill" onclick="setGestPill(this,'completado')">Completadas</span>
+        <span class="pill" onclick="setGestPill(this,'rechazado')">Rechazadas</span>
       </div>
     </div>
+    <div id="gestTableWrap">
+      <div class="empty-state"><i class="bi bi-arrow-clockwise"></i><p>Cargando solicitudes...</p></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;flex-wrap:wrap;gap:8px;">
+      <span id="gestPagInfo" style="font-size:12px;color:var(--text-muted);"></span>
+      <div id="gestPagBtns" style="display:flex;gap:6px;"></div>
+    </div>
+  </div>
+</div>
+<% } %>
 
-    <!-- Grid de servicios -->
-    <div class="card-ui">
-      <div class="card-head">
-        <span class="title" id="catTitle"><i class="bi bi-grid-3x3-gap"></i> Todos los servicios</span>
-        <span id="svcCount" style="font-size:12px;color:var(--muted);">0 servicios</span>
-      </div>
-      <div class="svc-grid" id="svcGrid">
-        <div class="empty-state" style="grid-column:1/-1;"><i class="bi bi-arrow-clockwise"></i> Cargando...</div>
+<!-- ══ TAB: INDICADORES ══ -->
+<% if (_isVisor || _canManage) { %>
+<div id="tab-indicadores" class="corp-tabpanel" style="display:none;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <div style="font-size:20px;font-weight:700;display:flex;align-items:center;gap:9px;"><i class="bi bi-bar-chart-line-fill" style="color:var(--jira-blue);"></i> Indicadores <span style="background:var(--jira-blue);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.5px;">ITSM</span></div>
+    <button class="btn-outline-sm" onclick="loadIndicadores()"><i class="bi bi-arrow-clockwise"></i> Actualizar</button>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px;">
+    <div class="kpi-card"><div><div class="kpi-title">Total</div><div class="kpi-value" id="indTotal" style="color:var(--purple);">—</div></div><i class="bi bi-collection kpi-icon" style="color:var(--purple);"></i></div>
+    <div class="kpi-card"><div><div class="kpi-title">Pendientes</div><div class="kpi-value" id="indPend" style="color:var(--warning);">—</div></div><i class="bi bi-hourglass-split kpi-icon" style="color:var(--warning);"></i></div>
+    <div class="kpi-card"><div><div class="kpi-title">Aprobadas</div><div class="kpi-value" id="indAprov" style="color:var(--success);">—</div></div><i class="bi bi-check-circle kpi-icon" style="color:var(--success);"></i></div>
+    <div class="kpi-card"><div><div class="kpi-title">En proceso</div><div class="kpi-value" id="indProc" style="color:var(--primary);">—</div></div><i class="bi bi-arrow-repeat kpi-icon" style="color:var(--primary);"></i></div>
+    <div class="kpi-card"><div><div class="kpi-title">Completadas</div><div class="kpi-value" id="indComp" style="color:var(--info);">—</div></div><i class="bi bi-check2-all kpi-icon" style="color:var(--info);"></i></div>
+    <div class="kpi-card"><div><div class="kpi-title">Rechazadas</div><div class="kpi-value" id="indRej" style="color:var(--danger);">—</div></div><i class="bi bi-x-circle kpi-icon" style="color:var(--danger);"></i></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:16px;margin-bottom:20px;">
+    <div class="card-panel">
+      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:6px;"><i class="bi bi-bar-chart-horizontal-fill" style="color:var(--jira-blue);"></i> Por estado</div>
+      <div id="indStatusRows"></div>
+    </div>
+    <div class="card-panel" style="display:flex;flex-direction:column;">
+      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px;"><i class="bi bi-pie-chart-fill" style="color:var(--purple);"></i> Por prioridad</div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;"><canvas id="indChartPrio" style="max-height:140px;max-width:180px;"></canvas></div>
+    </div>
+    <div class="card-panel" style="display:flex;flex-direction:column;">
+      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px;"><i class="bi bi-tags-fill" style="color:var(--info);"></i> Por categoría</div>
+      <div id="indCatRows"></div>
+    </div>
+  </div>
+</div>
+<% } %>
+
+<!-- ══ TAB: CATEGORÍAS ══ -->
+<% if (_canManage) { %>
+<div id="tab-categorias" class="corp-tabpanel" style="display:none;">
+  <div style="display:grid;grid-template-columns:1fr 400px;gap:20px;align-items:start;">
+    <div class="card-panel">
+      <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:16px;display:flex;align-items:center;gap:8px;"><i class="bi bi-tags" style="color:var(--jira-blue);"></i> Categorías configuradas</div>
+      <div id="catsBody" style="display:flex;flex-direction:column;gap:8px;min-height:60px;"></div>
+    </div>
+    <div class="card-panel" style="position:sticky;top:80px;">
+      <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:16px;display:flex;align-items:center;gap:8px;" id="catFormTitle"><i class="bi bi-plus-circle" style="color:var(--jira-blue);"></i> Nueva Categoría</div>
+      <input type="hidden" id="catEditId">
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div><div class="form-label-custom">Nombre *</div>
+          <input type="text" id="catName" class="form-control-custom" placeholder="Ej: Instalación de Software"></div>
+        <div><div class="form-label-custom">Descripción</div>
+          <textarea id="catDesc" class="form-control-custom" rows="2" placeholder="Breve descripción de la categoría"></textarea></div>
+        <div><div class="form-label-custom">Icono Bootstrap <a href="https://icons.getbootstrap.com" target="_blank" style="font-size:10px;color:var(--jira-blue);">bootstrap-icons ↗</a></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="text" id="catIcon" class="form-control-custom" placeholder="Ej: box-seam, folder, gear" oninput="previewCatIcon()">
+            <i id="catIconPreview" class="bi bi-folder" style="font-size:24px;color:var(--jira-blue);min-width:28px;"></i>
+          </div></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:4px;">
+          <button class="btn-outline-sm" onclick="resetCatForm()"><i class="bi bi-x-circle"></i> Limpiar</button>
+          <button class="btn-jira" onclick="guardarCategoria()"><i class="bi bi-save"></i> <span id="catSaveLabel">Guardar</span></button>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- MODAL SOLICITAR SERVICIO -->
-<div class="modal-overlay" id="modalSolicitar">
-  <div class="modal-box">
+<!-- ══ TAB: SOFTWARE ══ -->
+<div id="tab-software" class="corp-tabpanel" style="display:none;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+    <div style="font-size:20px;font-weight:700;display:flex;align-items:center;gap:9px;"><i class="bi bi-box-seam" style="color:var(--jira-blue);"></i> Catálogo de Software</div>
+    <button class="btn-jira" onclick="openModalAddSw()"><i class="bi bi-plus-lg"></i> Registrar Software</button>
+  </div>
+  <div class="card-panel" style="padding:0;">
+    <div style="padding:12px 16px;background:var(--bg-header);border-bottom:1px solid var(--border-soft);">
+      <input class="s-input" id="swSearch" placeholder="Buscar software..." oninput="filterSwList()" style="width:240px;">
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>Nombre</th><th>Versión</th><th>Proveedor</th><th>Categoría</th><th>Detalles</th><th></th></tr></thead>
+        <tbody id="swBody"><tr><td colspan="6"><div class="empty-state"><i class="bi bi-arrow-clockwise"></i></div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<% } %>
+
+<!-- ══ TAB: ESPECIALISTAS (admin) ══ -->
+<% if (_isAdmin) { %>
+<div id="tab-especialistas" class="corp-tabpanel" style="display:none;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <div style="font-size:20px;font-weight:700;display:flex;align-items:center;gap:9px;"><i class="bi bi-people-fill" style="color:var(--jira-blue);"></i> Especialistas de Catálogo</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 380px;gap:20px;align-items:start;">
+    <div class="card-panel">
+      <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:16px;display:flex;align-items:center;gap:8px;"><i class="bi bi-list-ul" style="color:var(--jira-blue);"></i> Equipo registrado</div>
+      <div id="specialistListWrap"><div class="empty-state"><i class="bi bi-arrow-clockwise"></i></div></div>
+    </div>
+    <div class="card-panel" style="position:sticky;top:80px;">
+      <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:16px;display:flex;align-items:center;gap:8px;"><i class="bi bi-person-plus" style="color:var(--jira-blue);"></i> Nuevo Especialista</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div><div class="form-label-custom">Nombre completo *</div><input type="text" id="sp_name" class="form-control-custom" placeholder="Ej: Juan Pérez"></div>
+        <div><div class="form-label-custom">Correo *</div><input type="email" id="sp_email" class="form-control-custom" placeholder="jperez@empresa.com"></div>
+        <div><div class="form-label-custom">Especialidad</div>
+          <select id="sp_specialty" class="form-control-custom">
+            <option value="">Sin definir</option><option>Hardware</option><option>Software</option>
+            <option>Redes</option><option>ERP</option><option>Accesos</option><option>VPN</option>
+          </select></div>
+        <div><div class="form-label-custom">Contraseña temporal *</div><input type="password" id="sp_pass" class="form-control-custom" placeholder="Mínimo 8 caracteres"></div>
+        <button class="btn-jira" style="width:100%;justify-content:center;" onclick="createSpecialist()"><i class="bi bi-person-plus-fill"></i> Registrar Especialista</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TAB: AUTOMATIZACIONES (admin) ══ -->
+<div id="tab-automaciones" class="corp-tabpanel" style="display:none;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <div style="font-size:20px;font-weight:700;display:flex;align-items:center;gap:9px;"><i class="bi bi-gear-wide-connected" style="color:var(--jira-blue);"></i> Automatizaciones</div>
+    <button class="btn-jira" onclick="saveAutomations()"><i class="bi bi-floppy"></i> Guardar cambios</button>
+  </div>
+  <div style="max-width:720px;">
+    <div class="card-panel" style="margin-bottom:20px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+        <i class="bi bi-envelope-exclamation-fill" style="color:var(--warning);"></i> Notificación por aprobación pendiente
+        <span style="font-size:11px;font-weight:400;color:var(--text-muted);margin-left:4px;">Alerta cuando una solicitud lleva N horas sin aprobar</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <label class="auto-toggle-wrap"><input type="checkbox" id="auto_pend_enabled" onchange="toggleAutoSection('pend')"><span class="auto-toggle"></span></label>
+        <span style="font-size:13px;font-weight:600;">Activar alerta de aprobación pendiente</span>
+      </div>
+      <div id="auto_pend_section" style="display:none;">
+        <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;">
+          <div><div class="form-label-custom">Correo del responsable *</div>
+            <input type="email" id="auto_pend_email" class="form-control-custom" placeholder="supervisor@empresa.com"></div>
+          <div><div class="form-label-custom">Horas sin aprobar</div>
+            <input type="number" id="auto_pend_hours" class="form-control-custom" value="24" min="1" max="72" style="width:100px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-panel" style="margin-bottom:20px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+        <i class="bi bi-star-fill" style="color:var(--warning);"></i> Encuesta de satisfacción
+        <span style="font-size:11px;font-weight:400;color:var(--text-muted);margin-left:4px;">Email automático al completar la solicitud</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <label class="auto-toggle-wrap"><input type="checkbox" id="auto_sat_enabled" onchange="toggleAutoSection('sat')"><span class="auto-toggle"></span></label>
+        <span style="font-size:13px;font-weight:600;">Activar encuesta al completar solicitud</span>
+      </div>
+      <div id="auto_sat_section" style="display:none;margin-top:12px;">
+        <div style="padding:10px 14px;background:rgba(16,185,129,.08);border-radius:8px;font-size:12px;color:var(--success);border:1px solid rgba(16,185,129,.2);">
+          <i class="bi bi-check-circle"></i> Se enviará al email del solicitante con calificación 😞😐🙂😊🤩
+        </div>
+      </div>
+    </div>
+    <div class="card-panel">
+      <div style="font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+        <i class="bi bi-clock-history" style="color:var(--purple);"></i> Alerta de SLA de solicitudes
+        <span style="font-size:11px;font-weight:400;color:var(--text-muted);margin-left:4px;">Notifica cuando una solicitud está próxima a vencer</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <label class="auto-toggle-wrap"><input type="checkbox" id="auto_sla_enabled" onchange="toggleAutoSection('sla')"><span class="auto-toggle"></span></label>
+        <span style="font-size:13px;font-weight:600;">Activar alertas de SLA</span>
+      </div>
+      <div id="auto_sla_section" style="display:none;">
+        <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;">
+          <div><div class="form-label-custom">Correo de destino *</div>
+            <input type="email" id="auto_sla_email" class="form-control-custom" placeholder="equipo@empresa.com"></div>
+          <div><div class="form-label-custom">Horas antes</div>
+            <input type="number" id="auto_sla_hours" class="form-control-custom" value="4" min="1" max="24" style="width:100px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TAB: ADMINISTRACIÓN (admin) ══ -->
+<div id="tab-admin" class="corp-tabpanel" style="display:none;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <div style="font-size:20px;font-weight:700;display:flex;align-items:center;gap:9px;"><i class="bi bi-shield-lock-fill" style="color:var(--jira-blue);"></i> Administración</div>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.2);border-radius:8px;font-size:12px;">
+      <i class="bi bi-shield-fill" style="color:var(--danger);"></i>
+      <div><strong>Administrador</strong><br><span style="color:var(--text-muted);">Todo: Registrar · Gestión · Indicadores · Categorías · Software · Especialistas · Automatizaciones · Admin</span></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:rgba(0,82,204,.08);border:1px solid rgba(0,82,204,.2);border-radius:8px;font-size:12px;">
+      <i class="bi bi-person-badge-fill" style="color:var(--jira-blue);"></i>
+      <div><strong>Especialista</strong><br><span style="color:var(--text-muted);">Registrar · Gestión · Indicadores · Categorías · Software</span></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:8px;font-size:12px;">
+      <i class="bi bi-eye-fill" style="color:var(--success);"></i>
+      <div><strong>Visor</strong><br><span style="color:var(--text-muted);">Registrar · Indicadores</span></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:rgba(107,114,128,.08);border:1px solid rgba(107,114,128,.2);border-radius:8px;font-size:12px;">
+      <i class="bi bi-person" style="color:var(--text-muted);"></i>
+      <div><strong>Usuario</strong><br><span style="color:var(--text-muted);">Solo Registrar (puede solicitar servicios)</span></div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start;">
+    <div class="card-panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px;flex-wrap:wrap;">
+        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);display:flex;align-items:center;gap:8px;"><i class="bi bi-people" style="color:var(--jira-blue);"></i> Usuarios del sistema</div>
+        <input type="text" id="adminUserSearch" class="form-control-custom" style="max-width:240px;" placeholder="Buscar nombre, email..." oninput="filterAdminUsers(this.value)">
+      </div>
+      <div id="adminUserTable"><div class="empty-state"><i class="bi bi-arrow-clockwise"></i></div></div>
+    </div>
+    <div class="card-panel" style="position:sticky;top:80px;">
+      <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:16px;display:flex;align-items:center;gap:8px;"><i class="bi bi-person-plus" style="color:var(--jira-blue);"></i> Crear usuario</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div><div class="form-label-custom">Nombre completo *</div><input type="text" id="au_name" class="form-control-custom" placeholder="Juan Pérez"></div>
+        <div><div class="form-label-custom">Usuario *</div><input type="text" id="au_username" class="form-control-custom" placeholder="jperez"></div>
+        <div><div class="form-label-custom">Correo *</div><input type="email" id="au_email" class="form-control-custom" placeholder="jperez@empresa.com"></div>
+        <div><div class="form-label-custom">Perfil *</div>
+          <select id="au_role" class="form-control-custom">
+            <option value="usuario">Usuario — solo Registrar</option>
+            <option value="visor">Visor — Registrar + Indicadores</option>
+            <option value="especialista">Especialista — Registrar + Gestión + Indicadores + Categorías + Software</option>
+            <option value="administrador">Administrador — Todo</option>
+          </select></div>
+        <div><div class="form-label-custom">Contraseña temporal *</div><input type="password" id="au_pass" class="form-control-custom" placeholder="Mínimo 8 caracteres"></div>
+        <button class="btn-jira" style="width:100%;justify-content:center;" onclick="createAdminUser()"><i class="bi bi-person-plus-fill"></i> Crear usuario</button>
+      </div>
+    </div>
+  </div>
+</div>
+<% } %>
+
+</div><!-- /.dashboard-content -->
+</div><!-- /.dashboard-wrapper -->
+<div class="toast-box" id="toastBox"></div>
+
+<!-- ══ MODAL: SOLICITAR SERVICIO ══ -->
+<div class="modal-ov" id="modalSolicitar">
+  <div class="modal-box" style="width:640px;">
     <div class="modal-hdr">
-      <h3><i class="bi bi-send" style="color:var(--primary)"></i> <span id="modalSvcName">Solicitar</span></h3>
-      <button class="btn-sm btn-outline" onclick="closeModal('modalSolicitar')">✕</button>
+      <h3><i class="bi bi-send" style="color:var(--jira-blue);"></i> <span id="msolTitle">Solicitar servicio</span></h3>
+      <button class="btn-outline-sm" onclick="closeModal('modalSolicitar')">✕</button>
     </div>
     <div class="modal-body">
-      <p id="modalSvcDesc" style="font-size:13px;color:var(--muted);margin-bottom:14px;"></p>
-      <div id="modalSvcMeta" style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap;"></div>
+      <!-- Info servicio -->
+      <div id="msolInfo" style="display:none;background:rgba(0,82,204,.05);border:1.5px solid rgba(0,82,204,.15);border-radius:10px;padding:12px 16px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:700;color:var(--jira-blue);" id="msolSvcName"></div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:3px;" id="msolSvcDesc"></div>
+        <div style="display:flex;gap:6px;margin-top:6px;" id="msolSvcMeta"></div>
+      </div>
+      <!-- Correo solicitante -->
       <div class="form-group">
-        <label class="form-lbl">Descripción de la solicitud *</label>
-        <textarea id="solDesc" class="form-ctrl" rows="3" placeholder="¿Qué necesitas específicamente?"></textarea>
+        <label class="form-label-custom">Correo del solicitante *</label>
+        <div class="autocomplete-wrap">
+          <input type="email" id="msolEmail" class="form-control-custom" placeholder="usuario@empresa.com" autocomplete="off"
+                 oninput="acSolEmail(this.value)" onkeydown="acKeydown(event,'acSolEmailDrop')">
+          <div id="acSolEmailDrop" class="ac-dropdown"></div>
+        </div>
+      </div>
+      <!-- Selector categoría + servicio si no viene pre-seleccionado -->
+      <div id="msolSelCat" class="form-group">
+        <label class="form-label-custom">Categoría *</label>
+        <select id="msolCatSel" class="form-control-custom" onchange="onCatChange()">
+          <option value="">— Seleccionar categoría —</option>
+        </select>
+      </div>
+      <div id="msolSelSvc" class="form-group" style="display:none;">
+        <label class="form-label-custom">Servicio *</label>
+        <select id="msolSvcSel" class="form-control-custom" onchange="onSvcChange()">
+          <option value="">— Seleccionar servicio —</option>
+        </select>
+      </div>
+      <!-- Software (solo categoría instalación de software) -->
+      <div id="msolSwZone" style="display:none;" class="form-group">
+        <label class="form-label-custom">Software a instalar</label>
+        <div class="autocomplete-wrap">
+          <input type="text" id="msolSwInput" class="form-control-custom" placeholder="Buscar software registrado..." autocomplete="off"
+                 oninput="acSw(this.value)" onkeydown="acKeydown(event,'acSwDrop')">
+          <div id="acSwDrop" class="ac-dropdown"></div>
+        </div>
+        <div id="msolSwTags" class="tag-wrap" style="margin-top:6px;" onclick="document.getElementById('msolSwInput').focus()"></div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Si el software no está en la lista, escríbelo y presiona Enter</div>
+      </div>
+      <!-- Campos extra según categoría -->
+      <div id="msolExtraZone" style="display:none;" class="form-group">
+        <label class="form-label-custom" id="msolExtraLbl">Detalles adicionales</label>
+        <textarea id="msolExtra" class="form-control-custom" rows="2" placeholder=""></textarea>
+      </div>
+      <!-- Descripción -->
+      <div class="form-group">
+        <label class="form-label-custom">Descripción de la solicitud *</label>
+        <textarea id="msolDesc" class="form-control-custom" rows="3" placeholder="¿Qué necesitas específicamente?"></textarea>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div class="form-group">
-          <label class="form-lbl">Prioridad</label>
-          <select id="solPriority" class="form-ctrl">
+          <label class="form-label-custom">Prioridad</label>
+          <select id="msolPriority" class="form-control-custom">
             <option value="baja">Baja</option>
             <option value="media" selected>Media</option>
             <option value="alta">Alta</option>
+            <option value="critica">Crítica</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-lbl">Fecha requerida</label>
-          <input type="date" id="solDue" class="form-ctrl">
+          <label class="form-label-custom">Fecha límite</label>
+          <input type="date" id="msolDue" class="form-control-custom">
         </div>
       </div>
     </div>
     <div class="modal-ftr">
-      <button class="btn-sm btn-outline" onclick="closeModal('modalSolicitar')">Cancelar</button>
-      <button class="btn-sm btn-primary" onclick="enviarSolicitud()">
-        <i class="bi bi-send"></i> Enviar Solicitud
-      </button>
+      <button class="btn-outline-sm" onclick="closeModal('modalSolicitar')">Cancelar</button>
+      <button class="btn-jira" onclick="enviarSolicitud()"><i class="bi bi-send"></i> Enviar Solicitud</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL AGREGAR SERVICIO -->
-<div class="modal-overlay" id="modalAdd">
+<!-- ══ MODAL: AGREGAR SERVICIO ══ -->
+<div class="modal-ov" id="modalAddSvc">
   <div class="modal-box">
     <div class="modal-hdr">
-      <h3><i class="bi bi-plus-circle" style="color:var(--success)"></i> Agregar Servicio al Catálogo</h3>
-      <button class="btn-sm btn-outline" onclick="closeModal('modalAdd')">✕</button>
+      <h3><i class="bi bi-plus-circle" style="color:var(--success);"></i> Agregar Servicio</h3>
+      <button class="btn-outline-sm" onclick="closeModal('modalAddSvc')">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label class="form-lbl">Categoría *</label>
-        <select id="addCatId" class="form-ctrl"><option value="">— Seleccionar —</option></select>
+        <label class="form-label-custom">Categoría *</label>
+        <select id="asvCatId" class="form-control-custom"><option value="">— Seleccionar —</option></select>
       </div>
       <div class="form-group">
-        <label class="form-lbl">Nombre del servicio *</label>
-        <input type="text" id="addName" class="form-ctrl" placeholder="Ej: Instalación de software">
+        <label class="form-label-custom">Nombre del servicio *</label>
+        <input type="text" id="asvName" class="form-control-custom" placeholder="Ej: Instalación de software">
       </div>
       <div class="form-group">
-        <label class="form-lbl">Descripción</label>
-        <textarea id="addDesc" class="form-ctrl" rows="2"></textarea>
+        <label class="form-label-custom">Descripción</label>
+        <textarea id="asvDesc" class="form-control-custom" rows="2" placeholder="Breve descripción del servicio"></textarea>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div class="form-group">
-          <label class="form-lbl">SLA (horas)</label>
-          <input type="number" id="addSla" class="form-ctrl" value="8" min="1">
+          <label class="form-label-custom">SLA (horas)</label>
+          <input type="number" id="asvSla" class="form-control-custom" value="8" min="1">
         </div>
         <div class="form-group">
-          <label class="form-lbl">¿Requiere aprobación?</label>
-          <select id="addApproval" class="form-ctrl">
+          <label class="form-label-custom">¿Requiere aprobación?</label>
+          <select id="asvApproval" class="form-control-custom">
             <option value="0">No</option>
             <option value="1">Sí</option>
           </select>
@@ -189,154 +666,860 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:'DM Sans',-appl
       </div>
     </div>
     <div class="modal-ftr">
-      <button class="btn-sm btn-outline" onclick="closeModal('modalAdd')">Cancelar</button>
-      <button class="btn-sm btn-primary" onclick="agregarServicio()">
-        <i class="bi bi-save"></i> Guardar
-      </button>
+      <button class="btn-outline-sm" onclick="closeModal('modalAddSvc')">Cancelar</button>
+      <button class="btn-jira" onclick="guardarServicio()"><i class="bi bi-save"></i> Guardar</button>
     </div>
   </div>
 </div>
 
-<script>
-let allServices = [];
-let allCats = [];
-let activeCatId = '';
-let activeSvcId = '';
+<!-- ══ MODAL: REGISTRAR SOFTWARE ══ -->
+<div class="modal-ov" id="modalAddSw">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <h3><i class="bi bi-box-seam" style="color:var(--info);"></i> Registrar Software</h3>
+      <button class="btn-outline-sm" onclick="closeModal('modalAddSw')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label-custom">Nombre del software *</label>
+        <input type="text" id="swNombre" class="form-control-custom" placeholder="Ej: AutoCAD 2024">
+      </div>
+      <div class="form-group">
+        <label class="form-label-custom">Categoría de uso</label>
+        <select id="swCat" class="form-control-custom" onchange="onSwCatChange()">
+          <option value="Software">Software general</option>
+          <option value="Accesos">Accesos / Aplicaciones</option>
+          <option value="Redes">Redes / VPN</option>
+          <option value="Licenciado">Software licenciado</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label class="form-label-custom">Versión <span style="font-weight:400;font-size:10px;">(opcional)</span></label>
+          <input type="text" id="swVersion" class="form-control-custom" placeholder="Ej: 2024.1">
+        </div>
+        <div class="form-group">
+          <label class="form-label-custom">Proveedor <span style="font-weight:400;font-size:10px;">(opcional)</span></label>
+          <input type="text" id="swProveedor" class="form-control-custom" placeholder="Ej: Autodesk">
+        </div>
+      </div>
+      <!-- Extra según categoría -->
+      <div id="swExtraZone" class="form-group" style="display:none;">
+        <label class="form-label-custom" id="swExtraLbl">Detalles adicionales</label>
+        <textarea id="swDetalles" class="form-control-custom" rows="2" placeholder=""></textarea>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn-outline-sm" onclick="closeModal('modalAddSw')">Cancelar</button>
+      <button class="btn-jira" onclick="guardarSoftware()"><i class="bi bi-save"></i> Registrar</button>
+    </div>
+  </div>
+</div>
 
-async function loadCatalog() {
-    const [catRes, svcRes] = await Promise.all([
-        fetch('/api/catalog/categories'),
-        fetch('/api/catalog'),
-    ]);
-    allCats = (await catRes.json()).data || [];
-    allServices = (await svcRes.json()).data || [];
-    renderCats();
-    renderServices(allServices);
-}
+<!-- ══ MODAL: DETALLE SOLICITUD ══ -->
+<div class="modal-ov" id="modalDetalle">
+  <div class="modal-box" style="width:680px;">
+    <div class="modal-hdr">
+      <h3 id="detTitle"><i class="bi bi-ticket-detailed" style="color:var(--jira-blue);"></i> Detalle de Solicitud</h3>
+      <button class="btn-outline-sm" onclick="closeModal('modalDetalle')">✕</button>
+    </div>
+    <div class="modal-body" id="detBody">
+      <div class="empty-state"><i class="bi bi-arrow-clockwise"></i></div>
+    </div>
+    <div class="modal-ftr" id="detFtr"></div>
+  </div>
+</div>
 
-function renderCats() {
-    const list = document.getElementById('catList');
-    const counts = {};
-    allServices.forEach(s => { counts[s.categoryId] = (counts[s.categoryId] || 0) + 1; });
+<!-- ══ MODAL: CORREO AL SOLICITANTE ══ -->
+<div class="modal-ov" id="modalEmail">
+  <div class="modal-box" style="width:540px;">
+    <div class="modal-hdr">
+      <h3><i class="bi bi-envelope" style="color:var(--info);"></i> Enviar correo al solicitante</h3>
+      <button class="btn-outline-sm" onclick="closeModal('modalEmail')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label-custom">Para</label>
+        <input type="text" id="emailTo" class="form-control-custom" readonly style="opacity:.7;">
+      </div>
+      <div class="form-group">
+        <label class="form-label-custom">Asunto</label>
+        <input type="text" id="emailAsunto" class="form-control-custom" placeholder="Asunto del correo">
+      </div>
+      <div class="form-group">
+        <label class="form-label-custom">Mensaje *</label>
+        <textarea id="emailMensaje" class="form-control-custom" rows="5" placeholder="Escribe el mensaje para el solicitante..."></textarea>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn-outline-sm" onclick="closeModal('modalEmail')">Cancelar</button>
+      <button class="btn-jira" onclick="enviarEmail()"><i class="bi bi-send"></i> Enviar correo</button>
+    </div>
+  </div>
+</div>
 
-    list.innerHTML = `
-      <div class="cat-item ${!activeCatId ? 'active' : ''}" onclick="selectCat('')">
-        <span class="cat-icon"><i class="bi bi-grid-3x3-gap"></i></span>
-        Todos
-        <span class="cat-count">${allServices.length}</span>
-      </div>` +
-      allCats.map(c => `
-        <div class="cat-item ${activeCatId === c.id ? 'active' : ''}" onclick="selectCat('${c.id}')">
-          <span class="cat-icon"><i class="bi bi-${esc(c.icon || 'folder')}"></i></span>
-          ${esc(c.name)}
-          <span class="cat-count">${counts[c.id] || 0}</span>
-        </div>`).join('');
-}
+<!-- ══ MODAL: DENEGAR ══ -->
+<div class="modal-ov" id="modalDenegar">
+  <div class="modal-box" style="width:480px;">
+    <div class="modal-hdr">
+      <h3><i class="bi bi-x-circle" style="color:var(--danger);"></i> Denegar solicitud</h3>
+      <button class="btn-outline-sm" onclick="closeModal('modalDenegar')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label-custom">Motivo de rechazo *</label>
+        <textarea id="denyReason" class="form-control-custom" rows="4" placeholder="Explica el motivo del rechazo..."></textarea>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn-outline-sm" onclick="closeModal('modalDenegar')">Cancelar</button>
+      <button class="btn-danger-sm" onclick="confirmarDenegar()"><i class="bi bi-x-circle"></i> Denegar</button>
+    </div>
+  </div>
+</div>
 
-function selectCat(id) {
-    activeCatId = id;
-    renderCats();
-    const filtered = id ? allServices.filter(s => s.categoryId === id) : allServices;
-    const cat = allCats.find(c => c.id === id);
-    document.getElementById('catTitle').innerHTML = `<i class="bi bi-${esc(cat?.icon || 'grid-3x3-gap')}"></i> ${esc(cat?.name || 'Todos los servicios')}`;
-    renderServices(filtered);
-}
-
-function filterServices() {
-    const q = document.getElementById('searchInput').value.toLowerCase();
-    const src = activeCatId ? allServices.filter(s => s.categoryId === activeCatId) : allServices;
-    renderServices(q ? src.filter(s => s.name.toLowerCase().includes(q) || (s.description||'').toLowerCase().includes(q)) : src);
-}
-
-function renderServices(svcs) {
-    document.getElementById('svcCount').textContent = `${svcs.length} servicio${svcs.length !== 1 ? 's' : ''}`;
-    const grid = document.getElementById('svcGrid');
-    if (!svcs.length) {
-        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="bi bi-inbox"></i> Sin servicios</div>';
-        return;
-    }
-    grid.innerHTML = svcs.map(s => `
-        <div class="svc-card" onclick="openSolicitar('${s.id}')">
-          <button class="svc-btn" onclick="event.stopPropagation();openSolicitar('${s.id}')">
-            <i class="bi bi-send"></i> Solicitar
-          </button>
-          <div class="svc-name"><i class="bi bi-${esc(s.categoria?.icon || 'box')}"></i> ${esc(s.name)}</div>
-          <div class="svc-desc">${esc(s.description || 'Sin descripción')}</div>
-          <div class="svc-meta">
-            <span class="svc-sla"><i class="bi bi-clock"></i> SLA ${s.slaHours}h</span>
-            ${s.approvalRequired ? '<span class="svc-approval"><i class="bi bi-person-check"></i> Req. aprobación</span>' : ''}
-          </div>
-        </div>`).join('');
-}
-
-function openSolicitar(id) {
-    activeSvcId = id;
-    const svc = allServices.find(s => s.id === id);
-    document.getElementById('modalSvcName').textContent = svc?.name || 'Solicitar';
-    document.getElementById('modalSvcDesc').textContent = svc?.description || '';
-    document.getElementById('modalSvcMeta').innerHTML = svc
-        ? `<span class="svc-sla">SLA ${svc.slaHours}h</span>
-           ${svc.approvalRequired ? '<span class="svc-approval">Requiere aprobación</span>' : ''}`
-        : '';
-    document.getElementById('modalSolicitar').classList.add('open');
-}
-
-async function enviarSolicitud() {
-    const desc = document.getElementById('solDesc').value.trim();
-    if (!desc) return alert('Por favor describe lo que necesitas');
-    const svc  = allServices.find(s => s.id === activeSvcId);
-    const res  = await fetch('/api/service-requests', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            title:       `Solicitud: ${svc?.name || activeSvcId}`,
-            description: desc,
-            serviceId:   activeSvcId,
-            priority:    document.getElementById('solPriority').value,
-            dueDate:     document.getElementById('solDue').value || null,
-        }),
-    });
-    const d = await res.json();
-    if (!d.success) return alert(d.error);
-    closeModal('modalSolicitar');
-    alert('✅ Solicitud enviada correctamente');
-}
-
-function openModalAdd() {
-    const sel = document.getElementById('addCatId');
-    sel.innerHTML = '<option value="">— Seleccionar —</option>' +
-        allCats.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
-    document.getElementById('modalAdd').classList.add('open');
-}
-
-async function agregarServicio() {
-    const catId = document.getElementById('addCatId').value;
-    const name  = document.getElementById('addName').value.trim();
-    if (!catId || !name) return alert('Categoría y nombre son requeridos');
-    const res = await fetch('/api/catalog', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            categoryId:       catId,
-            name,
-            description:      document.getElementById('addDesc').value,
-            slaHours:         parseInt(document.getElementById('addSla').value) || 8,
-            approvalRequired: document.getElementById('addApproval').value === '1',
-        }),
-    });
-    const d = await res.json();
-    if (!d.success) return alert(d.error);
-    closeModal('modalAdd');
-    loadCatalog();
-}
-
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-function esc(t) { return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
-function toggleTheme() {
-    const h = document.documentElement;
-    h.setAttribute('data-theme', h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-}
-
-loadCatalog();
-</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/sidebar.js"></script>
+<script>
+// ── Helpers ────────────────────────────────────────────────────────────────
+function esc(t){const d=document.createElement('div');d.textContent=String(t||'');return d.innerHTML;}
+function toast(msg,type='inf'){const b=document.getElementById('toastBox'),d=document.createElement('div');d.className='t-item t-'+type;d.innerHTML=`<i class="bi bi-${type==='ok'?'check-circle':type==='err'?'x-circle':'info-circle'}"></i><span>${msg}</span>`;b.appendChild(d);setTimeout(()=>d.remove(),4000);}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function fmtDate(d){return d?new Date(d).toLocaleDateString('es',{day:'2-digit',month:'short',year:'numeric'}):'—';}
+function fmtStatus(s){return{borrador:'Borrador',pendiente_aprobacion:'Pendiente aprobación',aprobado:'Aprobado',en_proceso:'En proceso',completado:'Completado',rechazado:'Rechazado',cancelado:'Cancelado'}[s]||s;}
+function bsClass(s){return'bs-'+s.replace(/ /g,'_');}
+function bpClass(p){return'bp-'+(p||'media');}
+function acKeydown(e,dropId){const d=document.getElementById(dropId);if(!d||!d.classList.contains('show'))return;const items=[...d.querySelectorAll('.ac-item')];if(!items.length)return;const cur=d.querySelector('.active-ac');let idx=items.indexOf(cur);if(e.key==='ArrowDown'){e.preventDefault();if(cur)cur.classList.remove('active-ac');items[(idx+1)%items.length].classList.add('active-ac');}else if(e.key==='ArrowUp'){e.preventDefault();if(cur)cur.classList.remove('active-ac');items[(idx-1+items.length)%items.length].classList.add('active-ac');}else if(e.key==='Enter'){e.preventDefault();const a=d.querySelector('.active-ac');if(a)a.click();}}
+function renderPag(containerId,total,page,limit,cb){const pages=Math.ceil(total/limit);const c=document.getElementById(containerId);if(!c||pages<=1){if(c)c.innerHTML='';return;}let h='';for(let i=1;i<=Math.min(pages,7);i++)h+=`<div class="pg-btn ${i===page?'active':''}" onclick="(${cb})(${i})">${i}</div>`;c.innerHTML=h;}
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let _allCats=[], _allSvcs=[], _activeCatId='', _activeSvcId=null;
+let _msolPreSvcId=null, _msolSwTags=[];
+let _currentDetailId=null, _currentEmailId=null, _currentDenyId=null;
+let _swAll=[];
+
+// ── CATALOG LOAD ──────────────────────────────────────────────────────────
+async function loadCatalog(){
+  const [cr,sr]=await Promise.all([fetch('/api/catalog/categories',{credentials:'include'}),fetch('/api/catalog',{credentials:'include'})]);
+  _allCats=(await cr.json()).data||[];
+  _allSvcs=(await sr.json()).data||[];
+  renderCatNav();
+  renderSvcGrid(_allSvcs);
+  // also populate modal selects
+  const catSel=document.getElementById('msolCatSel');
+  const asvCatSel=document.getElementById('asvCatId');
+  const opts='<option value="">— Seleccionar categoría —</option>'+_allCats.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  if(catSel)catSel.innerHTML=opts;
+  if(asvCatSel)asvCatSel.innerHTML=opts;
+}
+
+function renderCatNav(){
+  const cnt={};
+  _allSvcs.forEach(s=>{cnt[s.categoryId]=(cnt[s.categoryId]||0)+1;});
+  document.getElementById('catNavList').innerHTML=
+    `<div class="cat-item ${!_activeCatId?'active':''}" onclick="selectCat('')"><i class="bi bi-grid-3x3-gap" style="font-size:16px;"></i>Todos<span class="cnt">${_allSvcs.length}</span></div>`+
+    _allCats.map(c=>`<div class="cat-item ${_activeCatId===c.id?'active':''}" onclick="selectCat('${c.id}')"><i class="bi bi-${esc(c.icon||'folder')}" style="font-size:16px;"></i>${esc(c.name)}<span class="cnt">${cnt[c.id]||0}</span></div>`).join('');
+}
+
+function selectCat(id){
+  _activeCatId=id;
+  renderCatNav();
+  const filtered=id?_allSvcs.filter(s=>s.categoryId===id):_allSvcs;
+  const cat=_allCats.find(c=>c.id===id);
+  document.getElementById('catPanelTitle').innerHTML=`<i class="bi bi-${esc(cat?.icon||'grid-3x3-gap')}"></i> ${esc(cat?.name||'Todos los servicios')}`;
+  renderSvcGrid(filtered);
+}
+
+function filterCatalog(){
+  const q=document.getElementById('catSearchInput').value.toLowerCase();
+  const src=_activeCatId?_allSvcs.filter(s=>s.categoryId===_activeCatId):_allSvcs;
+  renderSvcGrid(q?src.filter(s=>s.name.toLowerCase().includes(q)||(s.description||'').toLowerCase().includes(q)):src);
+}
+
+function renderSvcGrid(svcs){
+  document.getElementById('svcCount').textContent=`${svcs.length} servicio${svcs.length!==1?'s':''}`;
+  const g=document.getElementById('svcGrid');
+  if(!svcs.length){g.innerHTML='<div class="empty-state" style="grid-column:1/-1;"><i class="bi bi-inbox"></i><p>Sin servicios en esta categoría</p></div>';return;}
+  g.innerHTML=svcs.map(s=>`
+    <div class="svc-card" onclick="_userCanRequest&&openModalSolicitar('${s.id}')">
+      ${_userCanManage?`<div class="svc-admin-btns"><button class="btn-outline-sm" onclick="event.stopPropagation();editSvc('${s.id}')" title="Editar"><i class="bi bi-pencil"></i></button></div>`:''}
+      ${_userCanRequest?`<button class="svc-btn-hover" onclick="event.stopPropagation();openModalSolicitar('${s.id}')"><i class="bi bi-send"></i> Solicitar</button>`:''}
+      <div class="svc-name"><i class="bi bi-${esc(s.categoria?.icon||'box')}" style="color:var(--jira-blue);"></i>${esc(s.name)}</div>
+      <div class="svc-desc">${esc(s.description||'Sin descripción')}</div>
+      <div class="svc-meta">
+        <span class="badge-sla"><i class="bi bi-clock"></i> SLA ${s.slaHours}h</span>
+        ${s.approvalRequired?'<span class="badge-aprob"><i class="bi bi-person-check"></i> Req. aprobación</span>':''}
+      </div>
+      ${!_userCanRequest?'<div style="margin-top:10px;font-size:11px;color:var(--text-muted);font-style:italic;">Sin permisos para solicitar</div>':''}
+    </div>`).join('');
+}
+
+// ── SOLICITAR MODAL ───────────────────────────────────────────────────────
+function openModalSolicitar(svcId){
+  _msolPreSvcId=svcId;
+  _msolSwTags=[];
+  document.getElementById('msolEmail').value='';
+  document.getElementById('msolDesc').value='';
+  document.getElementById('msolDue').value='';
+  document.getElementById('msolPriority').value='media';
+  document.getElementById('msolSwTags').innerHTML='';
+  document.getElementById('msolSwInput').value='';
+  document.getElementById('acSwDrop').classList.remove('show');
+  document.getElementById('acSolEmailDrop').classList.remove('show');
+
+  if(svcId){
+    const svc=_allSvcs.find(s=>s.id===svcId);
+    document.getElementById('msolTitle').textContent=svc?.name||'Solicitar';
+    document.getElementById('msolSvcName').textContent=svc?.name||'';
+    document.getElementById('msolSvcDesc').textContent=svc?.description||'';
+    document.getElementById('msolSvcMeta').innerHTML=(svc?`<span class="badge-sla">SLA ${svc.slaHours}h</span>${svc.approvalRequired?'<span class="badge-aprob">Req. aprobación</span>':''}`:'');
+    document.getElementById('msolInfo').style.display='';
+    document.getElementById('msolSelCat').style.display='none';
+    document.getElementById('msolSelSvc').style.display='none';
+    _activeSvcId=svcId;
+    showSwZone(svc?.categoria?.name||svc?.category?.name||'');
+  } else {
+    document.getElementById('msolTitle').textContent='Nueva Solicitud';
+    document.getElementById('msolInfo').style.display='none';
+    document.getElementById('msolSelCat').style.display='';
+    document.getElementById('msolSelSvc').style.display='none';
+    document.getElementById('msolCatSel').value='';
+    _activeSvcId=null;
+    showSwZone('');
+  }
+  openModal('modalSolicitar');
+}
+
+function onCatChange(){
+  const catId=document.getElementById('msolCatSel').value;
+  const svcsInCat=_allSvcs.filter(s=>s.categoryId===catId);
+  const sel=document.getElementById('msolSvcSel');
+  if(svcsInCat.length&&catId){
+    sel.innerHTML='<option value="">— Seleccionar servicio —</option>'+svcsInCat.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+    document.getElementById('msolSelSvc').style.display='';
+  } else {
+    document.getElementById('msolSelSvc').style.display='none';
+  }
+  const cat=_allCats.find(c=>c.id===catId);
+  showSwZone(cat?.name||'');
+  _activeSvcId=null;
+}
+
+function onSvcChange(){
+  _activeSvcId=document.getElementById('msolSvcSel').value||null;
+}
+
+function showSwZone(catName){
+  const name=(catName||'').toLowerCase();
+  const isSw=name.includes('software')||name.includes('instalaci');
+  const isAcceso=name.includes('acceso')||name.includes('accesos');
+  const isRed=name.includes('red')||name.includes('vpn')||name.includes('conect');
+  document.getElementById('msolSwZone').style.display=isSw?'':'none';
+  const extra=document.getElementById('msolExtraZone');
+  const lbl=document.getElementById('msolExtraLbl');
+  if(isAcceso){extra.style.display='';lbl.textContent='Aplicación / sistema al que necesita acceso';}
+  else if(isRed){extra.style.display='';lbl.textContent='Detalle de red o VPN requerido';}
+  else{extra.style.display='none';}
+}
+
+// Autocomplete email solicitante
+let _acEmailTimer;
+function acSolEmail(val){
+  clearTimeout(_acEmailTimer);
+  const drop=document.getElementById('acSolEmailDrop');
+  if(!val||val.length<2){drop.classList.remove('show');return;}
+  _acEmailTimer=setTimeout(async()=>{
+    const r=await fetch(`/api/employees/search-emails?q=${encodeURIComponent(val)}`,{credentials:'include'});
+    const d=await r.json();
+    const emps=(d.data||[]).slice(0,8);
+    if(!emps.length){drop.innerHTML='<div class="ac-item"><span class="ac-sub">Sin resultados</span></div>';drop.classList.add('show');return;}
+    drop.innerHTML=emps.map(e=>`<div class="ac-item" onclick="pickSolEmail('${esc(e.email||'')}')"><div class="ac-name">${esc(e.full_name||'')}</div><div class="ac-sub">${esc(e.email||'')} · ${esc(e.position_name||'')}</div></div>`).join('');
+    drop.classList.add('show');
+  },260);
+}
+function pickSolEmail(email){
+  document.getElementById('msolEmail').value=email;
+  document.getElementById('acSolEmailDrop').classList.remove('show');
+}
+
+// Autocomplete software
+let _acSwTimer;
+function acSw(val){
+  clearTimeout(_acSwTimer);
+  const drop=document.getElementById('acSwDrop');
+  _acSwTimer=setTimeout(async()=>{
+    const r=await fetch(`/api/service-requests/software?q=${encodeURIComponent(val)}`,{credentials:'include'});
+    const d=await r.json();
+    const items=(d.data||[]).slice(0,10);
+    if(!items.length){drop.innerHTML=`<div class="ac-item" onclick="addSwTag('${esc(val)}')"><i class="bi bi-plus"></i> Agregar "${esc(val)}"</div>`;drop.classList.add('show');return;}
+    drop.innerHTML=items.map(s=>`<div class="ac-item" onclick="addSwTag('${esc(s.nombre)}')"><div class="ac-name">${esc(s.nombre)}</div><div class="ac-sub">${esc(s.version||'')} · ${esc(s.proveedor||'')}</div></div>`).join('');
+    if(val) drop.innerHTML+=`<div class="ac-item" onclick="addSwTag('${esc(val)}')"><i class="bi bi-plus"></i> Agregar "${esc(val)}" manualmente</div>`;
+    drop.classList.add('show');
+  },240);
+}
+function addSwTag(nombre){
+  if(!nombre.trim()||_msolSwTags.includes(nombre.trim()))return;
+  _msolSwTags.push(nombre.trim());
+  renderSwTags();
+  document.getElementById('msolSwInput').value='';
+  document.getElementById('acSwDrop').classList.remove('show');
+}
+function removeSwTag(idx){
+  _msolSwTags.splice(idx,1);
+  renderSwTags();
+}
+function renderSwTags(){
+  document.getElementById('msolSwTags').innerHTML=_msolSwTags.map((t,i)=>`<span class="sw-tag">${esc(t)}<span class="rm" onclick="removeSwTag(${i})">✕</span></span>`).join('');
+}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.activeElement===document.getElementById('msolSwInput')){e.preventDefault();const v=document.getElementById('msolSwInput').value.trim();if(v)addSwTag(v);}});
+document.addEventListener('click',e=>{
+  ['acSolEmailDrop','acSwDrop'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.parentElement.contains(e.target))el.classList.remove('show');});
+});
+
+async function enviarSolicitud(){
+  const email=document.getElementById('msolEmail').value.trim();
+  const desc=document.getElementById('msolDesc').value.trim();
+  if(!email)return toast('El correo del solicitante es requerido','err');
+  if(!desc)return toast('La descripción es requerida','err');
+  const svcId=_msolPreSvcId||_activeSvcId||document.getElementById('msolSvcSel')?.value||null;
+  const catId=document.getElementById('msolCatSel')?.value||null;
+  const cat=_allCats.find(c=>c.id===catId);
+  const svc=_allSvcs.find(s=>s.id===svcId);
+  const title=svc?`Solicitud: ${svc.name}`:cat?`Solicitud: ${cat.name}`:'Nueva solicitud';
+  const extra=document.getElementById('msolExtra')?.value||'';
+  const body={
+    title, description:desc, serviceId:svcId||undefined,
+    priority:document.getElementById('msolPriority').value,
+    dueDate:document.getElementById('msolDue').value||undefined,
+    requesterEmail:email,
+    softwareItems:_msolSwTags.length?_msolSwTags:undefined,
+    extraData:extra||undefined,
+  };
+  const r=await fetch('/api/service-requests',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(body)});
+  const d=await r.json();
+  if(!d.success)return toast(d.error,'err');
+  closeModal('modalSolicitar');
+  toast('Solicitud enviada correctamente','ok');
+  if(_tabLoaded['indicadores'])loadIndicadores();
+}
+
+// ── AGREGAR SERVICIO ──────────────────────────────────────────────────────
+function openModalAddSvc(){
+  document.getElementById('asvName').value='';
+  document.getElementById('asvDesc').value='';
+  document.getElementById('asvSla').value=8;
+  document.getElementById('asvApproval').value='0';
+  if(_allCats.length){
+    document.getElementById('asvCatId').innerHTML='<option value="">— Seleccionar —</option>'+_allCats.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  }
+  openModal('modalAddSvc');
+}
+async function guardarServicio(){
+  const catId=document.getElementById('asvCatId').value;
+  const name=document.getElementById('asvName').value.trim();
+  if(!catId||!name)return toast('Categoría y nombre son requeridos','err');
+  const r=await fetch('/api/catalog',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({categoryId:catId,name,description:document.getElementById('asvDesc').value,slaHours:parseInt(document.getElementById('asvSla').value)||8,approvalRequired:document.getElementById('asvApproval').value==='1'})});
+  const d=await r.json();
+  if(!d.success)return toast(d.error,'err');
+  closeModal('modalAddSvc');
+  toast('Servicio agregado','ok');
+  await loadCatalog();
+}
+
+// ── SOFTWARE MODAL ────────────────────────────────────────────────────────
+function onSwCatChange(){
+  const cat=document.getElementById('swCat').value;
+  const zone=document.getElementById('swExtraZone');
+  const lbl=document.getElementById('swExtraLbl');
+  if(cat==='Accesos'){zone.style.display='';lbl.textContent='URL o sistema de acceso';}
+  else if(cat==='Redes'){zone.style.display='';lbl.textContent='Tipo de red / VPN / protocolo';}
+  else if(cat==='Licenciado'){zone.style.display='';lbl.textContent='Nro. de licencia o contrato';}
+  else zone.style.display='none';
+}
+function openModalAddSw(){
+  ['swNombre','swVersion','swProveedor'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('swCat').value='Software';
+  document.getElementById('swExtraZone').style.display='none';
+  if(document.getElementById('swDetalles'))document.getElementById('swDetalles').value='';
+  openModal('modalAddSw');
+}
+async function guardarSoftware(){
+  const nombre=document.getElementById('swNombre').value.trim();
+  if(!nombre)return toast('El nombre es requerido','err');
+  const r=await fetch('/api/service-requests/software',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({nombre,version:document.getElementById('swVersion').value||undefined,proveedor:document.getElementById('swProveedor').value||undefined,categoria:document.getElementById('swCat').value,detalles:document.getElementById('swDetalles')?.value||undefined})});
+  const d=await r.json();
+  if(!d.success)return toast(d.error,'err');
+  closeModal('modalAddSw');
+  toast('Software registrado','ok');
+  if(_tabLoaded['software'])loadSoftwareList();
+}
+
+
+// ── GESTIÓN ───────────────────────────────────────────────────────────────
+let _allSolicitudes=[], _gestPill='all', _gestPage=1;
+const GEST_PAGE_SIZE=20;
+
+function setGestPill(el,val){
+  _gestPill=val||'all';
+  _gestPage=1;
+  document.querySelectorAll('#gestPills .pill').forEach(p=>p.classList.remove('active'));
+  if(el){el.classList.add('active');}
+  else{const p=document.querySelector(`#gestPills .pill[onclick*="'${_gestPill}'"]`);if(p)p.classList.add('active');}
+  renderGestion();
+}
+function filterGestion(){_gestPage=1;renderGestion();}
+function gestGoPage(p){
+  const q=(document.getElementById('gestQ')?.value||'').toLowerCase().trim();
+  const filtered=_allSolicitudes.filter(r=>{
+    if(_gestPill!=='all'&&r.status!==_gestPill)return false;
+    if(q){const h=[r.title,r.requesterEmail,r.service?.name,r.service?.categoria?.name].join(' ').toLowerCase();if(!h.includes(q))return false;}
+    return true;
+  });
+  const pages=Math.ceil(filtered.length/GEST_PAGE_SIZE)||1;
+  if(p<1||p>pages)return;
+  _gestPage=p;
+  renderGestion();
+}
+
+async function loadGestion(){
+  const wrap=document.getElementById('gestTableWrap');
+  if(wrap)wrap.innerHTML='<div class="empty-state"><i class="bi bi-arrow-clockwise"></i><p>Cargando solicitudes...</p></div>';
+  try{
+    const r=await fetch('/api/service-requests?limit=500',{credentials:'include'});
+    const d=await r.json();
+    _allSolicitudes=d.data||[];
+    const all=_allSolicitudes;
+    document.getElementById('gkTotal').textContent=all.length;
+    document.getElementById('gkPend').textContent=all.filter(x=>x.status==='pendiente_aprobacion').length;
+    document.getElementById('gkAprov').textContent=all.filter(x=>x.status==='aprobado').length;
+    document.getElementById('gkProc').textContent=all.filter(x=>x.status==='en_proceso').length;
+    document.getElementById('gkComp').textContent=all.filter(x=>x.status==='completado').length;
+    document.getElementById('gkRej').textContent=all.filter(x=>x.status==='rechazado').length;
+    renderGestion();
+  }catch(err){
+    if(wrap)wrap.innerHTML=`<div class="empty-state"><i class="bi bi-exclamation-triangle"></i><p>Error cargando datos.<br><small>${err.message}</small></p><button class="btn-outline-sm" style="margin-top:8px;" onclick="loadGestion()"><i class="bi bi-arrow-clockwise"></i> Reintentar</button></div>`;
+  }
+}
+
+function renderGestion(){
+  const q=(document.getElementById('gestQ')?.value||'').toLowerCase().trim();
+  let rows=_allSolicitudes.filter(r=>{
+    if(_gestPill!=='all'&&r.status!==_gestPill)return false;
+    if(q){const h=[r.title,r.requesterEmail,r.service?.name,r.service?.categoria?.name].join(' ').toLowerCase();if(!h.includes(q))return false;}
+    return true;
+  });
+  rows.sort((a,b)=>{
+    const pa=a.status==='pendiente_aprobacion'?0:1, pb=b.status==='pendiente_aprobacion'?0:1;
+    if(pa!==pb)return pa-pb;
+    return new Date(b.createdAt)-new Date(a.createdAt);
+  });
+  const total=rows.length;
+  const pages=Math.ceil(total/GEST_PAGE_SIZE)||1;
+  if(_gestPage>pages)_gestPage=1;
+  const start=(_gestPage-1)*GEST_PAGE_SIZE;
+  const pageRows=rows.slice(start,start+GEST_PAGE_SIZE);
+  const wrap=document.getElementById('gestTableWrap');
+  if(!pageRows.length){
+    wrap.innerHTML='<div class="empty-state"><i class="bi bi-inbox"></i><p>Sin solicitudes</p></div>';
+    document.getElementById('gestPagInfo').textContent='';
+    document.getElementById('gestPagBtns').innerHTML='';
+    return;
+  }
+  wrap.innerHTML=`<div style="overflow-x:auto;"><table class="tbl">
+    <thead><tr><th>Solicitante</th><th>Título / Servicio</th><th>Categoría</th><th>Prioridad</th><th>Estado</th><th>Creado</th><th>Acciones</th></tr></thead>
+    <tbody>${pageRows.map(r=>`<tr onclick="verDetalle('${r.id}')" style="cursor:pointer;">
+      <td><div style="font-weight:600;font-size:13px;">${esc(r.requesterEmail||'—')}</div></td>
+      <td><div style="font-weight:600;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(r.title||'')}">${esc(r.title||'—')}</div><div style="font-size:11px;color:var(--text-muted);">${esc(r.service?.name||'Sin servicio')}</div></td>
+      <td style="font-size:12px;">${esc(r.service?.categoria?.name||'—')}</td>
+      <td><span class="bs ${bpClass(r.priority)}">${r.priority||'media'}</span></td>
+      <td><span class="bs ${bsClass(r.status)}">${fmtStatus(r.status)}</span></td>
+      <td style="font-size:12px;color:var(--text-muted);white-space:nowrap;">${fmtDate(r.createdAt)}</td>
+      <td onclick="event.stopPropagation();"><div style="display:flex;gap:4px;flex-wrap:wrap;">
+        ${r.status==='pendiente_aprobacion'?`<button class="btn-success-sm" style="padding:4px 9px;font-size:11px;" onclick="aprobar('${r.id}')"><i class="bi bi-check-lg"></i> Aprobar</button><button class="btn-danger-sm" style="padding:4px 9px;font-size:11px;" onclick="openDenegar('${r.id}')"><i class="bi bi-x-lg"></i> Denegar</button>`:''}
+        ${r.status==='aprobado'?`<button class="btn-outline-sm" style="padding:4px 9px;font-size:11px;" onclick="cambiarEstado('${r.id}','en_proceso')"><i class="bi bi-arrow-repeat"></i> En proceso</button>`:''}
+        ${r.status==='en_proceso'?`<button class="btn-success-sm" style="padding:4px 9px;font-size:11px;" onclick="cambiarEstado('${r.id}','completado')"><i class="bi bi-check2-all"></i> Completar</button>`:''}
+        <button class="btn-outline-sm" style="padding:4px 8px;" onclick="openEmailModal('${r.id}','${esc(r.requesterEmail||'')}','${esc(r.title||'')}')"><i class="bi bi-envelope"></i></button>
+      </div></td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+  const info=document.getElementById('gestPagInfo');
+  const btns=document.getElementById('gestPagBtns');
+  const e=Math.min(start+GEST_PAGE_SIZE,total);
+  if(info)info.textContent=total?`Mostrando ${start+1}–${e} de ${total} solicitudes`:'';
+  if(!btns)return;
+  if(pages<=1){btns.innerHTML='';return;}
+  let html=`<button class="btn-outline-sm" onclick="gestGoPage(${_gestPage-1})" ${_gestPage===1?'disabled':''}><i class="bi bi-chevron-left"></i></button>`;
+  for(let i=1;i<=pages;i++){
+    if(i===1||i===pages||(i>=_gestPage-1&&i<=_gestPage+1))
+      html+=`<button class="btn-outline-sm" style="${i===_gestPage?'background:var(--jira-blue);color:white;border-color:var(--jira-blue);':''}" onclick="gestGoPage(${i})">${i}</button>`;
+    else if(i===_gestPage-2||i===_gestPage+2)
+      html+=`<span style="padding:4px 6px;font-size:12px;color:var(--text-muted);">…</span>`;
+  }
+  html+=`<button class="btn-outline-sm" onclick="gestGoPage(${_gestPage+1})" ${_gestPage===pages?'disabled':''}><i class="bi bi-chevron-right"></i></button>`;
+  btns.innerHTML=html;
+}
+
+async function cambiarEstado(id,status){
+  const r=await fetch(`/api/service-requests/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({status})});
+  const d=await r.json();
+  if(!d.success)return toast(d.error||'Error al cambiar estado','err');
+  toast(`Estado actualizado: ${fmtStatus(status)}`,'ok');
+  loadGestion();
+}
+
+// ── INDICADORES ───────────────────────────────────────────────────────────
+let _indPrioChart=null;
+async function loadIndicadores(){
+  const r=await fetch('/api/service-requests?limit=500',{credentials:'include'});
+  const d=await r.json();
+  const rows=d.data||[];
+  const total=rows.length||1;
+  document.getElementById('indTotal').textContent=d.total||rows.length;
+  document.getElementById('indPend').textContent=rows.filter(r=>r.status==='pendiente_aprobacion').length;
+  document.getElementById('indAprov').textContent=rows.filter(r=>r.status==='aprobado').length;
+  document.getElementById('indProc').textContent=rows.filter(r=>r.status==='en_proceso').length;
+  document.getElementById('indComp').textContent=rows.filter(r=>r.status==='completado').length;
+  document.getElementById('indRej').textContent=rows.filter(r=>r.status==='rechazado').length;
+  // By status bars
+  const statuses=['pendiente_aprobacion','aprobado','en_proceso','completado','rechazado','borrador'];
+  const scols={'pendiente_aprobacion':'var(--warning)','aprobado':'var(--success)','en_proceso':'var(--primary)','completado':'var(--info)','rechazado':'var(--danger)','borrador':'var(--text-muted)'};
+  document.getElementById('indStatusRows').innerHTML=statuses.map(s=>{
+    const cnt=rows.filter(r=>r.status===s).length;
+    const pct=Math.round(cnt/total*100);
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <span style="width:140px;font-size:12px;font-weight:600;">${fmtStatus(s)}</span>
+      <div style="flex:1;height:8px;background:var(--border-soft);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${scols[s]};border-radius:4px;transition:width .4s;"></div></div>
+      <span style="width:28px;text-align:right;font-size:12px;font-weight:700;">${cnt}</span>
+    </div>`;
+  }).join('');
+  // By category bars
+  const catMap={};
+  rows.forEach(r=>{const k=r.service?.categoria?.name||'Sin categoría';catMap[k]=(catMap[k]||0)+1;});
+  const sorted=Object.entries(catMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  document.getElementById('indCatRows').innerHTML=sorted.length?sorted.map(([k,v])=>{
+    const pct=Math.round(v/total*100);
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <span style="width:110px;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(k)}">${esc(k)}</span>
+      <div style="flex:1;height:8px;background:var(--border-soft);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:var(--jira-blue);border-radius:4px;transition:width .4s;"></div></div>
+      <span style="width:28px;text-align:right;font-size:12px;font-weight:700;">${v}</span>
+    </div>`;
+  }).join(''):'<div class="empty-state" style="padding:20px;"><i class="bi bi-inbox"></i><p>Sin datos</p></div>';
+  // Donut prioridad
+  const prioMap={baja:0,media:0,alta:0,critica:0};
+  rows.forEach(r=>{if(prioMap[r.priority]!==undefined)prioMap[r.priority]++;});
+  const pCanvas=document.getElementById('indChartPrio');
+  if(pCanvas){
+    if(_indPrioChart)_indPrioChart.destroy();
+    _indPrioChart=new Chart(pCanvas,{type:'doughnut',data:{labels:['Baja','Media','Alta','Crítica'],datasets:[{data:[prioMap.baja,prioMap.media,prioMap.alta,prioMap.critica],backgroundColor:['#10b981','#f59e0b','#ef4444','#8b5cf6'],borderWidth:2,borderColor:'var(--bg-card)'}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:8}}}}});
+  }
+}
+
+// ── SOFTWARE LIST ──────────────────────────────────────────────────────────
+let _swAllData=[];
+async function loadSoftwareList(){
+  const r=await fetch('/api/service-requests/software',{credentials:'include'});
+  const d=await r.json();
+  _swAllData=d.data||[];
+  renderSwTable(_swAllData);
+}
+function filterSwList(){
+  const q=document.getElementById('swSearch').value.toLowerCase();
+  renderSwTable(q?_swAllData.filter(s=>s.nombre.toLowerCase().includes(q)||(s.proveedor||'').toLowerCase().includes(q)):_swAllData);
+}
+function renderSwTable(data){
+  const tbody=document.getElementById('swBody');
+  if(!data.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state"><i class="bi bi-inbox"></i><p>Sin software registrado</p></div></td></tr>';return;}
+  tbody.innerHTML=data.map(s=>`<tr>
+    <td style="font-weight:600;">${esc(s.nombre)}</td>
+    <td style="font-size:12px;color:var(--text-muted);">${esc(s.version||'—')}</td>
+    <td style="font-size:12px;">${esc(s.proveedor||'—')}</td>
+    <td><span class="badge-sla">${esc(s.categoria||'Software')}</span></td>
+    <td style="font-size:12px;color:var(--text-muted);">${esc(s.detalles||'—')}</td>
+    <td><button class="btn-danger-sm" onclick="deleteSw(${s.id})"><i class="bi bi-trash"></i></button></td>
+  </tr>`).join('');
+}
+async function deleteSw(id){
+  if(!confirm('¿Eliminar este software del catálogo?'))return;
+  const r=await fetch(`/api/service-requests/software/${id}`,{method:'DELETE',credentials:'include'});
+  const d=await r.json();
+  if(!d.success)return toast(d.error,'err');
+  toast('Software eliminado','ok');
+  loadSoftwareList();
+}
+
+// ── CATEGORÍAS ────────────────────────────────────────────────────────────
+async function loadCats(){
+  const r=await fetch('/api/catalog/categories',{credentials:'include'});
+  const d=await r.json();
+  const cats=d.data||[];
+  const wrap=document.getElementById('catsBody');
+  if(!cats.length){wrap.innerHTML='<div class="empty-state"><i class="bi bi-inbox"></i><p>Sin categorías creadas</p></div>';return;}
+  wrap.innerHTML=cats.map(c=>`<div class="cat-inline-row">
+    <i class="bi bi-${esc(c.icon||'folder')}" style="font-size:22px;color:var(--jira-blue);min-width:28px;"></i>
+    <div style="flex:1;">
+      <div style="font-weight:700;font-size:13px;">${esc(c.name)}</div>
+      <div style="font-size:11px;color:var(--text-muted);">${esc(c.description||'Sin descripción')} &nbsp;·&nbsp; icono: <code>${esc(c.icon||'folder')}</code></div>
+    </div>
+    <span class="bs ${c.isActive?'bs-aprobado':'bs-rechazado'}" style="font-size:10px;">${c.isActive?'Activa':'Inactiva'}</span>
+    <button class="btn-outline-sm" style="padding:4px 9px;" onclick="editCat('${esc(c.id)}','${esc(c.name)}',${JSON.stringify(c.description||'')},'${esc(c.icon||'')}')"><i class="bi bi-pencil"></i></button>
+    <button class="btn-danger-sm" style="padding:4px 9px;" onclick="deleteCat('${esc(c.id)}','${esc(c.name)}')"><i class="bi bi-trash"></i></button>
+  </div>`).join('');
+}
+
+function resetCatForm(){
+  document.getElementById('catEditId').value='';
+  document.getElementById('catFormTitle').innerHTML='<i class="bi bi-plus-circle" style="color:var(--jira-blue);"></i> Nueva Categoría';
+  document.getElementById('catSaveLabel').textContent='Guardar';
+  document.getElementById('catName').value='';
+  document.getElementById('catDesc').value='';
+  document.getElementById('catIcon').value='';
+  document.getElementById('catIconPreview').className='bi bi-folder';
+}
+
+function editCat(id,name,desc,icon){
+  document.getElementById('catEditId').value=id;
+  document.getElementById('catFormTitle').innerHTML='<i class="bi bi-pencil" style="color:var(--jira-blue);"></i> Editar Categoría';
+  document.getElementById('catSaveLabel').textContent='Actualizar';
+  document.getElementById('catName').value=name;
+  document.getElementById('catDesc').value=desc;
+  document.getElementById('catIcon').value=icon;
+  document.getElementById('catIconPreview').className=`bi bi-${icon||'folder'}`;
+  document.getElementById('catName').focus();
+}
+
+function previewCatIcon(){
+  const v=document.getElementById('catIcon').value.trim()||'folder';
+  document.getElementById('catIconPreview').className=`bi bi-${v}`;
+}
+
+async function guardarCategoria(){
+  const id=document.getElementById('catEditId').value;
+  const name=document.getElementById('catName').value.trim();
+  if(!name)return toast('El nombre es requerido','err');
+  const body={name,description:document.getElementById('catDesc').value.trim()||undefined,icon:document.getElementById('catIcon').value.trim()||undefined};
+  const url=id?`/api/catalog/categories/${id}`:'/api/catalog/categories';
+  const method=id?'PATCH':'POST';
+  const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(body)});
+  const d=await r.json();
+  if(!d.success)return toast(d.error||'Error al guardar','err');
+  toast(id?'Categoría actualizada':'Categoría creada','ok');
+  resetCatForm();
+  loadCats();
+  loadCatalog();
+}
+
+async function deleteCat(id,name){
+  if(!confirm(`¿Desactivar la categoría "${name}"? Los servicios asociados dejarán de aparecer.`))return;
+  const r=await fetch(`/api/catalog/categories/${id}`,{method:'DELETE',credentials:'include'});
+  const d=await r.json();
+  if(!d.success)return toast(d.error||'Error al eliminar','err');
+  toast('Categoría desactivada','ok');
+  loadCats();
+  loadCatalog();
+}
+
+// ── ESPECIALISTAS ─────────────────────────────────────────────────────────
+async function loadSpecialists(){
+  const r=await fetch('/api/jira/admin/users',{credentials:'include'});
+  const d=await r.json();
+  const users=(d.data||d||[]).filter(u=>['especialista','agente','tecnico'].includes(u.role));
+  const wrap=document.getElementById('specialistListWrap');
+  if(!users.length){wrap.innerHTML='<div class="empty-state"><i class="bi bi-people"></i><p>Sin especialistas registrados</p></div>';return;}
+  wrap.innerHTML=users.map(u=>`<div class="cat-inline-row">
+    <i class="bi bi-person-badge" style="font-size:22px;color:var(--jira-blue);min-width:28px;"></i>
+    <div style="flex:1;">
+      <div style="font-weight:700;font-size:13px;">${esc(u.full_name||u.username)}</div>
+      <div style="font-size:11px;color:var(--text-muted);">${esc(u.email)} &nbsp;·&nbsp; ${esc(u.role)}</div>
+    </div>
+    <span class="bs ${u.is_active!==false?'bs-aprobado':'bs-rechazado'}" style="font-size:10px;">${u.is_active!==false?'Activo':'Inactivo'}</span>
+  </div>`).join('');
+}
+
+async function createSpecialist(){
+  const name=document.getElementById('sp_name').value.trim();
+  const email=document.getElementById('sp_email').value.trim();
+  const pass=document.getElementById('sp_pass').value;
+  if(!name||!email||!pass)return toast('Nombre, correo y contraseña son requeridos','err');
+  const username=email.split('@')[0].replace(/[^a-z0-9]/gi,'').toLowerCase();
+  const r=await fetch('/api/jira/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',
+    body:JSON.stringify({full_name:name,username,email,password:pass,role:'especialista'})});
+  const d=await r.json();
+  if(!d.success)return toast(d.error||d.message||'Error al crear','err');
+  toast('Especialista creado correctamente','ok');
+  ['sp_name','sp_email','sp_pass'].forEach(id=>document.getElementById(id).value='');
+  loadSpecialists();
+}
+
+// ── AUTOMATIZACIONES ──────────────────────────────────────────────────────
+function toggleAutoSection(key){
+  const en=document.getElementById(`auto_${key}_enabled`).checked;
+  const sec=document.getElementById(`auto_${key}_section`);
+  if(sec)sec.style.display=en?'':'none';
+}
+async function loadAutomations(){
+  try{
+    const r=await fetch('/api/automations/catalog',{credentials:'include'});
+    const d=await r.json();
+    const cfg=d.data||{};
+    if(cfg.pend){document.getElementById('auto_pend_enabled').checked=true;toggleAutoSection('pend');if(cfg.pend.email)document.getElementById('auto_pend_email').value=cfg.pend.email;if(cfg.pend.hours)document.getElementById('auto_pend_hours').value=cfg.pend.hours;}
+    if(cfg.sat){document.getElementById('auto_sat_enabled').checked=true;toggleAutoSection('sat');}
+    if(cfg.sla){document.getElementById('auto_sla_enabled').checked=true;toggleAutoSection('sla');if(cfg.sla.email)document.getElementById('auto_sla_email').value=cfg.sla.email;if(cfg.sla.hours)document.getElementById('auto_sla_hours').value=cfg.sla.hours;}
+  }catch(e){}
+}
+async function saveAutomations(){
+  const cfg={
+    pend:document.getElementById('auto_pend_enabled').checked?{email:document.getElementById('auto_pend_email').value,hours:document.getElementById('auto_pend_hours').value}:null,
+    sat:document.getElementById('auto_sat_enabled').checked?{}:null,
+    sla:document.getElementById('auto_sla_enabled').checked?{email:document.getElementById('auto_sla_email').value,hours:document.getElementById('auto_sla_hours').value}:null,
+  };
+  try{
+    await fetch('/api/automations/catalog',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(cfg)});
+    toast('Automatizaciones guardadas','ok');
+  }catch(e){toast('Error al guardar','err');}
+}
+
+// ── ADMINISTRACIÓN ────────────────────────────────────────────────────────
+let _allAdminUsers=[];
+async function loadAdminUsers(){
+  const r=await fetch('/api/jira/admin/users',{credentials:'include'});
+  const d=await r.json();
+  _allAdminUsers=d.data||d||[];
+  renderAdminUsers(_allAdminUsers);
+}
+function filterAdminUsers(q){
+  const ql=q.toLowerCase();
+  renderAdminUsers(q?_allAdminUsers.filter(u=>(u.full_name||'').toLowerCase().includes(ql)||(u.email||'').toLowerCase().includes(ql)):_allAdminUsers);
+}
+function renderAdminUsers(users){
+  const wrap=document.getElementById('adminUserTable');
+  if(!users.length){wrap.innerHTML='<div class="empty-state"><i class="bi bi-people"></i><p>Sin usuarios</p></div>';return;}
+  wrap.innerHTML=`<table class="tbl"><thead><tr><th>Nombre</th><th>Usuario</th><th>Correo</th><th>Perfil</th><th>Estado</th><th></th></tr></thead><tbody>${
+    users.map(u=>`<tr>
+      <td style="font-weight:600;">${esc(u.full_name||'—')}</td>
+      <td style="font-size:12px;font-family:monospace;">${esc(u.username||'—')}</td>
+      <td style="font-size:12px;">${esc(u.email||'—')}</td>
+      <td><span class="bs bs-en_proceso" style="font-size:10px;">${esc(u.role||'—')}</span></td>
+      <td><span class="bs ${u.is_active!==false?'bs-aprobado':'bs-rechazado'}" style="font-size:10px;">${u.is_active!==false?'Activo':'Inactivo'}</span></td>
+      <td><button class="btn-danger-sm" style="padding:3px 8px;font-size:11px;" onclick="toggleUserActive('${u.id||u.uuid}',${u.is_active!==false})">${u.is_active!==false?'Desactivar':'Activar'}</button></td>
+    </tr>`).join('')
+  }</tbody></table>`;
+}
+async function toggleUserActive(id,isActive){
+  const r=await fetch(`/api/jira/admin/users/${id}/status`,{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({is_active:!isActive})});
+  const d=await r.json();
+  if(!d.success)return toast(d.error||d.message||'Error','err');
+  toast(isActive?'Usuario desactivado':'Usuario activado','ok');
+  loadAdminUsers();
+}
+async function createAdminUser(){
+  const name=document.getElementById('au_name').value.trim();
+  const email=document.getElementById('au_email').value.trim();
+  const role=document.getElementById('au_role').value;
+  const pass=document.getElementById('au_pass').value;
+  if(!name||!email||!pass)return toast('Nombre, correo y contraseña son requeridos','err');
+  const usernameInput=document.getElementById('au_username').value.trim();
+  const username=usernameInput||email.split('@')[0].replace(/[^a-z0-9]/gi,'').toLowerCase();
+  const r=await fetch('/api/jira/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({full_name:name,username,email,role,password:pass})});
+  const d=await r.json();
+  if(!d.success)return toast(d.error||d.message||'Error al crear','err');
+  toast('Usuario creado correctamente','ok');
+  ['au_name','au_username','au_email','au_pass'].forEach(id=>document.getElementById(id).value='');
+  loadAdminUsers();
+}
+
+// ── DETALLE SOLICITUD ─────────────────────────────────────────────────────
+async function verDetalle(id){
+  _currentDetailId=id;
+  const body=document.getElementById('detBody');
+  body.innerHTML='<div class="empty-state"><i class="bi bi-arrow-clockwise"></i></div>';
+  document.getElementById('detFtr').innerHTML='';
+  openModal('modalDetalle');
+  const r=await fetch(`/api/service-requests/${id}`,{credentials:'include'});
+  const d=await r.json();
+  if(!d.success){body.innerHTML=`<div class="empty-state"><i class="bi bi-x-circle"></i><p>${esc(d.error)}</p></div>`;return;}
+  const sr=d.data;
+  const catName=sr.service?.categoria?.name||'—';
+  const svcName=sr.service?.name||'—';
+  document.getElementById('detTitle').innerHTML=`<i class="bi bi-ticket-detailed" style="color:var(--jira-blue);"></i> ${esc(sr.title)}`;
+  body.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div class="detail-row" style="flex-direction:column;gap:2px;"><span class="detail-label">Solicitante</span><span style="font-size:13px;font-weight:600;">${esc(sr.requesterEmail||'—')}</span></div>
+      <div class="detail-row" style="flex-direction:column;gap:2px;"><span class="detail-label">Estado</span><span class="bs ${bsClass(sr.status)}">${fmtStatus(sr.status)}</span></div>
+      <div class="detail-row" style="flex-direction:column;gap:2px;"><span class="detail-label">Categoría</span><span style="font-size:13px;">${esc(catName)}</span></div>
+      <div class="detail-row" style="flex-direction:column;gap:2px;"><span class="detail-label">Servicio</span><span style="font-size:13px;">${esc(svcName)}</span></div>
+      <div class="detail-row" style="flex-direction:column;gap:2px;"><span class="detail-label">Prioridad</span><span class="bs ${bpClass(sr.priority)}">${sr.priority}</span></div>
+      <div class="detail-row" style="flex-direction:column;gap:2px;"><span class="detail-label">Vence</span><span style="font-size:13px;">${fmtDate(sr.dueDate)}</span></div>
+      <div class="detail-row" style="flex-direction:column;gap:2px;"><span class="detail-label">Creado</span><span style="font-size:13px;">${fmtDate(sr.createdAt)}</span></div>
+    </div>
+    ${sr.description?`<div style="background:var(--bg-header);border-radius:8px;padding:12px 14px;margin-bottom:14px;"><div class="detail-label" style="margin-bottom:6px;">Descripción</div><div style="font-size:13px;white-space:pre-line;line-height:1.7;">${esc(sr.description)}</div></div>`:''}
+    ${(sr.approvals||[]).length?`<div style="margin-top:10px;"><div class="detail-label" style="margin-bottom:8px;">Historial de aprobaciones</div>${sr.approvals.map(a=>`<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:6px 0;border-bottom:1px solid var(--border-row);"><span class="bs ${a.status==='aprobado'?'bs-aprobado':'bs-rechazado'}">${a.status}</span><span style="color:var(--text-muted);">${fmtDate(a.decidedAt)}</span>${a.comments?`<span>${esc(a.comments)}</span>`:''}</div>`).join('')}</div>`:''}`;
+
+  // Botones según rol y estado
+  let btns='<button class="btn-outline-sm" onclick="closeModal(\'modalDetalle\')">Cerrar</button>';
+  if(_userCanManage){
+    btns+=`<button class="btn-outline-sm" onclick="openEmailModal('${id}','${esc(sr.requesterEmail||'')}','${esc(sr.title||'')}');closeModal('modalDetalle');"><i class="bi bi-envelope"></i> Enviar correo</button>`;
+    if(sr.status==='pendiente_aprobacion'){
+      btns+=`<button class="btn-success-sm" onclick="aprobar('${id}');closeModal('modalDetalle');"><i class="bi bi-check"></i> Aprobar</button>`;
+      btns+=`<button class="btn-danger-sm" onclick="openDenegar('${id}');closeModal('modalDetalle');"><i class="bi bi-x"></i> Denegar</button>`;
+    }
+    if(sr.status==='aprobado')
+      btns+=`<button class="btn-outline-sm" style="border-color:var(--primary);color:var(--primary);" onclick="cambiarEstado('${id}','en_proceso');closeModal('modalDetalle');"><i class="bi bi-arrow-repeat"></i> En proceso</button>`;
+    if(sr.status==='en_proceso')
+      btns+=`<button class="btn-success-sm" onclick="cambiarEstado('${id}','completado');closeModal('modalDetalle');"><i class="bi bi-check2-all"></i> Completar</button>`;
+  }
+  document.getElementById('detFtr').innerHTML=btns;
+}
+
+// ── APROBAR / DENEGAR ─────────────────────────────────────────────────────
+async function aprobar(id){
+  const r=await fetch(`/api/service-requests/${id}/approve`,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({decision:'aprobado',comments:'Aprobado'})});
+  const d=await r.json();
+  if(!d.success)return toast(d.error,'err');
+  toast('Solicitud aprobada','ok');
+  loadGestion();
+}
+function openDenegar(id){_currentDenyId=id;document.getElementById('denyReason').value='';openModal('modalDenegar');}
+async function confirmarDenegar(){
+  const reason=document.getElementById('denyReason').value.trim();
+  if(!reason)return toast('El motivo de rechazo es requerido','err');
+  const r=await fetch(`/api/service-requests/${_currentDenyId}/approve`,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({decision:'rechazado',comments:reason})});
+  const d=await r.json();
+  if(!d.success)return toast(d.error,'err');
+  closeModal('modalDenegar');
+  toast('Solicitud rechazada','ok');
+  loadGestion();
+}
+
+// ── EMAIL MODAL ───────────────────────────────────────────────────────────
+function openEmailModal(id,email,title){
+  _currentEmailId=id;
+  document.getElementById('emailTo').value=email||'—';
+  document.getElementById('emailAsunto').value=`Actualización de tu solicitud — ${title}`;
+  document.getElementById('emailMensaje').value='';
+  openModal('modalEmail');
+}
+async function enviarEmail(){
+  const msg=document.getElementById('emailMensaje').value.trim();
+  if(!msg)return toast('El mensaje es requerido','err');
+  const r=await fetch(`/api/service-requests/${_currentEmailId}/notify`,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({mensaje:msg,asunto:document.getElementById('emailAsunto').value})});
+  const d=await r.json();
+  if(!d.success)return toast(d.error,'err');
+  closeModal('modalEmail');
+  toast('Correo enviado','ok');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+loadCatalog();
+
+// Pre-fill reporter email from portal session (URL param takes priority over localStorage)
+(function prefillReporter(){
+  const params = new URLSearchParams(window.location.search);
+  const email = params.get('reporter') || localStorage.getItem('portal_user_email') || '';
+  if(!email) return;
+  const el = document.getElementById('msolEmail');
+  if(el && !el.value) el.value = email;
+})();
+</script>
 </body>
 </html>

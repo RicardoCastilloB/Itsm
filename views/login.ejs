@@ -466,7 +466,7 @@
                     localStorage.setItem('refreshToken', data.refreshToken);
                     localStorage.setItem('user', JSON.stringify(data.user));
                     showAlert('Bienvenido, ' + data.user.username + '!', 'success');
-                    setTimeout(function () { window.location.href = '/home'; }, 1000);
+                    setTimeout(function () { window.location.href = '/autogestion'; }, 1000);
                 } else {
                     showAlert(data.error || 'Credenciales incorrectas. Intentalo de nuevo.', 'danger');
                     btn.disabled = false;

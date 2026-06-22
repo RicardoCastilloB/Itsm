@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><%= title %> — Service Desk TI</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+:root{--bg:#f5f7fa;--bg-card:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;--primary:#3b82f6;--primary-soft:#dbeafe;--accent:#2563eb;}
+[data-theme="dark"]{--bg:#0f172a;--bg-card:#1e293b;--border:#2d3f55;--text:#e2e8f0;--muted:#94a3b8;--primary:#60a5fa;--primary-soft:#1e3a5f;--accent:#60a5fa;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh;}
+
+/* HEADER */
+.faq-hero{background:linear-gradient(135deg,#1e3a5f,#2563eb,#0ea5e9);padding:44px 24px 52px;text-align:center;position:relative;overflow:hidden;}
+.faq-hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23fff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");}
+.faq-hero h1{font-size:clamp(22px,4vw,36px);font-weight:800;color:#fff;margin-bottom:10px;position:relative;}
+.faq-hero p{font-size:15px;color:rgba(255,255,255,.8);max-width:520px;margin:0 auto 28px;position:relative;}
+.search-wrap{position:relative;max-width:560px;margin:0 auto;z-index:1;}
+.search-wrap input{width:100%;padding:14px 20px 14px 48px;border-radius:50px;border:none;font-size:15px;box-shadow:0 4px 24px rgba(0,0,0,.2);outline:none;background:#fff;color:#1e293b;}
+.search-wrap .si{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:18px;}
+.search-wrap .sc{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94a3b8;font-size:18px;display:none;padding:4px;}
+.search-dropdown{position:absolute;top:calc(100% + 8px);left:0;right:0;background:#fff;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.18);overflow:hidden;z-index:500;display:none;max-height:360px;overflow-y:auto;}
+.search-dropdown.open{display:block;}
+.sdrop-item{display:flex;align-items:flex-start;gap:10px;padding:12px 18px;cursor:pointer;border-bottom:1px solid #f1f5f9;transition:background .15s;}
+.sdrop-item:last-child{border-bottom:none;}
+.sdrop-item:hover{background:#f0f7ff;}
+.sdrop-icon{flex-shrink:0;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.sdrop-icon.faq{background:#dbeafe;color:#2563eb;}
+.sdrop-icon.contrib{background:#fef3c7;color:#b45309;}
+.sdrop-text{flex:1;min-width:0;}
+.sdrop-title{font-size:13px;font-weight:600;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sdrop-sub{font-size:11px;color:#94a3b8;margin-top:2px;}
+.sdrop-badge{font-size:10px;font-weight:700;background:#e0f2fe;color:#0369a1;border-radius:4px;padding:1px 6px;white-space:nowrap;}
+.sdrop-badge.c{background:#fef3c7;color:#92400e;}
+.sdrop-empty{padding:20px;text-align:center;font-size:13px;color:#94a3b8;}
+
+/* BODY */
+.faq-body{max-width:860px;margin:24px auto 60px;padding:0 16px;}
+
+/* PILLS */
+.cat-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;}
+.cat-pill{padding:7px 18px;border-radius:50px;border:1.5px solid var(--border);background:var(--bg-card);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
+.cat-pill:hover{border-color:var(--primary);color:var(--primary);}
+.cat-pill.active{background:var(--primary);border-color:var(--primary);color:#fff;}
+
+/* CATEGORY BLOCK */
+.cat-block{margin-bottom:32px;}
+.cat-block-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.cat-block-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ACCORDION */
+.faq-item{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;transition:box-shadow .2s;}
+.faq-item:hover{box-shadow:0 2px 12px rgba(0,0,0,.06);}
+.faq-q{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;cursor:pointer;gap:12px;user-select:none;}
+.faq-q-text{font-size:14px;font-weight:600;color:var(--text);flex:1;line-height:1.5;}
+.faq-chevron{font-size:16px;color:var(--muted);transition:transform .3s;flex-shrink:0;}
+.faq-item.open .faq-chevron{transform:rotate(180deg);}
+.faq-item.open .faq-q{background:var(--primary-soft);}
+.faq-item.open .faq-q-text{color:var(--accent);}
+.faq-a{display:none;padding:0 20px 18px;border-top:1px solid var(--border);}
+.faq-item.open .faq-a{display:block;}
+.faq-a-text{font-size:13.5px;color:var(--muted);line-height:1.75;white-space:pre-line;margin-top:14px;}
+.faq-meta{display:flex;align-items:center;justify-content:space-between;margin-top:14px;}
+.faq-views{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px;}
+.faq-helpful{display:flex;align-items:center;gap:8px;}
+.faq-helpful span{font-size:11px;color:var(--muted);}
+.faq-btn-helpful{background:none;border:1.5px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;color:var(--muted);transition:all .2s;}
+.faq-btn-helpful:hover{border-color:var(--primary);color:var(--primary);}
+.faq-btn-helpful.voted{background:var(--primary);border-color:var(--primary);color:#fff;}
+
+/* EMPTY */
+.empty-faq{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-faq i{font-size:48px;opacity:.3;display:block;margin-bottom:12px;}
+.empty-faq p{font-size:14px;}
+
+/* WELCOME CHIP */
+.welcome-chip{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:50px;padding:6px 16px;font-size:13px;color:#fff;font-weight:600;margin-bottom:16px;backdrop-filter:blur(6px);}
+.welcome-name{font-weight:800;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* BACK TO PORTAL */
+.portal-back-btn{position:fixed;bottom:28px;left:28px;background:#fff;color:#1e3a5f;border:none;border-radius:50px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.15);display:none;align-items:center;gap:7px;z-index:100;transition:opacity .2s;text-decoration:none;}
+.portal-back-btn:hover{opacity:.88;color:#1e3a5f;}
+
+/* ADMIN PANEL */
+.admin-fab{position:fixed;bottom:28px;right:28px;background:var(--primary);color:#fff;border:none;border-radius:50px;padding:12px 20px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 20px rgba(37,99,235,.4);display:flex;align-items:center;gap:8px;z-index:100;transition:opacity .2s;}
+.admin-fab:hover{opacity:.88;}
+
+/* MODAL */
+.faq-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;}
+.faq-modal-bg.show{display:flex;}
+.faq-modal{background:var(--bg-card);border-radius:16px;padding:28px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2);}
+.faq-modal h3{font-size:17px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px;}
+.faq-modal label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:5px;margin-top:14px;}
+.faq-modal input,.faq-modal select,.faq-modal textarea{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;background:var(--bg);color:var(--text);outline:none;transition:border-color .2s;}
+.faq-modal input:focus,.faq-modal select:focus,.faq-modal textarea:focus{border-color:var(--primary);}
+.faq-modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
+.btn-pm{padding:9px 22px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;}
+.btn-primary{background:var(--primary);color:#fff;}.btn-primary:hover{opacity:.88;}
+.btn-secondary{background:#f1f5f9;color:#475569;}.btn-secondary:hover{background:#e2e8f0;}
+
+/* BACK LINK */
+.back-btn{display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,.85);font-size:13px;font-weight:600;text-decoration:none;margin-bottom:20px;position:relative;}
+.back-btn:hover{color:#fff;}
+
+/* STATS */
+.faq-stats{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-bottom:28px;}
+.faq-stat{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 24px;text-align:center;min-width:100px;}
+.faq-stat-n{font-size:24px;font-weight:800;color:var(--primary);}
+.faq-stat-l{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+
+/* TOAST */
+.faq-toast{position:fixed;top:24px;right:24px;z-index:9999;background:#1e293b;color:#fff;border-radius:10px;padding:13px 20px;font-size:13px;font-weight:600;box-shadow:0 4px 24px rgba(0,0,0,.25);display:none;align-items:center;gap:10px;max-width:360px;}
+.faq-toast.show{display:flex;}
+.faq-toast.warn{background:#92400e;}.faq-toast.success{background:#065f46;}.faq-toast.error{background:#7f1d1d;}
+
+/* SEND QUESTION */
+.ask-box{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:24px 28px;margin-top:40px;}
+.ask-box h4{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+.ask-box p{font-size:13px;color:var(--muted);margin-bottom:16px;}
+.ask-textarea{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:13px;background:var(--bg);color:var(--text);outline:none;resize:vertical;min-height:90px;transition:border-color .2s;font-family:inherit;}
+.ask-textarea:focus{border-color:var(--primary);}
+.ask-row{display:flex;gap:10px;margin-top:10px;align-items:flex-start;flex-wrap:wrap;}
+.ask-cat{flex:1;min-width:160px;border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;background:var(--bg);color:var(--text);outline:none;}
+.ask-cat:focus{border-color:var(--primary);}
+.btn-ask{padding:10px 22px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+.btn-ask:disabled{opacity:.6;cursor:default;}
+.ask-ok{display:none;margin-top:12px;background:#dcfce7;color:#166534;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;}
+
+/* SHARE KNOWLEDGE */
+.share-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 22px;border-radius:50px;border:1.5px solid var(--primary);background:transparent;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;margin-top:16px;transition:all .2s;}
+.share-btn:hover{background:var(--primary);color:#fff;}
+
+/* CONTRIBUTION MODAL */
+.contrib-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:8000;align-items:center;justify-content:center;}
+.contrib-modal-bg.show{display:flex;}
+.contrib-modal{background:var(--bg-card);border-radius:18px;padding:30px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 48px rgba(0,0,0,.25);}
+.contrib-modal h3{font-size:17px;font-weight:800;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.contrib-modal p{font-size:13px;color:var(--muted);margin-bottom:18px;}
+.contrib-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin:14px 0 5px;}
+.contrib-input{width:100%;border:1.5px solid var(--border);border-radius:9px;padding:10px 13px;font-size:13px;background:var(--bg);color:var(--text);outline:none;transition:border-color .2s;font-family:inherit;}
+.contrib-input:focus{border-color:var(--primary);}
+.contrib-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;flex-wrap:wrap;}
+.btn-contrib-ok{padding:10px 22px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;}
+.btn-contrib-cancel{padding:10px 20px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;}
+.contrib-thanks{display:none;text-align:center;padding:24px 0 8px;}
+.contrib-thanks i{font-size:44px;color:#059669;display:block;margin-bottom:10px;}
+.contrib-thanks h4{font-size:17px;font-weight:800;color:var(--text);margin-bottom:8px;}
+.contrib-thanks p{font-size:13px;color:var(--muted);}
+
+/* CONTRIBUTIONS SECTION */
+.contrib-section{margin-top:48px;}
+.contrib-section-title{font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.contrib-section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.contrib-card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:10px;}
+.contrib-card-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;}
+.contrib-card-body{font-size:13.5px;color:var(--muted);line-height:1.7;white-space:pre-line;}
+.contrib-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:14px;flex-wrap:wrap;gap:8px;}
+.contrib-author{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px;}
+.contrib-author i{color:var(--primary);}
+.star-row{display:flex;align-items:center;gap:3px;}
+.star{font-size:18px;cursor:pointer;color:#d1d5db;transition:color .15s;line-height:1;}
+.star.lit,.star:hover~.star{color:#d1d5db;}
+.star-row:hover .star,.star.lit{color:#f59e0b;}
+.star-row .star:hover~.star{color:#d1d5db!important;}
+.star-avg{font-size:12px;color:var(--muted);margin-left:6px;font-weight:600;}
+
+@media(max-width:576px){.faq-hero{padding:36px 16px 44px;}.faq-body{margin-top:16px;}.cat-pills{gap:6px;}.cat-pill{font-size:12px;padding:5px 14px;}}
+</style>
+</head>
+<body>
+
+<%
+const _isAdmin = user && ['administrador','especialista'].includes(user.role);
+const _isPriv  = user && ['administrador','especialista','agente','tecnico'].includes(user.role);
+%>
+
+<!-- HERO -->
+<div class="faq-hero">
+  <% if (_isPriv) { %>
+  <a href="/index" class="back-btn"><i class="bi bi-arrow-left"></i> Volver al panel</a>
+  <% } %>
+
+  <div id="welcomeChip" style="display:none;" class="welcome-chip">
+    <i class="bi bi-person-circle"></i>
+    <span>Bienvenido/a, <span class="welcome-name" id="welcomeName"></span></span>
+  </div>
+
+  <h1><i class="bi bi-patch-question-fill"></i> Preguntas Frecuentes</h1>
+  <p>Encuentra respuestas rápidas sobre el uso de los servicios TI, equipo y procesos.</p>
+  <div class="search-wrap">
+    <i class="bi bi-search si"></i>
+    <input type="text" id="faqSearch" placeholder="Buscar pregunta…" oninput="onSearch(this.value)" autocomplete="off" onkeydown="onSearchKey(event)">
+    <button class="sc" id="clearBtn" onclick="clearSearch()"><i class="bi bi-x-lg"></i></button>
+    <div class="search-dropdown" id="searchDropdown"></div>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="faq-body">
+
+  <!-- Stats -->
+  <div class="faq-stats" id="faqStats"></div>
+
+  <!-- Pills -->
+  <div class="cat-pills" id="catPills">
+    <button class="cat-pill active" onclick="filterCat('', this)">
+      <i class="bi bi-grid-fill"></i> Todas
+    </button>
+  </div>
+
+  <!-- Items container -->
+  <div id="faqItems"></div>
+
+  <!-- SEND YOUR QUESTION -->
+  <div class="ask-box" id="askBox">
+    <h4><i class="bi bi-chat-dots-fill" style="color:var(--primary)"></i> ¿No encontraste lo que buscabas?</h4>
+    <p>Envíanos tu pregunta y un especialista te responderá. Si la respuesta es útil, la publicaremos en esta base de conocimiento.</p>
+    <textarea class="ask-textarea" id="askQuestion" placeholder="Escribe tu pregunta aquí…"></textarea>
+    <div class="ask-row">
+      <select class="ask-cat" id="askCategory">
+        <option value="General">General</option>
+        <option value="Incidencias">Incidencias</option>
+        <option value="Requerimientos">Requerimientos</option>
+        <option value="Equipos y Mantenimiento">Equipos y Mantenimiento</option>
+        <option value="Accesos y Correo">Accesos y Correo</option>
+      </select>
+      <button class="btn-ask" id="btnAsk" onclick="sendQuestion()">
+        <i class="bi bi-send-fill"></i> Enviar pregunta
+      </button>
+    </div>
+    <div class="ask-ok" id="askOk"><i class="bi bi-check-circle-fill"></i> ¡Pregunta enviada! Un especialista la revisará pronto.</div>
+    <div style="margin-top:20px;text-align:center;">
+      <button class="share-btn" id="shareKnowledgeBtn" onclick="openContribModal()">
+        <i class="bi bi-lightbulb-fill"></i> ¿Quieres compartir tu conocimiento?
+      </button>
+    </div>
+  </div>
+
+  <!-- APPROVED CONTRIBUTIONS -->
+  <div class="contrib-section" id="contribSection" style="display:none;">
+    <div class="contrib-section-title">
+      <i class="bi bi-lightbulb-fill" style="color:#f59e0b"></i> Conocimiento Compartido por la Comunidad
+    </div>
+    <div id="contribList"></div>
+  </div>
+
+</div>
+
+<!-- FAB solo admin -->
+<% if (_isAdmin) { %>
+<button class="admin-fab" onclick="openAddModal()">
+  <i class="bi bi-plus-lg"></i> Nueva pregunta
+</button>
+<% } %>
+
+<!-- MODAL ADD/EDIT -->
+<div class="faq-modal-bg" id="faqModalBg">
+  <div class="faq-modal">
+    <h3><i class="bi bi-pencil-fill" style="color:var(--primary)"></i> <span id="modalTitle">Nueva Pregunta</span></h3>
+    <input type="hidden" id="editId">
+    <label>Categoría *</label>
+    <input type="text" id="faqCat" list="catList" placeholder="Ej: Incidencias">
+    <datalist id="catList"></datalist>
+    <label>Pregunta *</label>
+    <input type="text" id="faqQ" placeholder="¿Cómo…?">
+    <label>Respuesta *</label>
+    <textarea id="faqA" rows="6" placeholder="Escribe la respuesta detallada…"></textarea>
+    <label>Orden (número)</label>
+    <input type="number" id="faqOrder" value="0" min="0">
+    <div class="faq-modal-actions">
+      <button class="btn-pm btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn-pm btn-primary" onclick="saveItem()"><i class="bi bi-check-lg"></i> Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="faq-toast" id="faqToast"></div>
+
+<!-- CONTRIBUTION MODAL -->
+<div class="contrib-modal-bg" id="contribModalBg">
+  <div class="contrib-modal">
+    <div id="contribForm">
+      <h3><i class="bi bi-lightbulb-fill" style="color:#f59e0b"></i> Compartir mi conocimiento</h3>
+      <p>Tu aporte será revisado por un especialista. Una vez aprobado, aparecerá en esta base de conocimiento para ayudar a tus compañeros.</p>
+      <label class="contrib-label">Título *</label>
+      <input class="contrib-input" id="ctTitle" type="text" placeholder="Ej: Cómo configurar mi correo en el móvil">
+      <label class="contrib-label">Categoría</label>
+      <select class="contrib-input" id="ctCategory">
+        <option value="General">General</option>
+        <option value="Incidencias">Incidencias</option>
+        <option value="Requerimientos">Requerimientos</option>
+        <option value="Equipos y Mantenimiento">Equipos y Mantenimiento</option>
+        <option value="Accesos y Correo">Accesos y Correo</option>
+      </select>
+      <label class="contrib-label">Descripción / Respuesta *</label>
+      <textarea class="contrib-input" id="ctBody" rows="6" placeholder="Escribe el contenido que quieres compartir…"></textarea>
+      <div class="contrib-actions">
+        <button class="btn-contrib-cancel" onclick="closeContribModal()">Cancelar</button>
+        <button class="btn-contrib-ok" id="btnContribSend" onclick="sendContribution()">
+          <i class="bi bi-send-fill"></i> Enviar para revisión
+        </button>
+      </div>
+    </div>
+    <div class="contrib-thanks" id="contribThanks">
+      <i class="bi bi-heart-fill"></i>
+      <h4>¡Muchas gracias por compartir tu conocimiento!</h4>
+      <p>Tu aporte es muy valioso para el corporativo. Un especialista lo revisará y, una vez aprobado, aparecerá en esta sección para ayudar a todos tus compañeros.</p>
+      <button class="btn-contrib-ok" style="margin:20px auto 0;justify-content:center;" onclick="closeContribModal()"><i class="bi bi-check-lg"></i> Entendido</button>
+    </div>
+  </div>
+</div>
+
+<!-- BACK TO PORTAL FLOATING BUTTON -->
+<a class="portal-back-btn" id="portalBackBtn" href="/home">
+  <i class="bi bi-arrow-left-circle-fill"></i> Regresar al Portal
+</a>
+
+<script>
+var _allItems = [], _activeCat = '', _searchQ = '';
+var _portalEmail = '', _portalName = '';
+var _contribs = [];
+const IS_ADMIN = <%- JSON.stringify(!!_isAdmin) %>;
+
+// ── SESSION PORTAL ────────────────────────────────────────────────────────────
+(function initPortalSession(){
+  let email = <%- JSON.stringify(reporterEmail || '') %>;
+  let name  = <%- JSON.stringify(reporterName  || '') %>;
+  <% if (user) { %>
+  email = <%- JSON.stringify(user.email || '') %>;
+  name  = <%- JSON.stringify(user.full_name || user.name || user.email || '') %>;
+  <% } %>
+  if(!email){ const p=new URLSearchParams(window.location.search); email=p.get('reporter')||''; }
+  if(!name) { const p=new URLSearchParams(window.location.search); name =p.get('name')    ||''; }
+  if(!email) email = localStorage.getItem('portal_user_email') || '';
+  if(!name)  name  = localStorage.getItem('portal_user_name')  || '';
+
+  if(email){
+    _portalEmail = email;
+    _portalName  = name;
+
+    const chip = document.getElementById('welcomeChip');
+    const nameEl = document.getElementById('welcomeName');
+    if(chip && nameEl){ nameEl.textContent = name || email; chip.style.display='inline-flex'; }
+
+    const btn = document.getElementById('portalBackBtn');
+    if(btn){
+      const enc  = encodeURIComponent(email);
+      const encN = encodeURIComponent(name);
+      btn.href = '/home?reporter='+enc+'&name='+encN;
+      btn.style.display = 'flex';
+    }
+  }
+})();
+
+const CAT_ICONS = {
+  'Incidencias':           'bi-exclamation-triangle-fill',
+  'Requerimientos':        'bi-clipboard2-plus-fill',
+  'Equipos y Mantenimiento':'bi-tools',
+  'Accesos y Correo':      'bi-key-fill',
+  'General':               'bi-info-circle-fill',
+};
+const CAT_COLORS = {
+  'Incidencias':           '#ef4444',
+  'Requerimientos':        '#3b82f6',
+  'Equipos y Mantenimiento':'#f59e0b',
+  'Accesos y Correo':      '#10b981',
+  'General':               '#6366f1',
+};
+
+async function init() {
+  const r = await fetch('/api/faq', { credentials:'include' });
+  const d = await r.json();
+  _allItems = d.data || [];
+  buildStats();
+  buildPills();
+  render();
+}
+
+function buildStats() {
+  const cats = [...new Set(_allItems.map(i => i.category))];
+  document.getElementById('faqStats').innerHTML = `
+    <div class="faq-stat"><div class="faq-stat-n">${_allItems.length}</div><div class="faq-stat-l">Preguntas</div></div>
+    <div class="faq-stat"><div class="faq-stat-n">${cats.length}</div><div class="faq-stat-l">Categorías</div></div>
+    <div class="faq-stat"><div class="faq-stat-n">${_allItems.reduce((s,i)=>s+i.views,0)}</div><div class="faq-stat-l">Consultas</div></div>
+    <div class="faq-stat"><div class="faq-stat-n" id="statAportesN">${_contribs.length||'—'}</div><div class="faq-stat-l" style="color:#b45309;">Aportes</div></div>
+  `;
+}
+
+function buildPills() {
+  const cats = [...new Set(_allItems.map(i => i.category))];
+  const pills = document.getElementById('catPills');
+  // Conservar "Todas"
+  const todaBtn = pills.querySelector('.cat-pill');
+  pills.innerHTML = '';
+  pills.appendChild(todaBtn);
+  cats.forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'cat-pill';
+    b.innerHTML = `<i class="bi ${CAT_ICONS[c]||'bi-folder-fill'}"></i> ${c}`;
+    b.onclick = () => filterCat(c, b);
+    pills.appendChild(b);
+  });
+  // Datalist para modal
+  const dl = document.getElementById('catList');
+  dl.innerHTML = cats.map(c=>`<option value="${c}">`).join('');
+}
+
+function filterCat(cat, btn) {
+  _activeCat = cat;
+  document.querySelectorAll('.cat-pill').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function onSearch(q) {
+  _searchQ = q.trim().toLowerCase();
+  document.getElementById('clearBtn').style.display = q ? 'block' : 'none';
+  if (_searchQ.length >= 2) {
+    showDropdown(_searchQ);
+  } else {
+    hideDropdown();
+    render();
+    renderContribs();
+  }
+}
+
+function onSearchKey(e) {
+  if (e.key === 'Escape') { clearSearch(); }
+  if (e.key === 'Enter')  { hideDropdown(); render(); renderContribs(); }
+}
+
+function showDropdown(q) {
+  const dd = document.getElementById('searchDropdown');
+  const faqMatches = _allItems.filter(i =>
+    i.question.toLowerCase().includes(q) || i.answer.toLowerCase().includes(q)
+  ).slice(0, 5);
+  const contribMatches = _contribs.filter(c =>
+    c.title.toLowerCase().includes(q) || c.body.toLowerCase().includes(q)
+  ).slice(0, 3);
+
+  if (!faqMatches.length && !contribMatches.length) {
+    dd.innerHTML = `<div class="sdrop-empty"><i class="bi bi-search" style="display:block;font-size:22px;opacity:.3;margin-bottom:6px;"></i>Sin resultados para "<strong>${escFaq(q)}</strong>"</div>`;
+    dd.classList.add('open');
+    return;
+  }
+
+  let html = '';
+  faqMatches.forEach(item => {
+    const cat = item.category || 'General';
+    const icon = CAT_ICONS[cat] || 'bi-question-circle-fill';
+    html += `<div class="sdrop-item" onclick="selectFaq(${item.id})">
+      <div class="sdrop-icon faq"><i class="bi ${icon}"></i></div>
+      <div class="sdrop-text">
+        <div class="sdrop-title">${escFaq(item.question)}</div>
+        <div class="sdrop-sub"><span class="sdrop-badge">${escFaq(cat)}</span></div>
+      </div>
+    </div>`;
+  });
+  contribMatches.forEach(c => {
+    html += `<div class="sdrop-item" onclick="selectContrib(${c.id})">
+      <div class="sdrop-icon contrib"><i class="bi bi-lightbulb-fill"></i></div>
+      <div class="sdrop-text">
+        <div class="sdrop-title">${escFaq(c.title)}</div>
+        <div class="sdrop-sub"><span class="sdrop-badge c">Aporte</span> <span>${escFaq(c.name||c.email)}</span></div>
+      </div>
+    </div>`;
+  });
+  dd.innerHTML = html;
+  dd.classList.add('open');
+}
+
+function hideDropdown() {
+  document.getElementById('searchDropdown').classList.remove('open');
+}
+
+function selectFaq(id) {
+  hideDropdown();
+  _searchQ = '';
+  _activeCat = '';
+  document.getElementById('faqSearch').value = '';
+  document.getElementById('clearBtn').style.display = 'none';
+  document.querySelectorAll('.cat-pill').forEach((p,i) => p.classList.toggle('active', i===0));
+  render();
+  renderContribs();
+  setTimeout(() => {
+    const el = document.getElementById('faq-' + id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!el.classList.contains('open')) toggleItem(id);
+  }, 80);
+}
+
+function selectContrib(id) {
+  hideDropdown();
+  _searchQ = '';
+  document.getElementById('faqSearch').value = '';
+  document.getElementById('clearBtn').style.display = 'none';
+  render();
+  renderContribs();
+  setTimeout(() => {
+    const el = document.getElementById('cc-' + id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 80);
+}
+
+function clearSearch() {
+  document.getElementById('faqSearch').value = '';
+  document.getElementById('clearBtn').style.display = 'none';
+  _searchQ = '';
+  hideDropdown();
+  render();
+  renderContribs();
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrap')) hideDropdown();
+});
+
+function render() {
+  let items = _allItems;
+  if (_activeCat) items = items.filter(i => i.category === _activeCat);
+  if (_searchQ)   items = items.filter(i =>
+    i.question.toLowerCase().includes(_searchQ) || i.answer.toLowerCase().includes(_searchQ));
+
+  const container = document.getElementById('faqItems');
+  if (!items.length) {
+    container.innerHTML = `<div class="empty-faq"><i class="bi bi-search"></i><p>No encontramos resultados para tu búsqueda.</p></div>`;
+    return;
+  }
+
+  // Agrupar por categoría
+  const groups = {};
+  items.forEach(i => { if (!groups[i.category]) groups[i.category] = []; groups[i.category].push(i); });
+
+  container.innerHTML = Object.entries(groups).map(([cat, its]) => `
+    <div class="cat-block">
+      <div class="cat-block-title">
+        <i class="bi ${CAT_ICONS[cat]||'bi-folder-fill'}" style="color:${CAT_COLORS[cat]||'var(--primary)'}"></i>
+        ${cat}
+      </div>
+      ${its.map(item => renderItem(item)).join('')}
+    </div>
+  `).join('');
+}
+
+function renderItem(item) {
+  const adminActions = IS_ADMIN ? `
+    <button onclick="editItem(${item.id});event.stopPropagation();" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;padding:4px 6px;" title="Editar"><i class="bi bi-pencil"></i></button>
+    <button onclick="deleteItem(${item.id});event.stopPropagation();" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:13px;padding:4px 6px;" title="Eliminar"><i class="bi bi-trash3"></i></button>
+  ` : '';
+  return `
+    <div class="faq-item" id="faq-${item.id}">
+      <div class="faq-q" onclick="toggleItem(${item.id})">
+        <span class="faq-q-text">${highlight(item.question)}</span>
+        <div style="display:flex;align-items:center;gap:4px;">
+          ${adminActions}
+          <i class="bi bi-chevron-down faq-chevron"></i>
+        </div>
+      </div>
+      <div class="faq-a">
+        <div class="faq-a-text">${highlight(item.answer)}</div>
+        <div class="faq-meta">
+          <span class="faq-views"><i class="bi bi-eye"></i> ${item.views} consultas</span>
+          <div class="faq-helpful">
+            <span>¿Te fue útil?</span>
+            <button class="faq-btn-helpful" id="hbtn-${item.id}" onclick="markHelpful(${item.id})"><i class="bi bi-hand-thumbs-up"></i> Sí</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function highlight(text) {
+  if (!_searchQ) return text;
+  const re = new RegExp(`(${_searchQ.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+  return text.replace(re, '<mark style="background:#fef08a;padding:0 2px;border-radius:2px;">$1</mark>');
+}
+
+function toggleItem(id) {
+  const el = document.getElementById('faq-'+id);
+  const wasOpen = el.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(e=>e.classList.remove('open'));
+  if (!wasOpen) {
+    el.classList.add('open');
+    fetch(`/api/faq/${id}/view`, { method:'POST' }).catch(()=>{});
+    const item = _allItems.find(i=>i.id===id);
+    if (item) item.views++;
+  }
+}
+
+function markHelpful(id) {
+  const btn = document.getElementById('hbtn-'+id);
+  if (btn) { btn.classList.add('voted'); btn.innerHTML='<i class="bi bi-hand-thumbs-up-fill"></i> ¡Gracias!'; btn.disabled=true; }
+}
+
+// ── ADMIN CRUD ──
+function openAddModal() {
+  document.getElementById('editId').value = '';
+  document.getElementById('faqCat').value = '';
+  document.getElementById('faqQ').value   = '';
+  document.getElementById('faqA').value   = '';
+  document.getElementById('faqOrder').value = '0';
+  document.getElementById('modalTitle').textContent = 'Nueva Pregunta';
+  document.getElementById('faqModalBg').classList.add('show');
+}
+function closeModal() { document.getElementById('faqModalBg').classList.remove('show'); }
+document.getElementById('faqModalBg').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+
+function editItem(id) {
+  const item = _allItems.find(i=>i.id===id);
+  if (!item) return;
+  document.getElementById('editId').value    = id;
+  document.getElementById('faqCat').value    = item.category;
+  document.getElementById('faqQ').value      = item.question;
+  document.getElementById('faqA').value      = item.answer;
+  document.getElementById('faqOrder').value  = item.order_num || 0;
+  document.getElementById('modalTitle').textContent = 'Editar Pregunta';
+  document.getElementById('faqModalBg').classList.add('show');
+}
+
+async function saveItem() {
+  const id       = document.getElementById('editId').value;
+  const category = document.getElementById('faqCat').value.trim();
+  const question = document.getElementById('faqQ').value.trim();
+  const answer   = document.getElementById('faqA').value.trim();
+  const order_num = parseInt(document.getElementById('faqOrder').value) || 0;
+  if (!category || !question || !answer) { alert('Completa todos los campos obligatorios'); return; }
+  const method = id ? 'PUT' : 'POST';
+  const url    = id ? `/api/faq/${id}` : '/api/faq';
+  const r = await fetch(url, { method, credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ category, question, answer, order_num }) });
+  const d = await r.json();
+  if (d.success) { closeModal(); await init(); } else alert('Error: '+(d.error||'Error al guardar'));
+}
+
+async function deleteItem(id) {
+  if (!confirm('¿Eliminar esta pregunta?')) return;
+  await fetch(`/api/faq/${id}`, { method:'DELETE', credentials:'include' });
+  await init();
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+var _faqToastTimer;
+function showFaqToast(msg, type){
+  const t = document.getElementById('faqToast');
+  t.className = 'faq-toast show ' + (type||'');
+  t.innerHTML = '<i class="bi bi-'+(type==='warn'?'exclamation-triangle':type==='success'?'check-circle':'info-circle')+'-fill"></i>' + msg;
+  clearTimeout(_faqToastTimer);
+  _faqToastTimer = setTimeout(() => { t.classList.remove('show'); }, 4500);
+}
+
+// ── CONTRIBUTIONS ──────────────────────────────────────────────────────────────
+function openContribModal(){
+  if (!_portalEmail) {
+    showFaqToast('Identifícate primero en el portal de autogestión para compartir conocimiento.', 'warn');
+    return;
+  }
+  document.getElementById('ctTitle').value   = '';
+  document.getElementById('ctBody').value    = '';
+  document.getElementById('ctCategory').value= 'General';
+  document.getElementById('contribForm').style.display   = 'block';
+  document.getElementById('contribThanks').style.display = 'none';
+  document.getElementById('contribModalBg').classList.add('show');
+}
+function closeContribModal(){ document.getElementById('contribModalBg').classList.remove('show'); }
+document.getElementById('contribModalBg').addEventListener('click', e => { if(e.target===e.currentTarget) closeContribModal(); });
+
+async function sendContribution(){
+  const title    = document.getElementById('ctTitle').value.trim();
+  const body     = document.getElementById('ctBody').value.trim();
+  const category = document.getElementById('ctCategory').value;
+  if (!title || !body) { showFaqToast('Completa el título y la descripción.', 'warn'); return; }
+  const btn = document.getElementById('btnContribSend');
+  btn.disabled=true; btn.innerHTML='<i class="bi bi-hourglass-split"></i> Enviando…';
+  try {
+    const r = await fetch('/api/portal/contributions', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email:_portalEmail, name:_portalName||_portalEmail, title, body, category })
+    });
+    const d = await r.json();
+    if (d.success) {
+      document.getElementById('contribForm').style.display   = 'none';
+      document.getElementById('contribThanks').style.display = 'block';
+    } else showFaqToast(d.error||'Error al enviar', 'error');
+  } catch(e){ showFaqToast('Error de conexión','error'); }
+  finally{ btn.disabled=false; btn.innerHTML='<i class="bi bi-send-fill"></i> Enviar para revisión'; }
+}
+
+async function loadContributions(){
+  const r = await fetch('/api/portal/contributions/approved');
+  const d = await r.json();
+  _contribs = (d.success && d.data) ? d.data : [];
+  const statN = document.getElementById('statAportesN');
+  if (statN) statN.textContent = _contribs.length;
+  renderContribs();
+}
+
+function contribCard(c){
+  const titleH = highlightC(escFaq(c.title));
+  const bodyH  = highlightC(escFaq(c.body));
+  return `
+    <div class="contrib-card" id="cc-${c.id}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+        <span style="font-size:11px;font-weight:700;background:rgba(245,158,11,.1);color:#b45309;border:1px solid rgba(245,158,11,.25);border-radius:6px;padding:2px 9px;">${escFaq(c.category||'General')}</span>
+      </div>
+      <div class="contrib-card-title">${titleH}</div>
+      <div class="contrib-card-body">${bodyH}</div>
+      <div class="contrib-card-footer">
+        <div class="contrib-author"><i class="bi bi-person-fill"></i> Compartido por <strong>${escFaq(c.name||c.email)}</strong> &nbsp;·&nbsp; ${escFaq(c.email)}</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="star-row" id="stars-${c.id}">
+            ${[1,2,3,4,5].map(n=>`<span class="star${Math.round(c.avg_stars||0)>=n?' lit':''}" onclick="rateCont(${c.id},${n})" title="${n} estrella${n>1?'s':''}">★</span>`).join('')}
+          </div>
+          <span class="star-avg" id="avg-${c.id}">${c.avg_stars?Number(c.avg_stars).toFixed(1)+' ★ ('+c.rating_count+')':''}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderContribs(){
+  const section = document.getElementById('contribSection');
+  const list    = document.getElementById('contribList');
+  if (!_contribs.length) { section.style.display='none'; return; }
+  section.style.display = 'block';
+  let items = _contribs;
+  if (_searchQ) items = items.filter(c =>
+    c.title.toLowerCase().includes(_searchQ) || c.body.toLowerCase().includes(_searchQ)
+  );
+  if (!items.length) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">No hay aportes que coincidan con la búsqueda.</div>';
+    return;
+  }
+  list.innerHTML = items.map(contribCard).join('');
+}
+
+function highlightC(text){
+  if (!_searchQ) return text;
+  const re = new RegExp(`(${_searchQ.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+  return text.replace(re, '<mark style="background:#fef08a;padding:0 2px;border-radius:2px;">$1</mark>');
+}
+
+function escFaq(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+async function rateCont(id, stars){
+  if (!_portalEmail) { showFaqToast('Identifícate en el portal para valorar.', 'warn'); return; }
+  const r = await fetch('/api/portal/contributions/'+id+'/rate', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ email:_portalEmail, stars })
+  });
+  const d = await r.json();
+  if (d.success) {
+    const avg = d.avg_stars || 0;
+    const cnt = d.rating_count || 0;
+    document.querySelectorAll('#stars-'+id+' .star').forEach((s,i) => s.classList.toggle('lit', i<Math.round(avg)));
+    document.getElementById('avg-'+id).textContent = avg ? Number(avg).toFixed(1)+' ★ ('+cnt+')' : '';
+    showFaqToast('¡Gracias por tu valoración!', 'success');
+  }
+}
+
+// ── SEND QUESTION ─────────────────────────────────────────────────────────────
+async function sendQuestion(){
+  const q = document.getElementById('askQuestion').value.trim();
+  if (!q) { document.getElementById('askQuestion').focus(); return; }
+  if (!_portalEmail) {
+    showFaqToast('Para enviar tu pregunta, primero identifícate en el portal de autogestión.', 'warn');
+    return;
+  }
+  const btn = document.getElementById('btnAsk');
+  btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Enviando…';
+  try {
+    const r = await fetch('/api/portal/questions', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        email:    _portalEmail,
+        name:     _portalName || _portalEmail,
+        question: q,
+        category: document.getElementById('askCategory').value
+      })
+    });
+    const d = await r.json();
+    if (d.success) {
+      document.getElementById('askQuestion').value = '';
+      document.getElementById('askOk').style.display = 'block';
+      setTimeout(() => { document.getElementById('askOk').style.display='none'; }, 5000);
+    } else alert('Error: ' + (d.error || 'No se pudo enviar'));
+  } catch(e) { alert('Error de conexión'); }
+  finally { btn.disabled=false; btn.innerHTML='<i class="bi bi-send-fill"></i> Enviar pregunta'; }
+}
+
+init();
+loadContributions();
+</script>
+</body>
+</html>

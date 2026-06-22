@@ -4,6 +4,23 @@
 <!-- Sidebar -->
 <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
+        <div class="sidebar-brand">
+            <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="jg1" x1="100%" y1="0%" x2="18%" y2="100%">
+                        <stop offset="0%" stop-color="#2684FF"/>
+                        <stop offset="100%" stop-color="#0052CC"/>
+                    </linearGradient>
+                    <linearGradient id="jg2" x1="0%" y1="100%" x2="82%" y2="0%">
+                        <stop offset="0%" stop-color="#0052CC"/>
+                        <stop offset="100%" stop-color="#2684FF"/>
+                    </linearGradient>
+                </defs>
+                <path d="M15.5 3L3 15.5l5.5 5.5 7-7 7 7 5.5-5.5z" fill="url(#jg1)"/>
+                <path d="M15.5 29L28 16.5 22.5 11l-7 7-7-7L3 16.5z" fill="url(#jg2)"/>
+            </svg>
+            <span>Jira</span>
+        </div>
         <button class="close-sidebar" id="closeSidebar">
             <i class="fas fa-times"></i>
         </button>
@@ -172,6 +189,24 @@
     </div>
 
     <div class="menu-item">
+        <a href="<%= APP_URL %>/tickets/tv" class="menu-header" target="_blank">
+            <div class="menu-title">
+                <i class="fas fa-tv"></i>
+                <span>Dashboard TV</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item">
+        <a href="<%= APP_URL %>/licenses" class="menu-header">
+            <div class="menu-title">
+                <i class="bi bi-microsoft"></i>
+                <span>Licenciamiento</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="menu-item">
         <a href="<%= APP_URL %>/admin/reglas" class="menu-header">
             <div class="menu-title">
                 <i class="fas fa-cogs"></i>
@@ -196,6 +231,25 @@
         <button class="toggler-btn" id="mainToggleSidebar">
             <i class="fas fa-bars"></i>
         </button>
+
+        <!-- Logo Jira en navbar -->
+        <div class="navbar-brand-wrap">
+            <svg width="22" height="22" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="ng1" x1="100%" y1="0%" x2="18%" y2="100%">
+                        <stop offset="0%" stop-color="#2684FF"/>
+                        <stop offset="100%" stop-color="#0052CC"/>
+                    </linearGradient>
+                    <linearGradient id="ng2" x1="0%" y1="100%" x2="82%" y2="0%">
+                        <stop offset="0%" stop-color="#0052CC"/>
+                        <stop offset="100%" stop-color="#2684FF"/>
+                    </linearGradient>
+                </defs>
+                <path d="M15.5 3L3 15.5l5.5 5.5 7-7 7 7 5.5-5.5z" fill="url(#ng1)"/>
+                <path d="M15.5 29L28 16.5 22.5 11l-7 7-7-7L3 16.5z" fill="url(#ng2)"/>
+            </svg>
+            <span class="navbar-brand-text">Jira</span>
+        </div>
 
         <div class="theme-toggle-wrap ms-auto" id="themeToggle" onclick="toggleTheme()" title="Cambiar tema" role="button" aria-label="Cambiar modo claro/oscuro">
             <i class="theme-toggle-icon" id="toggleIcon">🌙</i>

@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal de Licenciamiento M365</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;0,700&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>(function(){const s=localStorage.getItem('dashboardTheme')||'light';document.documentElement.setAttribute('data-theme',s);})();</script>
+<style>
+:root,[data-theme="light"]{
+  --bg:#f0f4f8;--card:#ffffff;--hdr:#f8fafc;--border:#e2e8f0;
+  --text:#1e293b;--muted:#64748b;
+  --primary:#3b82f6;--success:#10b981;--warning:#f59e0b;
+  --danger:#ef4444;--info:#06b6d4;--purple:#8b5cf6;
+  --hover:#f1f5f9;--input-bg:#f8fafc;
+  --sh:0 1px 3px rgba(0,0,0,.07);--sh-md:0 4px 16px rgba(0,0,0,.1);
+  --mono:'JetBrains Mono',monospace;
+}
+[data-theme="dark"]{
+  --bg:#0f172a;--card:#1e293b;--hdr:#162032;--border:#2d3f55;
+  --text:#e2e8f0;--muted:#94a3b8;
+  --primary:#60a5fa;--success:#34d399;--warning:#fbbf24;
+  --danger:#f87171;--info:#22d3ee;--purple:#a78bfa;
+  --hover:#243348;--input-bg:#162032;
+  --sh:0 1px 3px rgba(0,0,0,.3);--sh-md:0 4px 16px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;transition:background .3s,color .3s;}
+.pg{margin-top:60px;padding:18px 22px;display:flex;flex-direction:column;gap:14px;max-width:1700px;margin-left:auto;margin-right:auto;}
+
+/* KPI */
+.kpi-row{display:grid;gap:10px;}
+.kpi-row-6{grid-template-columns:repeat(6,1fr);}
+.kpi-row-4{grid-template-columns:repeat(4,1fr);}
+@media(max-width:1200px){.kpi-row-6{grid-template-columns:repeat(3,1fr);}.kpi-row-4{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:640px){.kpi-row-6,.kpi-row-4{grid-template-columns:repeat(2,1fr);}}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;
+    position:relative;overflow:hidden;box-shadow:var(--sh);transition:transform .2s,box-shadow .2s;}
+.kpi:hover{transform:translateY(-2px);box-shadow:var(--sh-md);}
+.kpi-lbl{font-size:9px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:5px;}
+.kpi-val{font-size:24px;font-weight:900;line-height:1;letter-spacing:-1px;font-family:var(--mono);}
+.kpi-sub{font-size:10px;color:var(--muted);margin-top:3px;}
+.kpi-ico{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:28px;opacity:.08;}
+.kpi-trend{font-size:10px;margin-top:4px;display:flex;align-items:center;gap:4px;}
+.cg{color:var(--success);}.cr{color:var(--danger);}.ca{color:var(--warning);}
+.cb{color:var(--primary);}.cp{color:var(--purple);}.ci{color:var(--info);}
+
+/* Savings highlight */
+.kpi.kpi-savings{border-color:rgba(16,185,129,.3);background:linear-gradient(135deg,var(--card),rgba(16,185,129,.04));}
+.kpi.kpi-warn{border-color:rgba(239,68,68,.25);background:linear-gradient(135deg,var(--card),rgba(239,68,68,.03));}
+
+/* Card */
+.card-ui{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--sh);}
+.card-head{padding:12px 18px;background:var(--hdr);border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.card-head .title{display:flex;align-items:center;gap:8px;color:var(--text);font-size:13px;font-weight:700;}
+.card-body{padding:16px;}
+
+/* Tab nav */
+.tab-bar{display:flex;gap:3px;background:var(--hdr);padding:5px;border-radius:12px;border:1px solid var(--border);flex-wrap:wrap;}
+.tab-btn{padding:8px 14px;border:none;border-radius:8px;background:transparent;color:var(--muted);
+    font-size:12px;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;
+    display:flex;align-items:center;gap:6px;}
+.tab-btn.active{background:var(--card);color:var(--primary);box-shadow:var(--sh);}
+.tab-btn:hover:not(.active){background:var(--hover);}
+.tab-panel{display:none;}.tab-panel.active{display:flex;flex-direction:column;gap:14px;}
+
+/* Table */
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700;
+    padding:10px 14px;background:var(--hdr);border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:1;}
+.tbl tbody td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
+.tbl tbody tr:last-child td{border-bottom:none;}
+.tbl tbody tr:hover td{background:var(--hover);}
+.tbl-wrap{overflow:auto;max-height:460px;}
+.mono{font-family:var(--mono);font-size:11px;}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge-ok    {background:rgba(16,185,129,.12);color:#059669;}
+.badge-warn  {background:rgba(245,158,11,.12);color:#b45309;}
+.badge-bad   {background:rgba(239,68,68,.12); color:#dc2626;}
+.badge-muted {background:rgba(100,116,139,.1);color:var(--muted);}
+.badge-blue  {background:rgba(59,130,246,.1); color:var(--primary);}
+.badge-purple{background:rgba(139,92,246,.1); color:var(--purple);}
+
+/* Progress bar */
+.pbar-wrap{background:var(--border);border-radius:4px;height:7px;overflow:hidden;min-width:60px;}
+.pbar-fill{height:100%;border-radius:4px;transition:width .4s;}
+
+/* Sync panel */
+.sync-panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:var(--sh);}
+.sync-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.sync-dot.idle   {background:var(--muted);}
+.sync-dot.running{background:var(--warning);animation:pulse .8s infinite;}
+.sync-dot.ok     {background:var(--success);}
+.sync-dot.err    {background:var(--danger);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.sync-progress{flex:1;min-width:200px;}
+.sync-pbar-bg{background:var(--border);border-radius:4px;height:6px;overflow:hidden;margin-top:6px;}
+.sync-pbar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--primary),var(--info));transition:width .4s;}
+
+/* Group cards */
+.grp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;}
+.grp-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;
+    box-shadow:var(--sh);transition:transform .18s,box-shadow .18s;cursor:pointer;}
+.grp-card:hover{transform:translateY(-2px);box-shadow:var(--sh-md);}
+.grp-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+
+/* Drill-down Dirección */
+.dir-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;}
+.dir-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;
+    box-shadow:var(--sh);transition:transform .18s,box-shadow .18s;cursor:pointer;position:relative;overflow:hidden;}
+.dir-card:hover{transform:translateY(-3px);box-shadow:var(--sh-md);border-color:var(--primary);}
+.dir-card-name{font-size:13px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:8px;line-height:1.3;}
+.dir-card-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;}
+.dir-kpi{text-align:center;}
+.dir-kpi-val{font-size:18px;font-weight:900;font-family:var(--mono);line-height:1;}
+.dir-kpi-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-top:1px;}
+.dir-pbar{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin:6px 0 4px;}
+.dir-pbar-fill{height:100%;border-radius:4px;transition:width .6s;}
+.dir-card-footer{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);}
+.dir-card-footer .cost{font-weight:700;font-family:var(--mono);color:var(--success);}
+.dir-card .arrow{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:20px;
+    opacity:.12;transition:opacity .2s;}
+.dir-card:hover .arrow{opacity:.4;}
+
+/* Breadcrumb */
+.bc-item{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;cursor:pointer;
+    color:var(--muted);padding:2px 4px;border-radius:6px;transition:color .15s,background .15s;}
+.bc-item:hover,.bc-item.bc-root:hover{color:var(--primary);background:rgba(59,130,246,.07);}
+.bc-sep{color:var(--border);margin:0 2px;font-size:14px;user-select:none;}
+.bc-current{color:var(--text);cursor:default;font-weight:800;}
+.bc-current:hover{background:transparent;color:var(--text);}
+
+/* Dept bars */
+.dept-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+.dept-row:last-child{border-bottom:none;}
+.dept-name{width:160px;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dept-bar-bg{flex:1;background:var(--border);border-radius:4px;height:10px;overflow:hidden;}
+.dept-bar-fill{height:100%;border-radius:4px;transition:width .5s;}
+.dept-pct{width:36px;font-size:11px;font-weight:700;text-align:right;}
+
+/* Rec cards */
+.rec-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--sh);}
+.rec-card.alta   {border-left:4px solid var(--danger);}
+.rec-card.media  {border-left:4px solid var(--warning);}
+.rec-card.baja   {border-left:4px solid var(--info);}
+.rec-type-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.rec-eliminar{background:rgba(239,68,68,.1);color:#dc2626;}
+.rec-degradar{background:rgba(245,158,11,.1);color:#b45309;}
+.rec-revisar {background:rgba(6,182,212,.1); color:#0891b2;}
+
+/* Buttons */
+.btn-sm-act{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:8px;
+    font-size:12px;font-weight:700;border:none;cursor:pointer;transition:all .18s;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:#2563eb;}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed;}
+.btn-outline{background:none;border:1px solid var(--border);color:var(--muted);}
+.btn-outline:hover{border-color:var(--primary);color:var(--primary);}
+.btn-success{background:var(--success);color:#fff;}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-danger:hover{background:#dc2626;}
+
+/* Search / filter bar */
+.filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.sinp{padding:7px 10px 7px 32px;border:1px solid var(--border);border-radius:8px;font-size:12px;
+    background:var(--input-bg);color:var(--text);outline:none;transition:border-color .2s;}
+.sinp:focus{border-color:var(--primary);}
+.sinp-wrap{position:relative;}
+.sinp-wrap i{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none;}
+.fsel{padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;
+    background:var(--input-bg);color:var(--text);outline:none;}
+
+/* Skeleton */
+.skel{background:linear-gradient(90deg,var(--border) 25%,var(--hover) 50%,var(--border) 75%);
+    background-size:200%;animation:shim 1.3s infinite;border-radius:8px;}
+@keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* Toast */
+#toastBox{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.t-item{background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:12px;
+    padding:10px 16px;font-size:13px;font-weight:500;box-shadow:var(--sh-md);
+    display:flex;align-items:center;gap:10px;min-width:240px;pointer-events:auto;animation:tin .2s ease;}
+.t-ok{border-left:4px solid var(--success);}.t-err{border-left:4px solid var(--danger);}
+.t-inf{border-left:4px solid var(--info);}
+@keyframes tin{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+
+/* Modal */
+.modal-ov{display:none;position:fixed;inset:0;z-index:1050;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:20px;}
+.modal-ov.open{display:flex;}
+.modal-box{background:var(--card);border:1px solid var(--border);border-radius:18px;width:100%;
+    max-width:700px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--sh-md);}
+.modal-hdr{padding:14px 20px;background:var(--hdr);border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;}
+.modal-body{padding:18px;overflow-y:auto;flex:1;}
+.modal-close{background:none;border:none;font-size:20px;color:var(--muted);cursor:pointer;line-height:1;padding:4px 8px;border-radius:6px;}
+.modal-close:hover{background:var(--hover);}
+
+/* Pagination */
+.pagination{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.page-btn{padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;}
+.page-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.page-btn:hover:not(.active):not(:disabled){border-color:var(--primary);color:var(--primary);}
+.page-btn:disabled{opacity:.35;cursor:not-allowed;}
+
+/* Cost config table */
+.cost-inp{width:90px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;
+    font-size:12px;font-family:var(--mono);background:var(--input-bg);color:var(--text);text-align:right;}
+.cost-inp:focus{outline:none;border-color:var(--primary);}
+
+/* Empty state */
+.empty{text-align:center;padding:36px;color:var(--muted);}
+.empty i{font-size:36px;opacity:.2;display:block;margin-bottom:8px;}
+
+*::-webkit-scrollbar{width:5px;height:5px;}
+*::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+*::-webkit-scrollbar-track{background:transparent;}
+</style>
+</head>
+<body>
+<%- include("partials/sidebar_top") %>
+<div id="toastBox"></div>
+
+<div class="pg">
+
+  <!-- ══ HEADER ══ -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+    <div>
+      <div style="font-size:19px;font-weight:800;display:flex;align-items:center;gap:10px;">
+        <span style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#0052CC,#2684FF);
+            display:inline-flex;align-items:center;justify-content:center;">
+          <i class="bi bi-microsoft" style="color:#fff;font-size:16px;"></i>
+        </span>
+        Portal de Licenciamiento M365
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px;">
+        Costos · Usuarios · Dirección · Recomendaciones · Tendencias — datos desde caché DB
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn-sm-act btn-success" id="btnSync" onclick="startSync()">
+        <i class="bi bi-arrow-clockwise" id="syncIco"></i> Sincronizar con Azure
+      </button>
+      <a href="/api/licenses/export" class="btn-sm-act btn-outline" target="_blank">
+        <i class="bi bi-download"></i> Exportar CSV
+      </a>
+      <button class="btn-sm-act btn-outline" onclick="openCostModal()">
+        <i class="bi bi-currency-dollar"></i> Costos
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ SYNC STATUS ══ -->
+  <div class="sync-panel" id="syncPanel">
+    <div class="sync-dot idle" id="syncDot"></div>
+    <div class="sync-progress">
+      <div style="font-size:12px;font-weight:600;" id="syncMsg">Listo · datos en caché local</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px;" id="syncSub">Sincroniza para obtener datos actualizados de Azure AD</div>
+      <div class="sync-pbar-bg" id="syncBarWrap" style="display:none;">
+        <div class="sync-pbar-fill" id="syncBar" style="width:0%;"></div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);text-align:right;" id="syncTime"></div>
+  </div>
+
+  <!-- ══ KPI ROW ══ -->
+  <div class="kpi-row kpi-row-6" id="kpiRow">
+    <% for(let i=0;i<6;i++){ %><div class="kpi skel" style="height:80px;"></div><% } %>
+  </div>
+
+  <!-- ══ TABS ══ -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('resumen',this)"><i class="bi bi-pie-chart-fill"></i> Resumen</button>
+    <button class="tab-btn" onclick="switchTab('usuarios',this)"><i class="bi bi-people-fill"></i> Usuarios</button>
+    <button class="tab-btn" onclick="switchTab('areas',this)"><i class="bi bi-diagram-3"></i> Dirección</button>
+    <button class="tab-btn" onclick="switchTab('recom',this)"><i class="bi bi-lightbulb-fill"></i> Recomendaciones</button>
+    <button class="tab-btn" onclick="switchTab('historico',this)"><i class="bi bi-graph-up"></i> Histórico</button>
+    <button class="tab-btn" onclick="switchTab('grupos',this)"><i class="bi bi-collection-fill"></i> Grupos</button>
+    <button class="tab-btn" onclick="switchTab('sharepoint',this)"><i class="bi bi-cloud-fill"></i> SharePoint</button>
+  </div>
+
+  <!-- ══ TAB: RESUMEN ══ -->
+  <div id="tab-resumen" class="tab-panel active">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <!-- SKU Cost table -->
+      <div class="card-ui">
+        <div class="card-head"><span class="title"><i class="bi bi-key-fill cb"></i> SKUs suscritos y costo</span></div>
+        <div class="tbl-wrap" style="max-height:340px;">
+          <table class="tbl">
+            <thead><tr><th>SKU</th><th style="text-align:center;">Total</th><th style="text-align:center;">Usadas</th><th style="text-align:center;">Disp.</th><th>Uso</th><th style="text-align:right;">$/mes</th></tr></thead>
+            <tbody id="skuBody"><tr><td colspan="6" class="empty"><div class="skel" style="height:12px;width:200px;margin:0 auto;"></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Cost donut + savings -->
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="card-ui">
+          <div class="card-head"><span class="title"><i class="bi bi-pie-chart-fill cp"></i> Distribución de costo</span></div>
+          <div class="card-body" style="height:200px;"><canvas id="costChart"></canvas></div>
+        </div>
+        <div class="card-ui" style="border-color:rgba(16,185,129,.3);">
+          <div class="card-head" style="background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.2);">
+            <span class="title" style="color:var(--success);"><i class="bi bi-piggy-bank-fill"></i> Ahorro potencial estimado</span>
+          </div>
+          <div class="card-body">
+            <div style="font-size:36px;font-weight:900;font-family:var(--mono);color:var(--success);" id="savingsHero">—</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px;" id="savingsSub">por mes eliminando licencias sin uso</div>
+            <div style="margin-top:12px;font-size:11px;color:var(--muted);" id="savingsBreakdown"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: USUARIOS ══ -->
+  <div id="tab-usuarios" class="tab-panel">
+    <div class="card-ui">
+      <div class="card-head">
+        <span class="title"><i class="bi bi-people-fill cb"></i> Gestión de licencias por usuario</span>
+        <div class="filter-bar">
+          <div class="sinp-wrap"><i class="bi bi-search"></i>
+            <input class="sinp" style="width:200px;" id="userQ" placeholder="Nombre, email, UPN..." oninput="debounceUsers()">
+          </div>
+          <select class="fsel" id="userDept" onchange="loadUsers(1)"><option value="">Todos los dep.</option></select>
+          <select class="fsel" id="userGroup" onchange="loadUsers(1)">
+            <option value="">Todas las licencias</option>
+            <option>M365 E1</option><option>M365 E3</option><option>M365 E5</option>
+            <option>Power BI Pro</option><option>Power BI Premium</option>
+            <option>Visio P2</option><option>Project P3</option>
+            <option>Power Apps Premium</option><option>Power Automate</option><option>M365 EOP1</option>
+          </select>
+          <select class="fsel" id="userStatus" onchange="loadUsers(1)">
+            <option value="">Todos los estados</option>
+            <option value="ACTIVO">Activo</option>
+            <option value="BAJO USO">Bajo uso</option>
+            <option value="INACTIVO">Inactivo</option>
+            <option value="SIN USO">Sin uso</option>
+          </select>
+          <select class="fsel" id="userInactive" onchange="loadUsers(1)">
+            <option value="">Todos los días</option>
+            <option value="30">+30 días inactivo</option>
+            <option value="60">+60 días inactivo</option>
+            <option value="90">+90 días inactivo</option>
+          </select>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr>
+            <th>Nombre</th><th>Departamento</th><th>Licencias</th>
+            <th style="text-align:center;">Última actividad</th>
+            <th style="text-align:center;">Días inactivo</th>
+            <th style="text-align:center;">30d</th><th style="text-align:center;">60d</th><th style="text-align:center;">90d</th>
+            <th style="text-align:center;">Estado</th>
+            <th style="text-align:right;">$/mes</th>
+          </tr></thead>
+          <tbody id="usersBody"><tr><td colspan="10" class="empty"><i class="bi bi-people"></i>Cargando usuarios...</td></tr></tbody>
+        </table>
+      </div>
+      <div style="padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);flex-wrap:wrap;gap:8px;">
+        <div style="font-size:11px;color:var(--muted);" id="usersPagInfo"></div>
+        <div class="pagination" id="usersPag"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: DIRECCIÓN (drill-down) ══ -->
+  <div id="tab-areas" class="tab-panel">
+    <!-- Breadcrumb -->
+    <div class="card-ui" style="padding:10px 16px;" id="dirBreadcrumb">
+      <span class="bc-item bc-root" onclick="drillDir(0)"><i class="bi bi-diagram-3"></i> Direcciones</span>
+    </div>
+
+    <!-- KPI strip for current level -->
+    <div class="kpi-row kpi-row-4" id="dirKpiRow" style="display:none;"></div>
+
+    <!-- Level 0: Direcciones cards -->
+    <div id="dirLevel0">
+      <div class="dir-grid" id="dirGrid">
+        <% for(let i=0;i<6;i++){ %><div class="skel" style="height:130px;border-radius:12px;"></div><% } %>
+      </div>
+    </div>
+
+    <!-- Level 1: Áreas dentro de una dirección -->
+    <div id="dirLevel1" style="display:none;">
+      <div class="dir-grid" id="areaGrid"></div>
+    </div>
+
+    <!-- Level 2: Usuarios en un área -->
+    <div id="dirLevel2" style="display:none; flex-direction:column; gap:12px;">
+      <!-- Filters row -->
+      <div class="card-ui">
+        <div class="card-head" style="flex-wrap:wrap;gap:8px;">
+          <span class="title"><i class="bi bi-funnel cb"></i> Filtros</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <select class="sinp" id="dirUsrStatus" onchange="loadDirUsers(1)" style="width:130px;padding:6px 10px;">
+              <option value="">Todos los estados</option>
+              <option value="ACTIVO">Activo</option>
+              <option value="BAJO USO">Bajo uso</option>
+              <option value="INACTIVO">Inactivo</option>
+              <option value="SIN USO">Sin uso</option>
+            </select>
+            <select class="sinp" id="dirUsrGroup" onchange="loadDirUsers(1)" style="width:170px;padding:6px 10px;">
+              <option value="">Todas las licencias</option>
+            </select>
+            <select class="sinp" id="dirUsrInactive" onchange="loadDirUsers(1)" style="width:150px;padding:6px 10px;">
+              <option value="">Todos</option>
+              <option value="30">Sin uso +30 días</option>
+              <option value="60">Sin uso +60 días</option>
+              <option value="90">Sin uso +90 días</option>
+            </select>
+            <div class="sinp-wrap"><i class="bi bi-search"></i>
+              <input class="sinp" id="dirUsrQ" placeholder="Buscar usuario..." oninput="debDirQ()" style="width:180px;">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart + KPI fila -->
+      <div style="display:grid;grid-template-columns:1fr 340px;gap:12px;">
+        <div class="card-ui">
+          <div class="card-head"><span class="title"><i class="bi bi-bar-chart-fill cp"></i> Distribución por días inactivos</span></div>
+          <div class="card-body" style="padding:12px;"><canvas id="dirInactChart" height="160"></canvas></div>
+        </div>
+        <div class="card-ui">
+          <div class="card-head"><span class="title"><i class="bi bi-pie-chart-fill ci"></i> Estado de uso</span></div>
+          <div class="card-body" style="padding:12px;"><canvas id="dirStatusChart" height="160"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Users table -->
+      <div class="card-ui">
+        <div class="card-head">
+          <span class="title"><i class="bi bi-people-fill cb"></i> Usuarios</span>
+          <span id="dirUsrCount" style="font-size:11px;color:var(--muted);"></span>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr>
+              <th>Usuario</th><th>Cargo</th><th>Licencias</th>
+              <th style="text-align:center;">Última actividad</th>
+              <th style="text-align:center;">Días inactivo</th>
+              <th style="text-align:center;">Estado</th>
+              <th style="text-align:right;">$/mes</th>
+            </tr></thead>
+            <tbody id="dirUsrBody"><tr><td colspan="7" class="empty">Selecciona un área</td></tr></tbody>
+          </table>
+        </div>
+        <div id="dirUsrPag" style="padding:10px 16px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: RECOMENDACIONES ══ -->
+  <div id="tab-recom" class="tab-panel">
+    <!-- Savings summary -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;" id="recKpis">
+      <div class="kpi skel" style="height:70px;"></div>
+      <div class="kpi skel" style="height:70px;"></div>
+      <div class="kpi skel" style="height:70px;"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;" id="recList">
+      <div class="empty" style="padding:40px;"><i class="bi bi-lightbulb"></i>Cargando recomendaciones...</div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: HISTÓRICO ══ -->
+  <div id="tab-historico" class="tab-panel">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="card-ui">
+        <div class="card-head"><span class="title"><i class="bi bi-graph-up cb"></i> Licencias consumidas (tendencia)</span></div>
+        <div class="card-body"><canvas id="histChart" height="220"></canvas></div>
+      </div>
+      <div class="card-ui">
+        <div class="card-head"><span class="title"><i class="bi bi-currency-dollar cg"></i> Costo mensual (tendencia)</span></div>
+        <div class="card-body"><canvas id="costHistChart" height="220"></canvas></div>
+      </div>
+    </div>
+    <div class="card-ui">
+      <div class="card-head"><span class="title"><i class="bi bi-table"></i> Snapshots históricos</span></div>
+      <div class="tbl-wrap" style="max-height:300px;">
+        <table class="tbl">
+          <thead><tr><th>Fecha</th><th style="text-align:center;">Total licencias</th><th style="text-align:center;">Consumidas</th><th style="text-align:right;">Costo mensual USD</th></tr></thead>
+          <tbody id="histBody"><tr><td colspan="4" class="empty"><i class="bi bi-clock-history"></i>Sin datos históricos</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: GRUPOS ══ -->
+  <div id="tab-grupos" class="tab-panel">
+    <div class="grp-grid" id="groupsGrid">
+      <% for(let i=0;i<10;i++){ %><div class="skel" style="height:110px;border-radius:12px;"></div><% } %>
+    </div>
+  </div>
+
+  <!-- ══ TAB: SHAREPOINT ══ -->
+  <div id="tab-sharepoint" class="tab-panel">
+    <div class="kpi-row kpi-row-4" id="spKpiRow">
+      <% for(let i=0;i<4;i++){ %><div class="kpi skel" style="height:75px;"></div><% } %>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:14px;">
+      <div class="card-ui">
+        <div class="card-head">
+          <span class="title"><i class="bi bi-cloud-fill ci"></i> Sitios SharePoint</span>
+          <div class="sinp-wrap"><i class="bi bi-search"></i>
+            <input class="sinp" style="width:200px;" id="spSearch" placeholder="Buscar sitio..." oninput="filterSp(this.value)">
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>Sitio</th><th>Propietario</th><th style="text-align:right;">GB</th><th style="min-width:90px;">Uso</th><th style="text-align:center;">Archivos</th><th style="text-align:center;">Última activ.</th></tr></thead>
+            <tbody id="spBody"><tr><td colspan="6" class="empty"><i class="bi bi-cloud"></i>Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-ui">
+        <div class="card-head"><span class="title"><i class="bi bi-pie-chart-fill cp"></i> Top almacenamiento</span></div>
+        <div class="card-body"><canvas id="spChart" height="280"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.pg -->
+
+<!-- ══ MODAL: Detalle grupo ══ -->
+<div class="modal-ov" id="groupModal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div id="mGrpIco" class="grp-icon"></div>
+        <div><div id="mGrpTitle" style="font-size:14px;font-weight:700;"></div><div id="mGrpSub" style="font-size:11px;color:var(--muted);"></div></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('groupModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="sinp-wrap" style="margin-bottom:10px;"><i class="bi bi-search"></i>
+        <input class="sinp" style="width:100%;" id="mGrpQ" placeholder="Buscar miembro..." oninput="filterGrpMembers(this.value)">
+      </div>
+      <div class="tbl-wrap" style="max-height:440px;">
+        <table class="tbl">
+          <thead><tr><th>Nombre</th><th>Email</th><th>Departamento</th><th>Estado</th></tr></thead>
+          <tbody id="mGrpBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Configuración de costos ══ -->
+<div class="modal-ov" id="costModal">
+  <div class="modal-box" style="max-width:580px;">
+    <div class="modal-hdr">
+      <div style="font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;">
+        <i class="bi bi-currency-dollar" style="color:var(--success);"></i> Configurar costo por usuario (USD/mes)
+      </div>
+      <button class="modal-close" onclick="closeModal('costModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:14px;padding:8px 12px;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:8px;">
+        <i class="bi bi-info-circle me-1"></i>
+        Define el costo mensual por usuario para cada SKU. Estos valores se usan para calcular el costo total y el ahorro potencial.
+      </div>
+      <table class="tbl">
+        <thead><tr><th>SKU</th><th>Nombre</th><th style="text-align:right;">$/usuario/mes</th><th style="text-align:center;">Guardar</th></tr></thead>
+        <tbody id="costCfgBody"><tr><td colspan="4" class="empty">Cargando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/sidebar.js"></script>
+<script>
+function toggleTheme(){
+  const h=document.documentElement,c=h.getAttribute('data-theme'),n=c==='dark'?'light':'dark';
+  h.setAttribute('data-theme',n);localStorage.setItem('dashboardTheme',n);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function toast(msg,type='inf'){
+  const b=document.getElementById('toastBox'),d=document.createElement('div');
+  d.className=`t-item t-${type}`;
+  d.innerHTML=`<span>${{ok:'✓',err:'✗',inf:'ℹ'}[type]||'ℹ'}</span><span>${msg}</span>`;
+  b.appendChild(d);setTimeout(()=>d.remove(),4000);
+}
+function fmtMoney(v){return v==null?'—':'$'+parseFloat(v).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});}
+function fmtDate(d){if(!d)return '—';try{return new Date(d).toLocaleDateString('es-PE',{day:'2-digit',month:'short',year:'numeric'});}catch{return d;}}
+function fmtGB(gb){return gb>=1?gb.toFixed(2)+' GB':(gb*1024).toFixed(0)+' MB';}
+function pct(a,b){return b>0?Math.min(100,Math.round(a/b*100)):0;}
+function pctColor(p){return p>=80?'var(--success)':p>=50?'var(--warning)':'var(--danger)';}
+function statusBadge(s){
+  const m={'ACTIVO':'badge-ok','BAJO USO':'badge-warn','INACTIVO':'badge-bad','SIN USO':'badge-muted'};
+  return `<span class="badge ${m[s]||'badge-muted'}">${s||'—'}</span>`;
+}
+function escape(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+
+// ── Tabs ─────────────────────────────────────────────────────────────────────
+const _loaded={};
+function switchTab(name,btn){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(!_loaded[name]){_loaded[name]=true;loadTab(name);}
+}
+function loadTab(t){
+  if(t==='usuarios')   loadUsers(1);
+  if(t==='areas')      loadDepts();
+  if(t==='recom')      loadRecom();
+  if(t==='historico')  loadHistory();
+  if(t==='grupos')     loadGroups();
+  if(t==='sharepoint') loadSP();
+}
+
+// ── Modal helpers ─────────────────────────────────────────────────────────────
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-ov').forEach(m=>m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');}));
+
+// ── Sync ─────────────────────────────────────────────────────────────────────
+let _syncTimer=null;
+async function startSync(){
+  const btn=document.getElementById('btnSync');
+  btn.disabled=true;
+  try{
+    const r=await fetch('/api/licenses/sync',{method:'POST',credentials:'include'});
+    const j=await r.json();
+    if(!j.success&&j.message!=='Sync ya en progreso'){toast(j.message,'err');btn.disabled=false;return;}
+    toast('Sync iniciado — esto puede tardar unos minutos','inf');
+    pollSync();
+  }catch(e){toast('Error: '+e.message,'err');btn.disabled=false;}
+}
+function pollSync(){
+  clearInterval(_syncTimer);
+  _syncTimer=setInterval(async()=>{
+    try{
+      const r=await fetch('/api/licenses/sync-status',{credentials:'include'});
+      const j=await r.json();
+      const s=j.sync;
+      const dot=document.getElementById('syncDot');
+      const msg=document.getElementById('syncMsg');
+      const sub=document.getElementById('syncSub');
+      const bar=document.getElementById('syncBar');
+      const barWrap=document.getElementById('syncBarWrap');
+      const btnSync=document.getElementById('btnSync');
+
+      if(s.running){
+        dot.className='sync-dot running';
+        msg.textContent=s.message||'Sincronizando...';
+        sub.textContent=`Progreso: ${s.progress||0}%`;
+        barWrap.style.display='block';
+        bar.style.width=(s.progress||0)+'%';
+      } else {
+        clearInterval(_syncTimer);
+        btnSync.disabled=false;
+        if(s.error){
+          dot.className='sync-dot err';
+          msg.textContent='Error: '+s.error;
+          sub.textContent='Revisa la configuración de Azure AD';
+          toast('Sync falló: '+s.error,'err');
+        } else {
+          dot.className='sync-dot ok';
+          msg.textContent=s.message||'Sincronización completada';
+          sub.textContent=s.lastRun?'Último sync: '+new Date(s.lastRun).toLocaleString('es-PE'):'';
+          barWrap.style.display='none';
+          toast('Sync completado — recargando datos','ok');
+          // Reload all loaded tabs
+          Object.keys(_loaded).forEach(k=>{_loaded[k]=false;});
+          await loadOverview();
+          const activeTab=document.querySelector('.tab-panel.active');
+          if(activeTab){const name=activeTab.id.replace('tab-','');_loaded[name]=true;loadTab(name);}
+        }
+      }
+    }catch{}
+  },2500);
+}
+
+// ── Overview (KPIs + SKU table) ───────────────────────────────────────────────
+let _costChart=null;
+async function loadOverview(){
+  try{
+    const r=await fetch('/api/licenses/overview',{credentials:'include'});
+    const j=await r.json();
+    if(!j.success) throw new Error(j.message);
+    const d=j.data;
+    const usoPct=pct(d.totalConsumed,d.totalConsumed+(d.totalAvailable||0));
+
+    document.getElementById('kpiRow').innerHTML=`
+      <div class="kpi"><div class="kpi-lbl">Costo total mensual</div>
+        <div class="kpi-val cg" style="font-size:20px;">${fmtMoney(d.totalMonthly)}</div>
+        <div class="kpi-sub">USD/mes en licencias activas</div><i class="bi bi-currency-dollar kpi-ico cg"></i></div>
+      <div class="kpi kpi-savings"><div class="kpi-lbl">Ahorro potencial</div>
+        <div class="kpi-val cg" style="font-size:20px;">${fmtMoney(d.savingsPotential)}</div>
+        <div class="kpi-sub">/mes en licencias sin uso</div><i class="bi bi-piggy-bank-fill kpi-ico cg"></i></div>
+      <div class="kpi"><div class="kpi-lbl">Licencias consumidas</div>
+        <div class="kpi-val cb">${(d.totalConsumed||0).toLocaleString()}</div>
+        <div class="kpi-sub">de ${((d.totalConsumed||0)+(d.totalAvailable||0)).toLocaleString()} totales · ${usoPct}%</div><i class="bi bi-key-fill kpi-ico cb"></i></div>
+      <div class="kpi kpi-warn"><div class="kpi-lbl">Sin uso / Inactivos</div>
+        <div class="kpi-val cr">${(d.inactiveUsers||0).toLocaleString()}</div>
+        <div class="kpi-sub">de ${(d.totalUsers||0).toLocaleString()} usuarios totales</div><i class="bi bi-person-x-fill kpi-ico cr"></i></div>
+      <div class="kpi"><div class="kpi-lbl">Costo por usuario activo</div>
+        <div class="kpi-val ca" style="font-size:20px;">${fmtMoney(d.costPerActive)}</div>
+        <div class="kpi-sub">/mes entre ${(d.activeCount||0).toLocaleString()} usuarios activos</div><i class="bi bi-person-check-fill kpi-ico ca"></i></div>
+      <div class="kpi"><div class="kpi-lbl">Último sync</div>
+        <div class="kpi-val" style="font-size:13px;margin-top:8px;">${d.lastSync?new Date(d.lastSync).toLocaleDateString('es-PE'):'—'}</div>
+        <div class="kpi-sub">${d.lastSync?new Date(d.lastSync).toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'}):'Sin datos aún'}</div><i class="bi bi-clock-fill kpi-ico"></i></div>
+    `;
+
+    // SKU table
+    const skus=d.skus||[];
+    document.getElementById('skuBody').innerHTML=skus.length?skus.map(s=>{
+      const p=pct(s.consumed||0,s.total||1);
+      const col=pctColor(p);
+      return `<tr>
+        <td><div style="font-weight:700;font-size:12px;">${s.sku_name||'—'}</div>
+            <div class="mono" style="color:var(--muted);font-size:10px;">${s.label||''}</div></td>
+        <td style="text-align:center;font-family:var(--mono);">${(s.total||0).toLocaleString()}</td>
+        <td style="text-align:center;font-family:var(--mono);color:var(--danger);">${(s.consumed||0).toLocaleString()}</td>
+        <td style="text-align:center;font-family:var(--mono);color:var(--success);">${(s.available||0).toLocaleString()}</td>
+        <td style="min-width:90px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="pbar-wrap" style="flex:1;"><div class="pbar-fill" style="width:${p}%;background:${col};"></div></div>
+            <span style="font-size:10px;font-weight:700;color:${col};min-width:28px;">${p}%</span>
+          </div>
+        </td>
+        <td style="text-align:right;font-weight:700;font-family:var(--mono);color:var(--success);">${s.cost_monthly?'$'+parseFloat(s.cost_monthly).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}):'—'}</td>
+      </tr>`;
+    }).join(''):`<tr><td colspan="6" class="empty"><i class="bi bi-cloud-slash"></i>Sin datos — realiza un sync primero</td></tr>`;
+
+    // Savings detail
+    document.getElementById('savingsHero').textContent=fmtMoney(d.savingsPotential)+'/mes';
+    document.getElementById('savingsSub').textContent=`${d.inactiveUsers||0} usuarios sin actividad detectada`;
+
+    // Cost donut
+    const colored=['#3b82f6','#0052CC','#172B4D','#F2C811','#e0a800','#106ebe','#31752f','#742774','#0066FF','#5c2d91'];
+    if(_costChart)_costChart.destroy();
+    const cSkus=skus.filter(s=>parseFloat(s.cost_monthly)>0);
+    if(cSkus.length){
+      _costChart=new Chart(document.getElementById('costChart'),{
+        type:'doughnut',
+        data:{labels:cSkus.map(s=>s.label||s.sku_name),
+              datasets:[{data:cSkus.map(s=>parseFloat(s.cost_monthly)||0),backgroundColor:colored.slice(0,cSkus.length),borderWidth:2,borderColor:'var(--card)'}]},
+        options:{responsive:true,maintainAspectRatio:false,
+                 plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:6,boxWidth:10}},
+                          tooltip:{callbacks:{label:c=>' '+c.label+': $'+c.raw.toLocaleString('en-US',{minimumFractionDigits:0})}}}}
+      });
+    }
+
+    // Sync status
+    if(d.lastSync){
+      document.getElementById('syncDot').className='sync-dot ok';
+      document.getElementById('syncMsg').textContent='Datos sincronizados correctamente';
+      document.getElementById('syncSub').textContent='Último sync: '+new Date(d.lastSync).toLocaleString('es-PE');
+    }
+  }catch(e){
+    if(e.message&&!e.message.includes('Failed')){
+      document.getElementById('syncMsg').textContent='Sin datos — realiza una sincronización';
+      document.getElementById('syncSub').textContent='Conecta con Azure para obtener datos de licencias';
+    }
+  }
+}
+
+// ── Usuarios ─────────────────────────────────────────────────────────────────
+let _userDebounce=null, _costMapLocal={};
+async function loadUsers(page=1){
+  const q=document.getElementById('userQ').value;
+  const dept=document.getElementById('userDept').value;
+  const group=document.getElementById('userGroup').value;
+  const status=document.getElementById('userStatus').value;
+  const inactive=document.getElementById('userInactive').value;
+  const params=new URLSearchParams({q,dept,group,status,inactive,page,limit:60});
+  const tbody=document.getElementById('usersBody');
+  tbody.innerHTML=`<tr><td colspan="10" class="empty"><div class="skel" style="height:12px;width:200px;margin:0 auto;"></div></td></tr>`;
+  try{
+    const r=await fetch(`/api/licenses/users?${params}`,{credentials:'include'});
+    const j=await r.json();
+    if(!j.success) throw new Error(j.message);
+    const rows=j.data||[];
+    if(!rows.length){tbody.innerHTML=`<tr><td colspan="10" class="empty"><i class="bi bi-people"></i>Sin resultados</td></tr>`;
+      document.getElementById('usersPagInfo').textContent='0 usuarios';
+      document.getElementById('usersPag').innerHTML='';return;}
+    tbody.innerHTML=rows.map(u=>{
+      const grps=(u.license_groups||[]);
+      const cost=grps.reduce((s,g)=>{
+        const skuMap={'M365 E1':'STANDARDPACK','M365 E3':'ENTERPRISEPACK','M365 E5':'SPE_E5','Power BI Pro':'POWER_BI_PRO','Power BI Premium':'PBI_PREMIUM_PER_USER','Visio P2':'VISIOONLINE_PLAN2','Project P3':'PROJECTPREMIUM','Power Apps Premium':'POWERAPPS_PER_USER','Power Automate':'FLOW_PER_USER','M365 EOP1':'EOP_ENTERPRISE_PREMIUM_P1'};
+        return s+(_costMapLocal[skuMap[g]]||0);
+      },0);
+      const dias=u.days_inactive!=null?u.days_inactive:'—';
+      const diasBadge=u.days_inactive==null?'badge-muted':u.days_inactive<=30?'badge-ok':u.days_inactive<=60?'badge-warn':'badge-bad';
+      return `<tr>
+        <td><div style="font-weight:600;font-size:12px;">${escape(u.display_name||'—')}</div>
+            <div class="mono" style="color:var(--muted);">${escape(u.email||u.upn||'')}</div></td>
+        <td style="font-size:12px;color:var(--muted);">${escape(u.department||'—')}</td>
+        <td style="font-size:11px;">${grps.map(g=>`<span class="badge badge-blue" style="margin:1px;">${g}</span>`).join('')||'—'}</td>
+        <td style="text-align:center;font-size:12px;">${fmtDate(u.last_activity_date)}</td>
+        <td style="text-align:center;"><span class="badge ${diasBadge}">${dias}d</span></td>
+        <td style="text-align:center;"><span class="badge ${u.activo_30d?'badge-ok':'badge-muted'}">${u.activo_30d?'Sí':'No'}</span></td>
+        <td style="text-align:center;"><span class="badge ${u.activo_60d?'badge-ok':'badge-muted'}">${u.activo_60d?'Sí':'No'}</span></td>
+        <td style="text-align:center;"><span class="badge ${u.activo_90d?'badge-ok':'badge-muted'}">${u.activo_90d?'Sí':'No'}</span></td>
+        <td style="text-align:center;">${statusBadge(u.activity_status)}</td>
+        <td style="text-align:right;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--muted);">${cost>0?'$'+cost.toFixed(0):'—'}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('usersPagInfo').textContent=`${j.total.toLocaleString()} usuarios · página ${j.page}/${j.pages}`;
+    renderPagination('usersPag',j.page,j.pages,loadUsers);
+  }catch(e){tbody.innerHTML=`<tr><td colspan="10" style="color:var(--danger);padding:20px;text-align:center;">${e.message}</td></tr>`;}
+}
+function debounceUsers(){clearTimeout(_userDebounce);_userDebounce=setTimeout(()=>loadUsers(1),400);}
+
+function renderPagination(id,page,pages,fn){
+  const wrap=document.getElementById(id);
+  if(!wrap) return;
+  if(pages<=1){wrap.innerHTML='';return;}
+  const btns=[];
+  btns.push(`<button class="page-btn" onclick="${fn.name}(1)" ${page===1?'disabled':''}>«</button>`);
+  btns.push(`<button class="page-btn" onclick="${fn.name}(${page-1})" ${page===1?'disabled':''}>‹</button>`);
+  const start=Math.max(1,page-2),end=Math.min(pages,page+2);
+  for(let i=start;i<=end;i++) btns.push(`<button class="page-btn ${i===page?'active':''}" onclick="${fn.name}(${i})">${i}</button>`);
+  btns.push(`<button class="page-btn" onclick="${fn.name}(${page+1})" ${page===pages?'disabled':''}>›</button>`);
+  btns.push(`<button class="page-btn" onclick="${fn.name}(${pages})" ${page===pages?'disabled':''}>»</button>`);
+  wrap.innerHTML=btns.join('');
+}
+
+// ── Dirección — Drill-down ────────────────────────────────────────────────────
+let _dirLevel=0, _selDir=null, _selArea=null;
+let _dirInactChart=null, _dirStatusChart=null;
+let _dirUsrDebTimer=null;
+
+async function loadDepts(){
+  _dirLevel=0; _selDir=null; _selArea=null;
+  document.getElementById('dirLevel0').style.display='';
+  document.getElementById('dirLevel1').style.display='none';
+  document.getElementById('dirLevel2').style.display='none';
+  document.getElementById('dirKpiRow').style.display='none';
+  setBreadcrumb(0);
+  const grid=document.getElementById('dirGrid');
+  grid.innerHTML='<div class="skel" style="height:130px;border-radius:12px;"></div>'.repeat(6);
+  try{
+    const r=await fetch('/api/licenses/direcciones',{credentials:'include'});
+    const j=await r.json();
+    if(!j.success) throw new Error(j.message);
+    const dirs=j.data||[];
+    if(!dirs.length){grid.innerHTML=`<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--muted);"><i class="bi bi-diagram-3" style="font-size:40px;"></i><br>Sin datos — realiza una sincronización primero</div>`;return;}
+    grid.innerHTML=dirs.map(d=>dirCard(d)).join('');
+  }catch(e){grid.innerHTML=`<div style="grid-column:1/-1;padding:20px;color:var(--danger);text-align:center;">${escape(e.message)}</div>`;}
+}
+
+function dirCard(d){
+  const col=pctColor(d.uso_pct);
+  const usados=d.activos+d.bajo_uso;
+  return `<div class="dir-card" onclick="drillDir(1,'${escJs(d.dir)}')">
+    <div class="dir-card-name"><i class="bi bi-building-fill" style="color:var(--primary);font-size:16px;"></i>${escape(d.dir)}</div>
+    <div class="dir-card-kpis">
+      <div class="dir-kpi"><div class="dir-kpi-val cg">${d.activos}</div><div class="dir-kpi-lbl">Activos</div></div>
+      <div class="dir-kpi"><div class="dir-kpi-val ca">${d.bajo_uso}</div><div class="dir-kpi-lbl">Bajo uso</div></div>
+      <div class="dir-kpi"><div class="dir-kpi-val cr">${d.sin_uso}</div><div class="dir-kpi-lbl">Sin uso</div></div>
+      <div class="dir-kpi"><div class="dir-kpi-val cb">${d.areas_count}</div><div class="dir-kpi-lbl">Áreas</div></div>
+    </div>
+    <div class="dir-pbar"><div class="dir-pbar-fill" style="width:${d.uso_pct}%;background:${col};"></div></div>
+    <div class="dir-card-footer">
+      <span>${d.uso_pct}% uso (${usados}/${d.total})</span>
+      <span class="cost">${d.cost_monthly>0?fmtMoney(d.cost_monthly)+'/mes':'—'}</span>
+    </div>
+    <i class="bi bi-chevron-right arrow"></i>
+  </div>`;
+}
+
+function areaCard(d,dir){
+  const col=pctColor(d.uso_pct);
+  const usados=d.activos+d.bajo_uso;
+  return `<div class="dir-card" onclick="drillDir(2,'${escJs(dir)}','${escJs(d.area)}')">
+    <div class="dir-card-name"><i class="bi bi-people-fill" style="color:var(--info);font-size:16px;"></i>${escape(d.area)}</div>
+    <div class="dir-card-kpis">
+      <div class="dir-kpi"><div class="dir-kpi-val cg">${d.activos}</div><div class="dir-kpi-lbl">Activos</div></div>
+      <div class="dir-kpi"><div class="dir-kpi-val ca">${d.bajo_uso}</div><div class="dir-kpi-lbl">Bajo uso</div></div>
+      <div class="dir-kpi"><div class="dir-kpi-val cr">${d.sin_uso}</div><div class="dir-kpi-lbl">Sin uso</div></div>
+      <div class="dir-kpi"><div class="dir-kpi-val cp">${d.total}</div><div class="dir-kpi-lbl">Total</div></div>
+    </div>
+    <div class="dir-pbar"><div class="dir-pbar-fill" style="width:${d.uso_pct}%;background:${col};"></div></div>
+    <div class="dir-card-footer">
+      <span>${d.uso_pct}% uso · ${usados}/${d.total}</span>
+      <span class="cost">${d.cost_monthly>0?fmtMoney(d.cost_monthly)+'/mes':'—'}</span>
+    </div>
+    <i class="bi bi-chevron-right arrow"></i>
+  </div>`;
+}
+
+async function drillDir(level,dir,area){
+  _dirLevel=level; _selDir=dir||null; _selArea=area||null;
+  document.getElementById('dirLevel0').style.display=level===0?'':'none';
+  document.getElementById('dirLevel1').style.display=level===1?'':'none';
+  document.getElementById('dirLevel2').style.display=level===2?'flex':'none';
+  document.getElementById('dirKpiRow').style.display=level===0?'none':'';
+  setBreadcrumb(level);
+  if(level===1) await loadAreaCards(dir);
+  if(level===2){ populateGroupFilter(); loadDirUsers(1); renderDirCharts([]); }
+}
+
+async function loadAreaCards(dir){
+  const grid=document.getElementById('areaGrid');
+  grid.innerHTML='<div class="skel" style="height:130px;border-radius:12px;"></div>'.repeat(6);
+  const r=await fetch(`/api/licenses/direccion-areas?dir=${encodeURIComponent(dir)}`,{credentials:'include'});
+  const j=await r.json();
+  if(!j.success){grid.innerHTML=`<div style="grid-column:1/-1;color:var(--danger);padding:20px;">${escape(j.message)}</div>`;return;}
+  const areas=j.data||[];
+  if(!areas.length){grid.innerHTML=`<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--muted);">Sin áreas registradas</div>`;return;}
+  grid.innerHTML=areas.map(a=>areaCard(a,dir)).join('');
+  const tot=areas.reduce((s,a)=>s+a.total,0),act=areas.reduce((s,a)=>s+a.activos,0),
+        sin=areas.reduce((s,a)=>s+a.sin_uso,0),cost=areas.reduce((s,a)=>s+a.cost_monthly,0);
+  document.getElementById('dirKpiRow').innerHTML=`
+    <div class="kpi"><div class="kpi-lbl">Total usuarios</div><div class="kpi-val cb">${tot}</div><i class="bi bi-people-fill kpi-ico cb"></i></div>
+    <div class="kpi"><div class="kpi-lbl">Activos</div><div class="kpi-val cg">${act}</div><div class="kpi-sub">${pct(act,tot)}% uso</div><i class="bi bi-check-circle-fill kpi-ico cg"></i></div>
+    <div class="kpi"><div class="kpi-lbl">Sin uso / inactivos</div><div class="kpi-val cr">${sin}</div><i class="bi bi-slash-circle-fill kpi-ico cr"></i></div>
+    <div class="kpi kpi-savings"><div class="kpi-lbl">Costo mensual</div><div class="kpi-val cg">${fmtMoney(cost)}</div><i class="bi bi-currency-dollar kpi-ico cg"></i></div>`;
+}
+
+let _grpFilterDone=false;
+function populateGroupFilter(){
+  if(_grpFilterDone)return; _grpFilterDone=true;
+  const sel=document.getElementById('dirUsrGroup');
+  ['M365 E1','M365 E3','M365 E5','Power BI Pro','Power BI Premium','Visio P2','Project P3','Power Apps Premium','Power Automate','M365 EOP1']
+    .forEach(g=>{ const o=document.createElement('option'); o.value=g; o.textContent=g; sel.appendChild(o); });
+}
+
+function debDirQ(){clearTimeout(_dirUsrDebTimer);_dirUsrDebTimer=setTimeout(()=>loadDirUsers(1),350);}
+
+async function loadDirUsers(page=1){
+  const status=document.getElementById('dirUsrStatus').value;
+  const group=document.getElementById('dirUsrGroup').value;
+  const inactive=document.getElementById('dirUsrInactive').value;
+  const q=document.getElementById('dirUsrQ').value.trim();
+  const params=new URLSearchParams({page,limit:50});
+  if(_selArea&&_selArea!=='Sin área') params.set('dept',_selArea);
+  if(_selDir) params.set('dir',_selDir);
+  if(status)  params.set('status',status);
+  if(group)   params.set('group',group);
+  if(inactive)params.set('inactive',inactive);
+  if(q)       params.set('q',q);
+  const tbody=document.getElementById('dirUsrBody');
+  tbody.innerHTML=`<tr><td colspan="7" class="empty"><i class="bi bi-hourglass-split"></i> Cargando...</td></tr>`;
+  try{
+    const r=await fetch(`/api/licenses/users?${params}`,{credentials:'include'});
+    const j=await r.json();
+    if(!j.success) throw new Error(j.message);
+    const rows=j.data||[];
+    document.getElementById('dirUsrCount').textContent=`${j.total} usuarios`;
+    const act=rows.filter(u=>u.activity_status==='ACTIVO').length;
+    const sin=rows.filter(u=>u.activity_status==='SIN USO').length;
+    document.getElementById('dirKpiRow').innerHTML=`
+      <div class="kpi"><div class="kpi-lbl">Total en área</div><div class="kpi-val cb">${j.total}</div><i class="bi bi-people-fill kpi-ico cb"></i></div>
+      <div class="kpi"><div class="kpi-lbl">Activos en vista</div><div class="kpi-val cg">${act}</div><div class="kpi-sub">${pct(act,rows.length)}%</div><i class="bi bi-check-circle-fill kpi-ico cg"></i></div>
+      <div class="kpi"><div class="kpi-lbl">Sin uso en vista</div><div class="kpi-val cr">${sin}</div><i class="bi bi-slash-circle-fill kpi-ico cr"></i></div>
+      <div class="kpi"><div class="kpi-lbl">Dirección / Área</div><div class="kpi-val" style="font-size:12px;letter-spacing:0;">${escape(_selArea||_selDir||'—')}</div></div>`;
+    renderDirCharts(rows);
+    if(!rows.length){tbody.innerHTML=`<tr><td colspan="7" class="empty"><i class="bi bi-inbox"></i> Sin usuarios</td></tr>`;return;}
+    tbody.innerHTML=rows.map(u=>{
+      const grps=u.license_groups||[];
+      const sk={'M365 E1':'STANDARDPACK','M365 E3':'ENTERPRISEPACK','M365 E5':'SPE_E5','Power BI Pro':'POWER_BI_PRO','Power BI Premium':'PBI_PREMIUM_PER_USER','Visio P2':'VISIOONLINE_PLAN2','Project P3':'PROJECTPREMIUM','Power Apps Premium':'POWERAPPS_PER_USER','Power Automate':'FLOW_PER_USER','M365 EOP1':'EOP_ENTERPRISE_PREMIUM_P1'};
+      const cost=grps.reduce((s,g)=>s+(_costMapLocal[sk[g]]||0),0);
+      const dias=u.days_inactive!=null?u.days_inactive:'—';
+      const diasBadge=u.days_inactive==null?'badge-muted':u.days_inactive<=30?'badge-ok':u.days_inactive<=60?'badge-warn':'badge-bad';
+      const grpBadges=grps.map(g=>`<span class="badge badge-info" style="font-size:9px;">${escape(g)}</span>`).join(' ');
+      return `<tr>
+        <td><div style="font-weight:600;font-size:12px;">${escape(u.display_name||'—')}</div>
+            <div style="font-size:10px;color:var(--muted);">${escape(u.upn||'')}</div></td>
+        <td style="font-size:11px;">${escape(u.job_title||'—')}</td>
+        <td style="max-width:220px;">${grpBadges||'—'}</td>
+        <td style="text-align:center;font-size:11px;">${fmtDate(u.last_activity_date)}</td>
+        <td style="text-align:center;"><span class="badge ${diasBadge}">${dias}</span></td>
+        <td style="text-align:center;">${statusBadge(u.activity_status)}</td>
+        <td style="text-align:right;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--success);">${cost>0?'$'+cost.toFixed(0):'—'}</td>
+      </tr>`;
+    }).join('');
+    renderPagination('dirUsrPag',parseInt(page),j.pages,loadDirUsers);
+  }catch(e){tbody.innerHTML=`<tr><td colspan="7" style="color:var(--danger);padding:20px;text-align:center;">${escape(e.message)}</td></tr>`;}
+}
+
+function renderDirCharts(rows){
+  const theme=document.documentElement.getAttribute('data-theme')==='dark';
+  const gridC=theme?'rgba(255,255,255,.06)':'rgba(0,0,0,.06)';
+  const txtC=theme?'#94a3b8':'#64748b';
+  const ranges={'0-30 días':0,'31-60 días':0,'61-90 días':0,'+90 días':0,'Sin dato':0};
+  for(const u of rows){
+    if(u.days_inactive==null) ranges['Sin dato']++;
+    else if(u.days_inactive<=30) ranges['0-30 días']++;
+    else if(u.days_inactive<=60) ranges['31-60 días']++;
+    else if(u.days_inactive<=90) ranges['61-90 días']++;
+    else ranges['+90 días']++;
+  }
+  if(_dirInactChart)_dirInactChart.destroy();
+  const ctx1=document.getElementById('dirInactChart');
+  if(ctx1)_dirInactChart=new Chart(ctx1,{type:'bar',
+    data:{labels:Object.keys(ranges),datasets:[{label:'Usuarios',data:Object.values(ranges),
+      backgroundColor:['rgba(16,185,129,.75)','rgba(245,158,11,.75)','rgba(249,115,22,.75)','rgba(239,68,68,.75)','rgba(100,116,139,.4)'],
+      borderRadius:6,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} usuarios`}}},
+      scales:{x:{grid:{color:gridC},ticks:{color:txtC,font:{size:10}}},y:{grid:{color:gridC},ticks:{color:txtC,font:{size:10},stepSize:1}}}}
+  });
+  const stCounts={ACTIVO:0,'BAJO USO':0,INACTIVO:0,'SIN USO':0};
+  for(const u of rows) if(stCounts[u.activity_status]!==undefined) stCounts[u.activity_status]++;
+  if(_dirStatusChart)_dirStatusChart.destroy();
+  const ctx2=document.getElementById('dirStatusChart');
+  if(ctx2)_dirStatusChart=new Chart(ctx2,{type:'doughnut',
+    data:{labels:Object.keys(stCounts),datasets:[{data:Object.values(stCounts),
+      backgroundColor:['rgba(16,185,129,.8)','rgba(245,158,11,.8)','rgba(249,115,22,.8)','rgba(239,68,68,.8)'],
+      borderWidth:2,borderColor:theme?'#1e293b':'#ffffff',hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,color:txtC}},
+               tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw}`}}}}
+  });
+}
+
+function setBreadcrumb(level){
+  const bc=document.getElementById('dirBreadcrumb');
+  let html=`<span class="bc-item bc-root" onclick="drillDir(0)"><i class="bi bi-diagram-3"></i> Direcciones</span>`;
+  if(level>=1&&_selDir){
+    html+=`<span class="bc-sep">›</span>`;
+    if(level===1) html+=`<span class="bc-item bc-current">${escape(_selDir)}</span>`;
+    else html+=`<span class="bc-item" onclick="drillDir(1,'${escJs(_selDir)}')">${escape(_selDir)}</span>`;
+  }
+  if(level===2&&_selArea) html+=`<span class="bc-sep">›</span><span class="bc-item bc-current">${escape(_selArea)}</span>`;
+  bc.innerHTML=html;
+}
+
+function escJs(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+
+// ── Recomendaciones ───────────────────────────────────────────────────────────
+async function loadRecom(){
+  try{
+    const r=await fetch('/api/licenses/recommendations',{credentials:'include'});
+    const j=await r.json();
+    if(!j.success) throw new Error(j.message);
+    const recs=j.data||[];
+    const eliminar=recs.filter(r=>r.type==='ELIMINAR');
+    const degradar=recs.filter(r=>r.type==='DEGRADAR');
+    const revisar =recs.filter(r=>r.type==='REVISAR');
+
+    document.getElementById('recKpis').innerHTML=`
+      <div class="kpi" style="border-color:rgba(239,68,68,.25);">
+        <div class="kpi-lbl">Ahorro potencial total</div>
+        <div class="kpi-val cg">${fmtMoney(j.totalSavings)}/mes</div>
+        <div class="kpi-sub">${recs.length} recomendaciones activas</div><i class="bi bi-piggy-bank-fill kpi-ico cg"></i></div>
+      <div class="kpi"><div class="kpi-lbl">Licencias a eliminar</div>
+        <div class="kpi-val cr">${eliminar.reduce((a,r)=>a+r.count,0)}</div>
+        <div class="kpi-sub">usuarios sin actividad >90d</div><i class="bi bi-trash-fill kpi-ico cr"></i></div>
+      <div class="kpi"><div class="kpi-lbl">Candidatos a degradar</div>
+        <div class="kpi-val ca">${degradar.reduce((a,r)=>a+r.count,0)}</div>
+        <div class="kpi-sub">usuarios E5 sin uso avanzado</div><i class="bi bi-arrow-down-circle-fill kpi-ico ca"></i></div>
+    `;
+
+    if(!recs.length){
+      document.getElementById('recList').innerHTML=`<div class="empty"><i class="bi bi-check-circle"></i>No se detectaron oportunidades de optimización</div>`;return;
+    }
+
+    document.getElementById('recList').innerHTML=recs.map(rec=>{
+      const typeMap={ELIMINAR:'rec-eliminar',DEGRADAR:'rec-degradar',REVISAR:'rec-revisar'};
+      const prioClass=rec.priority==='ALTA'?'alta':rec.priority==='MEDIA'?'media':'baja';
+      const userRows=(rec.users||[]).map(u=>`<span style="font-size:11px;background:var(--hover);border:1px solid var(--border);border-radius:6px;padding:2px 8px;display:inline-flex;align-items:center;gap:5px;">
+        <i class="bi bi-person" style="color:var(--muted);"></i>${u.name||'—'}${u.dept?` — ${u.dept}`:''}${u.days?' · '+u.days+'d':''}</span>`).join('');
+      return `<div class="rec-card ${prioClass}">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span class="rec-type-badge ${typeMap[rec.type]}">${rec.type==='ELIMINAR'?'🗑 Eliminar':rec.type==='DEGRADAR'?'⬇ Degradar':'🔍 Revisar'}</span>
+            <span class="badge ${rec.priority==='ALTA'?'badge-bad':rec.priority==='MEDIA'?'badge-warn':'badge-blue'}" style="font-size:10px;">Prioridad ${rec.priority}</span>
+          </div>
+          ${rec.savings>0?`<div style="font-size:20px;font-weight:900;font-family:var(--mono);color:var(--success);">${fmtMoney(rec.savings)}/mes</div>`:''}
+        </div>
+        <div style="margin-top:10px;">
+          <div style="font-size:14px;font-weight:700;color:var(--text);">${escape(rec.message)}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px;">${escape(rec.detail)}</div>
+        </div>
+        ${userRows?`<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:5px;">${userRows}</div>`:''}
+        ${rec.users&&rec.users.length<rec.count?`<div style="margin-top:6px;font-size:10px;color:var(--muted);">... y ${rec.count-rec.users.length} más</div>`:''}
+      </div>`;
+    }).join('');
+  }catch(e){document.getElementById('recList').innerHTML=`<div style="color:var(--danger);padding:20px;text-align:center;">${e.message}</div>`;}
+}
+
+// ── Histórico ─────────────────────────────────────────────────────────────────
+let _histChart=null,_costHistChart=null;
+async function loadHistory(){
+  try{
+    const r=await fetch('/api/licenses/history',{credentials:'include'});
+    const j=await r.json();
+    if(!j.success) throw new Error(j.message);
+    const d=j.data;
+    if(!d.dates||!d.dates.length){
+      document.getElementById('histBody').innerHTML=`<tr><td colspan="4" class="empty"><i class="bi bi-clock-history"></i>Sin datos históricos — realiza un sync</td></tr>`;return;
+    }
+    const fmtD=dt=>dt?new Date(dt).toLocaleDateString('es-PE',{day:'2-digit',month:'short'}):dt;
+    const labels=d.dates.map(fmtD);
+
+    // Consumed chart (per-sku lines)
+    if(_histChart)_histChart.destroy();
+    const colors=['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6'];
+    const skuDatasets=(d.topSkuLabels||[]).map((lbl,i)=>({
+      label:lbl, data:(d.perSku||{})[lbl]||[], borderColor:colors[i%colors.length],
+      backgroundColor:colors[i%colors.length]+'20', tension:.35, fill:false, pointRadius:2,
+    }));
+    _histChart=new Chart(document.getElementById('histChart'),{
+      type:'line',
+      data:{labels,datasets:skuDatasets.length?skuDatasets:[{label:'Total consumidas',data:d.consumed,borderColor:'var(--primary)',tension:.35,fill:false,pointRadius:2}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}}},scales:{x:{ticks:{font:{size:9}}},y:{beginAtZero:false}}}
+    });
+
+    // Cost chart
+    if(_costHistChart)_costHistChart.destroy();
+    _costHistChart=new Chart(document.getElementById('costHistChart'),{
+      type:'line',
+      data:{labels,datasets:[{label:'Costo mensual USD',data:d.cost,borderColor:'var(--success)',backgroundColor:'rgba(16,185,129,.1)',tension:.35,fill:true,pointRadius:2}]},
+      options:{responsive:true,maintainAspectRatio:false,
+               plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:c=>' $'+c.raw.toLocaleString('en-US',{minimumFractionDigits:0})}}},
+               scales:{x:{ticks:{font:{size:9}}},y:{beginAtZero:false,ticks:{callback:v=>'$'+v.toLocaleString()}}}}
+    });
+
+    // Table
+    document.getElementById('histBody').innerHTML=[...d.dates].reverse().map((dt,i)=>{
+      const ri=[...d.dates].length-1-i;
+      return `<tr>
+        <td>${fmtDate(dt)}</td>
+        <td style="text-align:center;font-family:var(--mono);">${(d.total[ri]||0).toLocaleString()}</td>
+        <td style="text-align:center;font-family:var(--mono);color:var(--danger);">${(d.consumed[ri]||0).toLocaleString()}</td>
+        <td style="text-align:right;font-family:var(--mono);font-weight:700;color:var(--success);">${d.cost[ri]?'$'+parseFloat(d.cost[ri]).toLocaleString('en-US',{minimumFractionDigits:0}):'—'}</td>
+      </tr>`;
+    }).join('');
+  }catch(e){document.getElementById('histBody').innerHTML=`<tr><td colspan="4" style="color:var(--danger);padding:20px;text-align:center;">${e.message}</td></tr>`;}
+}
+
+// ── Grupos ───────────────────────────────────────────────────────────────────
+let _groupsData=[];
+async function loadGroups(){
+  try{
+    // Load from DB via users endpoint (aggregate by group)
+    const r=await fetch('/api/licenses/users?limit=9999',{credentials:'include'});
+    const j=await r.json();
+    const grpMap={};
+    for(const u of (j.data||[])){
+      for(const grp of (u.license_groups||[])){
+        if(!grpMap[grp])grpMap[grp]={count:0,active:0,members:[]};
+        grpMap[grp].count++;
+        if(u.activity_status==='ACTIVO')grpMap[grp].active++;
+        grpMap[grp].members.push(u);
+      }
+    }
+    const LG_META={
+      'M365 E1':{color:'#3b82f6',icon:'bi-microsoft'},'M365 E3':{color:'#0052CC',icon:'bi-microsoft'},
+      'M365 E5':{color:'#172B4D',icon:'bi-microsoft'},'Power BI Pro':{color:'#F2C811',icon:'bi-bar-chart-fill'},
+      'Power BI Premium':{color:'#e0a800',icon:'bi-bar-chart-fill'},'Visio P2':{color:'#106ebe',icon:'bi-diagram-3-fill'},
+      'Project P3':{color:'#31752f',icon:'bi-kanban-fill'},'Power Apps Premium':{color:'#742774',icon:'bi-lightning-fill'},
+      'Power Automate':{color:'#0066FF',icon:'bi-arrow-repeat'},'M365 EOP1':{color:'#5c2d91',icon:'bi-shield-fill'},
+    };
+    _groupsData=Object.entries(grpMap).map(([label,d])=>({label,...d,...(LG_META[label]||{color:'#6b7280',icon:'bi-collection'})}));
+    const grid=document.getElementById('groupsGrid');
+    if(!_groupsData.length){grid.innerHTML=`<div class="empty" style="grid-column:1/-1;"><i class="bi bi-collection"></i>Sin datos — realiza un sync</div>`;return;}
+    grid.innerHTML=_groupsData.map(g=>{
+      const p=pct(g.active,g.count);
+      return `<div class="grp-card" onclick="openGroupModal('${g.label.replace(/'/g,"\\'")}')">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div class="grp-icon" style="background:${g.color}18;border:1px solid ${g.color}30;">
+            <i class="bi ${g.icon}" style="color:${g.color};"></i>
+          </div>
+          <div><div style="font-weight:700;font-size:13px;">${g.label}</div>
+               <div style="font-size:10px;color:var(--muted);">grupo de licencia</div></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+          <div><div style="font-size:28px;font-weight:900;font-family:var(--mono);color:${g.color};">${g.count}</div>
+               <div style="font-size:10px;color:var(--muted);">miembros</div></div>
+          <div style="text-align:right;">
+            <div style="font-size:11px;font-weight:700;color:${pctColor(p)};">${p}% activos</div>
+            <div class="pbar-wrap" style="width:70px;margin-top:4px;"><div class="pbar-fill" style="width:${p}%;background:${pctColor(p)};"></div></div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){document.getElementById('groupsGrid').innerHTML=`<div style="color:var(--danger);grid-column:1/-1;">${e.message}</div>`;}
+}
+
+// Group modal
+let _grpMembers=[];
+function openGroupModal(label){
+  const g=_groupsData.find(x=>x.label===label);
+  if(!g) return;
+  _grpMembers=g.members||[];
+  document.getElementById('mGrpIco').innerHTML=`<i class="bi ${g.icon}" style="color:${g.color};"></i>`;
+  document.getElementById('mGrpIco').style.background=`${g.color}18`;
+  document.getElementById('mGrpTitle').textContent=g.label;
+  document.getElementById('mGrpSub').textContent=`${g.count} miembros · ${g.active} activos`;
+  document.getElementById('mGrpQ').value='';
+  renderGrpMembers(_grpMembers);
+  document.getElementById('groupModal').classList.add('open');
+}
+function filterGrpMembers(q){
+  const t=q.toLowerCase();
+  renderGrpMembers(_grpMembers.filter(u=>(u.display_name||'').toLowerCase().includes(t)||(u.email||'').toLowerCase().includes(t)));
+}
+function renderGrpMembers(members){
+  const tb=document.getElementById('mGrpBody');
+  if(!members.length){tb.innerHTML=`<tr><td colspan="4" class="empty">Sin resultados</td></tr>`;return;}
+  tb.innerHTML=members.map(u=>`<tr>
+    <td style="font-weight:600;font-size:12px;">${escape(u.display_name||'—')}</td>
+    <td class="mono">${escape(u.email||u.upn||'—')}</td>
+    <td style="font-size:12px;color:var(--muted);">${escape(u.department||'—')}</td>
+    <td>${statusBadge(u.activity_status)}</td>
+  </tr>`).join('');
+}
+
+// ── SharePoint ────────────────────────────────────────────────────────────────
+let _spSites=[],_spChart=null;
+async function loadSP(){
+  try{
+    const r=await fetch('/api/licenses/sharepoint',{credentials:'include'});
+    const j=await r.json();
+    if(!j.success) throw new Error(j.message);
+    const d=j.data; _spSites=d.sites||[];
+    const s=d.stats;
+    document.getElementById('spKpiRow').innerHTML=`
+      <div class="kpi"><div class="kpi-lbl">Sitios totales</div><div class="kpi-val cb">${s.total}</div><div class="kpi-sub">SharePoint activos</div></div>
+      <div class="kpi"><div class="kpi-lbl">Con actividad 30d</div><div class="kpi-val cg">${s.activeSites}</div><div class="kpi-sub">últimos 30 días</div></div>
+      <div class="kpi"><div class="kpi-lbl">Almacenamiento</div><div class="kpi-val cp">${fmtGB(s.totalGB)}</div><div class="kpi-sub">consumido total</div></div>
+      <div class="kpi"><div class="kpi-lbl">Total archivos</div><div class="kpi-val ci">${s.totalFiles.toLocaleString()}</div><div class="kpi-sub">en todos los sitios</div></div>
+    `;
+    renderSP(_spSites);
+    const top10=_spSites.slice(0,10);
+    if(_spChart)_spChart.destroy();
+    if(top10.length)_spChart=new Chart(document.getElementById('spChart'),{
+      type:'bar',
+      data:{labels:top10.map(s=>s.name||'—'),
+            datasets:[{label:'GB',data:top10.map(s=>s.storageGB),backgroundColor:'rgba(59,130,246,.7)',borderRadius:4}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+               plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.raw+' GB'}}},
+               scales:{x:{ticks:{font:{size:9}}},y:{ticks:{font:{size:9}}}}}
+    });
+  }catch(e){document.getElementById('spBody').innerHTML=`<tr><td colspan="6" style="color:var(--danger);padding:20px;text-align:center;">${e.message}</td></tr>`;}
+}
+function renderSP(sites){
+  const tb=document.getElementById('spBody');
+  if(!sites.length){tb.innerHTML=`<tr><td colspan="6" class="empty"><i class="bi bi-cloud-slash"></i>Sin datos</td></tr>`;return;}
+  const max=sites[0]?.storageUsed||1;
+  tb.innerHTML=sites.map(s=>{
+    const p=Math.round(s.storageUsed/max*100);
+    return `<tr>
+      <td><div style="font-weight:600;font-size:12px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${s.url}">${s.name||s.url}</div>
+          <div class="mono" style="color:var(--muted);font-size:9px;max-width:220px;overflow:hidden;text-overflow:ellipsis;">${s.url}</div></td>
+      <td style="font-size:12px;color:var(--muted);">${s.owner}</td>
+      <td style="text-align:right;font-weight:700;font-family:var(--mono);font-size:12px;">${fmtGB(s.storageGB)}</td>
+      <td><div class="pbar-wrap"><div class="pbar-fill" style="width:${p}%;background:var(--primary);"></div></div></td>
+      <td style="text-align:center;font-family:var(--mono);font-size:12px;">${s.fileCount.toLocaleString()}</td>
+      <td style="text-align:center;font-size:12px;">${fmtDate(s.lastActivity)}</td>
+    </tr>`;
+  }).join('');
+}
+function filterSp(q){const t=q.toLowerCase();renderSP(_spSites.filter(s=>(s.name||s.url||'').toLowerCase().includes(t)||(s.owner||'').toLowerCase().includes(t)));}
+
+// ── Cost config modal ─────────────────────────────────────────────────────────
+async function openCostModal(){
+  document.getElementById('costModal').classList.add('open');
+  try{
+    const r=await fetch('/api/licenses/cost-config',{credentials:'include'});
+    const j=await r.json();
+    const rows=j.data||[];
+    // Build local cost map for user table cost calculation
+    _costMapLocal=Object.fromEntries(rows.map(r=>[r.sku_name,parseFloat(r.cost_per_user)||0]));
+    document.getElementById('costCfgBody').innerHTML=rows.map(row=>`
+      <tr>
+        <td class="mono" style="font-size:11px;">${row.sku_name}</td>
+        <td style="font-size:12px;">${row.label||row.sku_name}</td>
+        <td style="text-align:right;">
+          <input type="number" class="cost-inp" id="cost_${row.sku_name.replace(/[^a-zA-Z0-9]/g,'_')}"
+            value="${parseFloat(row.cost_per_user||0).toFixed(2)}" step="0.01" min="0">
+        </td>
+        <td style="text-align:center;">
+          <button class="btn-sm-act btn-primary" style="padding:4px 10px;font-size:11px;"
+            onclick="saveCost('${row.sku_name}','${row.sku_name.replace(/[^a-zA-Z0-9]/g,'_')}')">
+            <i class="bi bi-check"></i>
+          </button>
+        </td>
+      </tr>`).join('');
+  }catch(e){document.getElementById('costCfgBody').innerHTML=`<tr><td colspan="4" style="color:var(--danger);">${e.message}</td></tr>`;}
+}
+async function saveCost(skuName,inputId){
+  const val=document.getElementById('cost_'+inputId)?.value;
+  try{
+    const r=await fetch('/api/licenses/cost-config',{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({sku_name:skuName,cost_per_user:parseFloat(val)||0})});
+    const j=await r.json();
+    if(j.success){toast('Costo actualizado','ok');_loaded['resumen']=false;loadOverview();}
+    else throw new Error(j.message);
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+
+// ── Depts list for filter ─────────────────────────────────────────────────────
+async function loadDeptFilter(){
+  try{
+    const r=await fetch('/api/licenses/departments-list',{credentials:'include'});
+    const j=await r.json();
+    const sel=document.getElementById('userDept');
+    (j.data||[]).forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;sel.appendChild(o);});
+  }catch{}
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+(async()=>{
+  await loadOverview();
+  await loadDeptFilter();
+  // Load cost map for user table
+  try{
+    const r=await fetch('/api/licenses/cost-config',{credentials:'include'});
+    const j=await r.json();
+    _costMapLocal=Object.fromEntries((j.data||[]).map(r=>[r.sku_name,parseFloat(r.cost_per_user)||0]));
+  }catch{}
+  // Check if sync is running
+  const rs=await fetch('/api/licenses/sync-status',{credentials:'include'}).then(r=>r.json()).catch(()=>null);
+  if(rs?.sync?.running) pollSync();
+})();
+</script>
+</body>
+</html>
